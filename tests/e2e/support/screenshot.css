@@ -1,0 +1,8 @@
+/*
+ * Applied only while Playwright takes a baseline screenshot. The design panel
+ * is dev tooling that the playground server injects, so it stays out of the
+ * kit's baselines.
+ */
+[data-sdk-design-panel] {
+  visibility: hidden;
+}
