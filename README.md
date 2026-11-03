@@ -39,7 +39,7 @@ color scheme.
 ## Base CSS and layout primitives
 
 Three stylesheets in `theme/assets/` make up the kit's CSS. Load them in this
-order; the Shopify theme loads the same files:
+order; the Shopify theme will load the same files:
 
 ```html
 <link rel="stylesheet" href="sdk-tokens.css">     <!-- generated tokens -->

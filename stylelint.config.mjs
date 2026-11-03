@@ -25,10 +25,17 @@ export default {
         // LAY-13: physical keywords.
         '/^(float|clear)$/': ['left', 'right'],
         'text-align': ['left', 'right'],
-        // MOT-01: durations come from --sdk-duration-* tokens, never literal times.
-        '/^(transition|animation)$/': [/(^|[\s,(])-?[\d.]+m?s\b/],
+        // MOT-01: durations and easings come from --sdk-duration-* and --sdk-ease-* tokens, never literals.
+        '/^(transition|animation)$/': [
+          /(^|[\s,(])-?[\d.]+m?s\b/,
+          /(^|[\s,])ease(-in|-out|-in-out)?($|[\s,])/,
+          /(^|[\s,])(cubic-bezier|steps|linear)\(/,
+        ],
       },
-      { message: (property, value) => `LAY-13/MOT-01: "${property}: ${value}" is not allowed; use a logical keyword or a --sdk-duration-* token` },
+      {
+        message: (property, value) =>
+          `LAY-13/MOT-01: "${property}: ${value}" is not allowed; use a logical keyword or --sdk-duration-* and --sdk-ease-* tokens`,
+      },
     ],
     'declaration-property-value-allowed-list': [
       {

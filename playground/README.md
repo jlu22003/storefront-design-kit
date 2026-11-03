@@ -46,13 +46,14 @@ matters.
 
 The **Design** button (bottom corner of every served page) opens a panel:
 
-- **Appearance** (system, light, dark) and **Direction** (left to right or
-  right to left) previews.
+- **Appearance** (system, light, dark) preview. Color picks are kept per
+  appearance: light picks apply in light, dark picks in dark.
 - **Spacing**, **Type scale**, and **Corner radius** sliders scale every
   `--sdk-space-*`, `--sdk-font-size-*`, and `--sdk-radius-*` token.
 - **Color pickers** for the main color roles, with live WCAG contrast ratios
   for text, links, accent, and control borders.
-- **Copy CSS** copies only the tokens you changed as a `:root { … }` block.
+- **Copy CSS** copies only the tokens you changed: a `:root { … }` block, plus
+  one block per appearance for the colors picked in it.
   **Reset** returns to the token values.
 
 Changes are kept in this browser's localStorage, so they survive reloads.

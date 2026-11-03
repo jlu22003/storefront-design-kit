@@ -22,7 +22,7 @@
   margin: 0;
 }
 
-:where(ol, ul)[role="list"] {
+:where(ol[role="list"], ul[role="list"]) {
   padding: 0;
   list-style: none;
 }

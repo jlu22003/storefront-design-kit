@@ -2,9 +2,10 @@
 //
 // Every change sets the matching custom property on <html>, so the page
 // updates at once. Changes survive live reloads (they are kept in this
-// browser's localStorage) until you press Reset. "Copy CSS" copies only the
-// tokens you changed, ready to paste into a sketch stylesheet or to carry
-// back into tokens/*.tokens.json.
+// browser's localStorage) until you press Reset. Color picks are kept per
+// appearance (light or dark) and apply only in that appearance. "Copy CSS"
+// copies only the tokens you changed, ready to paste into a sketch stylesheet
+// or to carry back into tokens/*.tokens.json.
 
 const STORAGE_KEY = 'sdk-playground-design';
 
@@ -126,17 +127,43 @@ export function contrastRatio(a, b) {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-/** Builds the CSS block for the changed tokens. */
-export function changedCss(changes, appearance) {
-  const names = Object.keys(changes).sort();
-  if (!names.length) return '/* No changes yet: move a slider or pick a color. */';
-  const note = appearance === 'system' ? '' : ` (picked in ${appearance} appearance)`;
-  return [
-    `/* Design panel values${note}. Paste into a sketch stylesheet, or copy the numbers into tokens/*.tokens.json. */`,
-    ':root {',
-    ...names.map((name) => `  ${name}: ${changes[name]};`),
-    '}',
-  ].join('\n');
+const declarations = (values, indent) =>
+  Object.keys(values)
+    .sort()
+    .map((name) => `${indent}${name}: ${values[name]};`);
+
+/**
+ * Builds the CSS for the changed tokens: scaled tokens in one :root block, and
+ * each appearance's color picks under the selectors that appearance uses in
+ * sdk-tokens.css.
+ */
+export function changedCss(scaled, colors = {}) {
+  const light = colors.light ?? {};
+  const dark = colors.dark ?? {};
+  if (![scaled, light, dark].some((values) => Object.keys(values).length)) {
+    return '/* No changes yet: move a slider or pick a color. */';
+  }
+  const blocks = ['/* Design panel values. Paste into a sketch stylesheet, or copy the numbers into tokens/*.tokens.json. */'];
+  if (Object.keys(scaled).length) blocks.push([':root {', ...declarations(scaled, '  '), '}'].join('\n'));
+  if (Object.keys(light).length) {
+    blocks.push(['/* Colors picked in the light appearance. */', ':root {', ...declarations(light, '  '), '}'].join('\n'));
+  }
+  if (Object.keys(dark).length) {
+    blocks.push(
+      [
+        '/* Colors picked in the dark appearance. */',
+        '@media (prefers-color-scheme: dark) {',
+        '  :root:not([data-theme="light"]) {',
+        ...declarations(dark, '    '),
+        '  }',
+        '}',
+        ':root[data-theme="dark"] {',
+        ...declarations(dark, '  '),
+        '}',
+      ].join('\n'),
+    );
+  }
+  return blocks.join('\n\n');
 }
 
 function el(tag, attributes = {}, children = []) {
@@ -154,9 +181,21 @@ function el(tag, attributes = {}, children = []) {
 export function mountDesignPanel() {
   if (document.querySelector('[data-sdk-design-panel]')) return;
   const root = document.documentElement;
-  const state = { open: false, appearance: 'system', direction: null, scales: {}, colors: {}, ...storage.load() };
-  const pageDirection = root.getAttribute('dir');
+  const state = { open: false, appearance: 'system', scales: {}, colors: {}, ...storage.load() };
+  const darkQuery = matchMedia('(prefers-color-scheme: dark)');
   let base = {};
+
+  // The appearance the page is showing: light or dark.
+  function scheme() {
+    if (state.appearance !== 'system') return state.appearance;
+    return darkQuery.matches ? 'dark' : 'light';
+  }
+
+  function picks() {
+    const key = scheme();
+    state.colors[key] ??= {};
+    return state.colors[key];
+  }
 
   const host = el('div', { 'data-sdk-design-panel': true });
   const shadow = host.attachShadow({ mode: 'open' });
@@ -178,15 +217,12 @@ export function mountDesignPanel() {
     for (const name of PANEL_PINNED) host.style.setProperty(name, base[name]);
   }
 
-  function changes() {
+  function scaled() {
     const out = {};
     for (const scale of SCALES) {
       const factor = state.scales[scale.key] ?? 1;
       if (factor === 1) continue;
       for (const name of scale.tokens) if (base[name]) out[name] = scaleValue(base[name], factor);
-    }
-    for (const [name, value] of Object.entries(state.colors)) {
-      if (normalizeHex(base[name] ?? '') !== value) out[name] = value;
     }
     return out;
   }
@@ -198,9 +234,9 @@ export function mountDesignPanel() {
 
   function apply() {
     for (const name of [...SPACE, ...FONT_SIZES, ...RADII, ...COLORS.map((c) => c.name)]) root.style.removeProperty(name);
-    const current = changes();
-    for (const [name, value] of Object.entries(current)) root.style.setProperty(name, value);
-    output.textContent = changedCss(current, state.appearance);
+    const sizes = scaled();
+    for (const [name, value] of Object.entries({ ...sizes, ...picks() })) root.style.setProperty(name, value);
+    output.textContent = changedCss(sizes, state.colors);
     syncColorInputs();
     updateContrast();
     storage.save(state);
@@ -208,7 +244,7 @@ export function mountDesignPanel() {
 
   // The live value, so aliases (link and focus follow accent in light mode) stay accurate.
   function currentColor(name) {
-    return state.colors[name] ?? normalizeHex(getComputedStyle(root).getPropertyValue(name));
+    return picks()[name] ?? normalizeHex(getComputedStyle(root).getPropertyValue(name));
   }
 
   // ---- toggle
@@ -233,27 +269,7 @@ export function mountDesignPanel() {
     el('option', { value: 'dark', text: 'Dark' }),
   ]);
   appearance.value = state.appearance;
-  const direction = el('select', { id: 'sdk-dp-direction' }, [
-    el('option', { value: '', text: 'As the page sets it' }),
-    el('option', { value: 'ltr', text: 'Left to right' }),
-    el('option', { value: 'rtl', text: 'Right to left' }),
-  ]);
-  direction.value = state.direction ?? '';
-  const appearanceRow = el('div', { class: 'pair' }, [
-    el('div', { class: 'field' }, [el('label', { for: 'sdk-dp-appearance', text: 'Appearance' }), appearance]),
-    el('div', { class: 'field' }, [el('label', { for: 'sdk-dp-direction', text: 'Direction' }), direction]),
-  ]);
-
-  function applyDirection() {
-    const value = state.direction || pageDirection;
-    if (value) root.setAttribute('dir', value);
-    else root.removeAttribute('dir');
-  }
-  direction.addEventListener('change', () => {
-    state.direction = direction.value || null;
-    applyDirection();
-    storage.save(state);
-  });
+  const appearanceRow = el('div', { class: 'field' }, [el('label', { for: 'sdk-dp-appearance', text: 'Appearance' }), appearance]);
 
   const scaleFields = SCALES.map((scale) => {
     const id = `sdk-dp-${scale.key}`;
@@ -291,7 +307,8 @@ export function mountDesignPanel() {
     const id = `sdk-dp-${color.name.slice(2)}`;
     const input = el('input', { id, type: 'color' });
     input.addEventListener('input', () => {
-      state.colors[color.name] = input.value;
+      if (normalizeHex(base[color.name] ?? '') === input.value) delete picks()[color.name];
+      else picks()[color.name] = input.value;
       apply();
     });
     return { color, input, node: el('div', { class: 'swatch' }, [input, el('label', { for: id, text: color.label })]) };
@@ -382,10 +399,7 @@ export function mountDesignPanel() {
     state.colors = {};
     state.appearance = 'system';
     appearance.value = 'system';
-    state.direction = null;
-    direction.value = '';
     applyAppearance();
-    applyDirection();
     readBase();
     for (const field of scaleFields) {
       field.input.value = 1;
@@ -397,7 +411,7 @@ export function mountDesignPanel() {
   });
 
   // Follow OS appearance changes while on System.
-  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  darkQuery.addEventListener('change', () => {
     readBase();
     syncColorInputs();
     apply();
@@ -405,7 +419,6 @@ export function mountDesignPanel() {
 
   document.body.append(host);
   applyAppearance();
-  applyDirection();
   readBase();
   syncColorInputs();
   apply();

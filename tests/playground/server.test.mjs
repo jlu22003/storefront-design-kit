@@ -129,10 +129,19 @@ describe('design panel helpers', () => {
     assert.equal(Math.round(contrastRatio('#ffffff', '#0a5fd1') * 100) / 100, 5.88);
   });
 
-  test('changedCss emits only changed tokens as a :root block', () => {
-    assert.match(changedCss({}, 'system'), /No changes yet/);
-    const css = changedCss({ '--sdk-space-16': '1.25rem', '--sdk-color-accent': '#123456' }, 'dark');
-    assert.match(css, /picked in dark appearance/);
-    assert.match(css, /:root \{\n {2}--sdk-color-accent: #123456;\n {2}--sdk-space-16: 1\.25rem;\n\}/);
+  test('changedCss emits only changed tokens', () => {
+    assert.match(changedCss({}, {}), /No changes yet/);
+    assert.match(changedCss({}, { light: {}, dark: {} }), /No changes yet/);
+    const css = changedCss({ '--sdk-space-16': '1.25rem', '--sdk-space-8': '0.625rem' }, {});
+    assert.match(css, /:root \{\n {2}--sdk-space-16: 1\.25rem;\n {2}--sdk-space-8: 0\.625rem;\n\}/);
+    assert.doesNotMatch(css, /appearance|data-theme/);
+  });
+
+  test('changedCss puts each appearance\'s color picks under that appearance\'s selectors', () => {
+    const css = changedCss({}, { light: { '--sdk-color-bg': '#fafafa' }, dark: { '--sdk-color-bg': '#101010' } });
+    assert.match(css, /light appearance\. \*\/\n:root \{\n {2}--sdk-color-bg: #fafafa;\n\}/);
+    assert.match(css, /@media \(prefers-color-scheme: dark\) \{\n {2}:root:not\(\[data-theme="light"\]\) \{\n {4}--sdk-color-bg: #101010;\n {2}\}\n\}/);
+    assert.match(css, /:root\[data-theme="dark"\] \{\n {2}--sdk-color-bg: #101010;\n\}/);
+    assert.doesNotMatch(changedCss({}, { light: { '--sdk-color-bg': '#fafafa' } }), /#101010|dark/);
   });
 });

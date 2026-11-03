@@ -17,6 +17,6 @@
   ],
   "MOT-01": [
     "stylelint: declaration-property-value-allowed-list (durations and easings are --sdk-* tokens)",
-    "stylelint: declaration-property-value-disallowed-list (no literal times in transition/animation)"
+    "stylelint: declaration-property-value-disallowed-list (no literal times or easings in transition/animation)"
   ]
 }
