@@ -161,9 +161,9 @@
     },
     {
       "id": "LIB-27",
-      "title": "Clay vocabulary, adapted:",
-      "detail": "Clay's physical `LEFT`/`RIGHT` become logical `start`/`end` on the web. Clay's `PERCENT` subtracts padding *and* gaps; CSS % does not, so the web shim uses `calc()`. Clay has no wrap or grid, so `Cluster` and `Grid` are web-only primitives (§4.5).",
-      "rationale": "Fidelity where natural, per the captain's intent."
+      "title": "Layout vocabulary:",
+      "detail": "Alignment uses logical `start`/`end` rather than physical left/right. Percentage sizing subtracts padding *and* gaps; CSS % does not, so primitives use `calc()`. `Cluster` and `Grid` are the wrap and grid primitives (§4.5).",
+      "rationale": "Layout behaves the same in either writing direction and sizes predictably."
     },
     {
       "id": "LIB-28",

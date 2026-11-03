@@ -1,8 +1,8 @@
 // Writes the generated token outputs, or checks that the committed ones are current.
 //
-// Each output is { path, render(model), committed }. To add an emitter (for example the
-// C header dist/sdk_tokens.h planned for the Clay toolkit), add an entry here with a
-// render function that takes the same model; nothing else changes.
+// Each output is { path, render(model), committed }. Emitters are pluggable: CSS today,
+// and another format is added as an entry here with a render function that takes the
+// same model; nothing else changes.
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
