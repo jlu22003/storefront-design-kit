@@ -1,0 +1,452 @@
+/*
+ * storefront-design-kit layout primitives. Load after sdk-tokens.css and sdk-base.css.
+ *
+ * The layout model
+ * ----------------
+ * A layout is a tree of boxes. Each container lays its children out along one
+ * direction, puts a gap between them, pads its edges, and aligns them on both
+ * axes. Each child says how it is sized along each axis:
+ *
+ *   grow      take a share of the leftover space
+ *   fit       be as big as its content
+ *   fixed     be exactly --w / --h
+ *   percent   be a fraction (0 to 1) of the container: --w: 0.5
+ *
+ * Everything is logical: "start" and "end" follow the reading direction, so
+ * dir="rtl" mirrors a layout with no extra CSS (LAY-13).
+ *
+ * Primitives own spacing and alignment; components own visuals (background,
+ * radius, border). Children never set outer margins: the parent sets the gap.
+ *
+ * How to set things
+ * -----------------
+ *   Keywords use data attributes:      data-direction, data-align-x, data-align-y,
+ *                                      data-w, data-h, data-attach-x, data-attach-y,
+ *                                      data-scroll, data-snap, data-fit, data-gutter
+ *   Amounts use custom properties:     --child-gap, --padding (and its logical longhands),
+ *                                      --w, --h, --w-min, --w-max, --h-min, --h-max,
+ *                                      --measure, --gutter, --min, --switch-at,
+ *                                      --offset-x, --offset-y, --z, --ratio
+ *
+ *   <div class="sdk-stack" style="--child-gap: var(--sdk-space-24)" data-align-x="center">
+ *
+ * A parameter applies only to the element it is set on: every primitive
+ * resets the parameters it reads, so nested layouts never inherit a parent's
+ * gap or padding. The resets have zero specificity, so a theme class or an
+ * inline style always wins.
+ *
+ * Primitives: .sdk-box .sdk-stack .sdk-row .sdk-grid .sdk-cluster .sdk-switcher
+ *             .sdk-center .sdk-float .sdk-clip .sdk-aspect
+ */
+
+/* ------------------------------------- parameter resets and padding */
+
+/*
+ * Containers. Padding: --padding sets all four edges; the logical longhands
+ * win over it. On .sdk-center the inline edges belong to the gutter, so only
+ * block padding applies there.
+ */
+:where(.sdk-box, .sdk-stack, .sdk-row, .sdk-grid, .sdk-cluster, .sdk-switcher, .sdk-center) {
+  --child-gap: initial;
+  --padding: initial;
+  --padding-inline: initial;
+  --padding-block: initial;
+  --padding-inline-start: initial;
+  --padding-inline-end: initial;
+  --padding-block-start: initial;
+  --padding-block-end: initial;
+  --measure: initial;
+  --gutter: initial;
+  --min: initial;
+  --switch-at: initial;
+
+  padding-block: var(--padding-block-start, var(--padding-block, var(--padding, 0))) var(--padding-block-end, var(--padding-block, var(--padding, 0)));
+  padding-inline: var(--padding-inline-start, var(--padding-inline, var(--padding, 0))) var(--padding-inline-end, var(--padding-inline, var(--padding, 0)));
+}
+
+/* Sized children, floats, and aspect frames. */
+
+:where([data-w], [data-h], .sdk-float, .sdk-aspect) {
+  --w: initial;
+  --h: initial;
+  --w-min: initial;
+  --w-max: initial;
+  --h-min: initial;
+  --h-max: initial;
+  --offset-x: initial;
+  --offset-y: initial;
+  --z: initial;
+  --ratio: initial;
+}
+
+/* ------------------------------------------- box, stack, row: flex */
+
+/*
+ * .sdk-box lays children out in a row unless data-direction="column".
+ * .sdk-row and .sdk-stack are the two directions with a default gap.
+ */
+.sdk-box,
+.sdk-row,
+.sdk-stack {
+  display: flex;
+  flex-direction: row;
+  gap: var(--child-gap, var(--sdk-space-0));
+}
+
+.sdk-row,
+.sdk-stack {
+  gap: var(--child-gap, var(--sdk-space-16));
+}
+
+.sdk-stack,
+.sdk-box[data-direction="column"] {
+  flex-direction: column;
+}
+
+/*
+ * Alignment. x is the inline axis (start = the reading-direction start),
+ * y is the block axis. "between" spreads children along the main axis;
+ * "stretch" fills the cross axis (the flexbox default).
+ */
+:is(.sdk-row, .sdk-box:not([data-direction="column"]), .sdk-cluster)[data-align-x="start"] {
+  justify-content: flex-start;
+}
+
+:is(.sdk-row, .sdk-box:not([data-direction="column"]), .sdk-cluster)[data-align-x="center"] {
+  justify-content: center;
+}
+
+:is(.sdk-row, .sdk-box:not([data-direction="column"]), .sdk-cluster)[data-align-x="end"] {
+  justify-content: flex-end;
+}
+
+:is(.sdk-row, .sdk-box:not([data-direction="column"]), .sdk-cluster)[data-align-x="between"] {
+  justify-content: space-between;
+}
+
+:is(.sdk-row, .sdk-box:not([data-direction="column"]), .sdk-cluster)[data-align-y="start"] {
+  align-items: flex-start;
+}
+
+:is(.sdk-row, .sdk-box:not([data-direction="column"]), .sdk-cluster)[data-align-y="center"] {
+  align-items: center;
+}
+
+:is(.sdk-row, .sdk-box:not([data-direction="column"]), .sdk-cluster)[data-align-y="end"] {
+  align-items: flex-end;
+}
+
+:is(.sdk-row, .sdk-box:not([data-direction="column"]), .sdk-cluster)[data-align-y="stretch"] {
+  align-items: stretch;
+}
+
+:is(.sdk-row, .sdk-box:not([data-direction="column"]))[data-align-y="baseline"] {
+  align-items: baseline;
+}
+
+:is(.sdk-stack, .sdk-box[data-direction="column"])[data-align-x="start"] {
+  align-items: flex-start;
+}
+
+:is(.sdk-stack, .sdk-box[data-direction="column"])[data-align-x="center"] {
+  align-items: center;
+}
+
+:is(.sdk-stack, .sdk-box[data-direction="column"])[data-align-x="end"] {
+  align-items: flex-end;
+}
+
+:is(.sdk-stack, .sdk-box[data-direction="column"])[data-align-x="stretch"] {
+  align-items: stretch;
+}
+
+:is(.sdk-stack, .sdk-box[data-direction="column"])[data-align-y="start"] {
+  justify-content: flex-start;
+}
+
+:is(.sdk-stack, .sdk-box[data-direction="column"])[data-align-y="center"] {
+  justify-content: center;
+}
+
+:is(.sdk-stack, .sdk-box[data-direction="column"])[data-align-y="end"] {
+  justify-content: flex-end;
+}
+
+:is(.sdk-stack, .sdk-box[data-direction="column"])[data-align-y="between"] {
+  justify-content: space-between;
+}
+
+/* ------------------------------------------------------ child sizing */
+
+/* Min and max apply to any sized child. */
+:where([data-w]) {
+  min-inline-size: var(--w-min, auto);
+  max-inline-size: var(--w-max, none);
+}
+
+:where([data-h]) {
+  min-block-size: var(--h-min, auto);
+  max-block-size: var(--h-max, none);
+}
+
+/* Fixed and percent work inside any container, including grids and plain blocks. */
+:where([data-w="fixed"]) {
+  inline-size: var(--w);
+}
+
+:where([data-w="percent"]) {
+  inline-size: calc(var(--w) * 100%);
+}
+
+:where([data-w="fit"]) {
+  inline-size: fit-content;
+}
+
+:where([data-h="fixed"]) {
+  block-size: var(--h);
+}
+
+:where([data-h="percent"]) {
+  block-size: calc(var(--h) * 100%);
+}
+
+:where([data-h="fit"]) {
+  block-size: fit-content;
+}
+
+/* Width along a row is the main axis: sizing becomes flex. */
+:is(.sdk-row, .sdk-box:not([data-direction="column"]), .sdk-cluster) > [data-w="grow"] {
+  flex: 1 1 0;
+  min-inline-size: var(--w-min, 0);
+}
+
+:is(.sdk-row, .sdk-box:not([data-direction="column"]), .sdk-cluster) > [data-w="fit"] {
+  flex: 0 0 auto;
+}
+
+:is(.sdk-row, .sdk-box:not([data-direction="column"]), .sdk-cluster) > [data-w="fixed"] {
+  flex: 0 0 var(--w);
+}
+
+/* Percent may shrink a little so the gaps still fit. */
+:is(.sdk-row, .sdk-box:not([data-direction="column"]), .sdk-cluster) > [data-w="percent"] {
+  flex: 0 1 calc(var(--w) * 100%);
+}
+
+/* Width down a column is the cross axis. */
+:is(.sdk-stack, .sdk-box[data-direction="column"]) > [data-w="grow"] {
+  align-self: stretch;
+  inline-size: auto;
+}
+
+/* Height down a column is the main axis. */
+:is(.sdk-stack, .sdk-box[data-direction="column"]) > [data-h="grow"] {
+  flex: 1 1 0;
+  min-block-size: var(--h-min, 0);
+}
+
+:is(.sdk-stack, .sdk-box[data-direction="column"]) > [data-h="fit"] {
+  flex: 0 0 auto;
+}
+
+:is(.sdk-stack, .sdk-box[data-direction="column"]) > [data-h="fixed"] {
+  flex: 0 0 var(--h);
+}
+
+:is(.sdk-stack, .sdk-box[data-direction="column"]) > [data-h="percent"] {
+  flex: 0 1 calc(var(--h) * 100%);
+}
+
+/* Height across a row is the cross axis. */
+:is(.sdk-row, .sdk-box:not([data-direction="column"])) > [data-h="grow"] {
+  align-self: stretch;
+  block-size: auto;
+}
+
+/* --------------------------------------------------------------- grid */
+
+/*
+ * Responsive columns: as many as fit at --min wide (default 15rem), each
+ * growing to share the row. A single column never overflows a narrow screen.
+ */
+.sdk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--min, 15rem), 100%), 1fr));
+  gap: var(--child-gap, var(--sdk-space-16));
+}
+
+/* data-fit="auto-fit" lets a few items stretch across the whole row instead. */
+.sdk-grid[data-fit="auto-fit"] {
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--min, 15rem), 100%), 1fr));
+}
+
+/* ------------------------------------------------------------ cluster */
+
+/* A wrapping row for tags, buttons, and links. */
+.sdk-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--child-gap, var(--sdk-space-8));
+}
+
+/* ----------------------------------------------------------- switcher */
+
+/*
+ * A row that becomes a stack when its own width drops below --switch-at
+ * (default 30rem). It reacts to the space it is given, not the viewport, so
+ * it also stacks when text grows (LAY-07, TYP-10). More than four children
+ * always stack.
+ */
+.sdk-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--child-gap, var(--sdk-space-16));
+}
+
+.sdk-switcher > * {
+  flex-grow: 1;
+  flex-basis: calc((var(--switch-at, 30rem) - 100%) * 999);
+  min-inline-size: 0; /* wide content (code, tables) scrolls instead of widening the page */
+}
+
+.sdk-switcher > :nth-last-child(n + 5),
+.sdk-switcher > :nth-last-child(n + 5) ~ * {
+  flex-basis: 100%;
+}
+
+/* ------------------------------------------------------------- center */
+
+/*
+ * Caps content at a readable or page width and centers it. --measure sets
+ * the cap (default --sdk-size-measure). data-gutter adds the responsive page
+ * gutter outside the cap; --gutter sets a custom one.
+ */
+.sdk-center {
+  box-sizing: content-box;
+  max-inline-size: var(--measure, var(--sdk-size-measure));
+  margin-inline: auto;
+  padding-inline: var(--gutter, 0);
+}
+
+/* Breakpoints match the regular (40em) and wide (64em) tokens. */
+.sdk-center[data-gutter] {
+  padding-inline: var(--gutter, var(--sdk-space-gutter-compact));
+}
+
+@media (width >= 40em) {
+  .sdk-center[data-gutter] {
+    padding-inline: var(--gutter, var(--sdk-space-gutter-regular));
+  }
+}
+
+@media (width >= 64em) {
+  .sdk-center[data-gutter] {
+    padding-inline: var(--gutter, var(--sdk-space-gutter-wide));
+  }
+}
+
+/* -------------------------------------------------------------- float */
+
+/*
+ * Lifts a child out of the flow and pins it to an edge or corner of its
+ * parent, like a badge on a card. data-attach-x and data-attach-y take
+ * start, center, or end (default start, start). --offset-x and --offset-y
+ * move it inward from the edges it is attached to. --z picks the layer.
+ */
+.sdk-float {
+  position: absolute;
+  z-index: var(--z, var(--sdk-z-raised));
+  inset-inline-start: var(--offset-x, 0);
+  inset-block-start: var(--offset-y, 0);
+}
+
+:where(:has(> .sdk-float)) {
+  position: relative;
+}
+
+.sdk-float[data-attach-x="end"] {
+  inset-inline: auto var(--offset-x, 0);
+}
+
+.sdk-float[data-attach-x="center"] {
+  inset-inline: 0;
+  inline-size: fit-content;
+  margin-inline: auto;
+}
+
+.sdk-float[data-attach-y="end"] {
+  inset-block: auto var(--offset-y, 0);
+}
+
+.sdk-float[data-attach-y="center"] {
+  inset-block: 0;
+  block-size: fit-content;
+  margin-block: auto;
+}
+
+/* --------------------------------------------------------------- clip */
+
+/*
+ * Clips overflowing content. data-scroll="x", "y", or "both" makes that
+ * axis scroll instead; data-snap snaps children to the start edge.
+ */
+.sdk-clip {
+  overflow: clip;
+}
+
+.sdk-clip[data-scroll] {
+  overscroll-behavior: contain;
+}
+
+.sdk-clip[data-scroll="x"] {
+  overflow: auto hidden;
+}
+
+.sdk-clip[data-scroll="y"] {
+  overflow: hidden auto;
+}
+
+.sdk-clip[data-scroll="both"] {
+  overflow: auto;
+}
+
+.sdk-clip[data-scroll="x"][data-snap] {
+  scroll-snap-type: x mandatory;
+}
+
+.sdk-clip[data-scroll="y"][data-snap] {
+  scroll-snap-type: y mandatory;
+}
+
+.sdk-clip[data-snap] > * {
+  scroll-snap-align: start;
+}
+
+/* ------------------------------------------------------------- aspect */
+
+/*
+ * Holds a fixed shape (--ratio, default 1; e.g. 4 / 3 or 16 / 9). Media
+ * inside fills the frame and crops instead of stretching (LAY-10);
+ * data-fit="contain" letterboxes instead.
+ */
+.sdk-aspect {
+  aspect-ratio: var(--ratio, 1);
+  overflow: clip;
+}
+
+.sdk-aspect > :is(img, video, iframe, canvas, svg),
+.sdk-aspect > picture > img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.sdk-aspect > picture {
+  block-size: 100%;
+}
+
+.sdk-aspect[data-fit="contain"] > :is(img, video),
+.sdk-aspect[data-fit="contain"] > picture > img {
+  object-fit: contain;
+}

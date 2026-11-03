@@ -22,9 +22,14 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node }}
-      # No dependencies to install: the catalog and token tooling use Node built-ins only.
+          cache: npm
+      # Dev dependencies are Stylelint and PostCSS; the catalog, token, and playground tooling use Node built-ins.
+      - name: Install dev dependencies
+        run: npm ci
       - name: Unit tests
         run: npm test
+      - name: Lint CSS
+        run: npm run lint:css
       - name: Generated docs are up to date
         run: npm run catalog:docs:check
       - name: Generated tokens are up to date

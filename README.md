@@ -36,6 +36,67 @@ The CSS follows the OS appearance (`prefers-color-scheme`,
 `data-theme="light"` or `data-theme="dark"` on `<html>` to override the
 color scheme.
 
+## Base CSS and layout primitives
+
+Three stylesheets in `theme/assets/` make up the kit's CSS. Load them in this
+order; the Shopify theme will load the same files:
+
+```html
+<link rel="stylesheet" href="sdk-tokens.css">     <!-- generated tokens -->
+<link rel="stylesheet" href="sdk-base.css">       <!-- reset, text styles, focus, reduced motion -->
+<link rel="stylesheet" href="sdk-primitives.css"> <!-- layout primitives -->
+```
+
+Layouts are built from ten primitives: `.sdk-box`, `.sdk-stack`, `.sdk-row`,
+`.sdk-grid`, `.sdk-cluster`, `.sdk-switcher`, `.sdk-center`, `.sdk-float`,
+`.sdk-clip`, and `.sdk-aspect`. Each container sets a direction, a gap, padding,
+and alignment. Each child is sized as `grow`, `fit`, `fixed`, or `percent`.
+Keywords are data attributes and amounts are custom properties:
+
+```html
+<div class="sdk-row" data-align-y="center" style="--child-gap: var(--sdk-space-12)">
+  <img data-w="fixed" style="--w: 4rem" src="…" alt="…">
+  <p data-w="grow">Grows into the space that is left.</p>
+</div>
+```
+
+Start and end follow the reading direction, so `dir="rtl"` mirrors a layout.
+The header comment in `sdk-primitives.css` documents every option, and the
+playground has a live demo page.
+
+`npm run lint:css` runs Stylelint. Its kit rules enforce catalog standards:
+logical properties only (LAY-13), font sizes from text-style tokens in rem
+(TYP-02, TYP-05), no `pt`, colors from role tokens only (COL-06), and
+durations and easings from motion tokens (MOT-01). `catalog/lint-map.json`
+maps each rule to its standard. CI runs the linter.
+
+## Playground: prototype live
+
+```sh
+npm install
+npm run dev
+```
+
+`npm run dev` starts a small local server (localhost only) and opens the
+playground in your browser. It reloads the page every time you save a file.
+Saved CSS is swapped in without a reload, so you keep your scroll position.
+
+- **Starters.** The playground links a primitives demo and three starter pages,
+  a landing page, a product page, and a collection grid, to copy from.
+- **Sketches.** `npm run sketch -- my-idea` copies the landing starter to
+  `sketches/my-idea/index.html`. Add `--from product` or
+  `--from collection` to start from another one. `sketches/` is gitignored,
+  so half-finished and client ideas never reach this public repo.
+- **Design panel.** The **Design** button in the corner of every page opens
+  sliders for spacing, type scale, and corner radius, plus color pickers for
+  the main color roles. Changes show up on the page at once, and contrast
+  ratios update as you go. **Copy CSS** copies only the values you changed,
+  as a `:root { … }` block plus one block per appearance for picked colors.
+  Paste it into a sketch stylesheet, or carry the numbers into
+  `tokens/*.tokens.json` and run `npm run tokens`.
+
+More detail is in [playground/README.md](playground/README.md).
+
 ## License
 
 MIT. See [LICENSE](LICENSE). Third-party material and its licenses are listed in
