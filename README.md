@@ -108,6 +108,33 @@ Saved CSS is swapped in without a reload, so you keep your scroll position.
 
 More detail is in [playground/README.md](playground/README.md).
 
+## Standards tests
+
+`npm test` runs the node unit tests: tokens, lint rules, the playground
+server, and the tooling. The browser suite is Playwright with axe-core, run
+against the playground pages in the PR-smoke projects: iPhone 17 Pro, iPad
+Mini, and Desktop Chrome, each in light and dark, plus 200% text and reduced
+motion on the iPhone.
+
+```sh
+npm run test:e2e:docker   # in the pinned Playwright image, like CI (needs Docker)
+npm run test:e2e          # with local browsers; screenshot tests skip
+```
+
+Tests carry catalog IDs as tags (`@ACC-01`), and failures name the standard
+with its HIG and WCAG links. They check reflow at 320px, 44px targets, focus
+order and focus rings, text spacing, 200% text, dark mode, increased contrast,
+reduced motion, and axe's WCAG 2.2 AA rules. Screenshot baselines of the
+primitives demo and the starters are committed. They are rendered only in the
+pinned Playwright image, so they match on every machine.
+
+`npm run catalog:check` reports which standards have tests, from what the
+test runners report rather than from test source. CI runs it with `--enforce`
+after the Playwright run. It fails if a standard listed in
+`catalog/enforced.json` loses its tests, or if a test names an unknown ID.
+Details, including how to update baselines, are in
+[tests/e2e/README.md](tests/e2e/README.md).
+
 ## License
 
 MIT. See [LICENSE](LICENSE). Third-party material and its licenses are listed in
