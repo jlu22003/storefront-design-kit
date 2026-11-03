@@ -18,6 +18,25 @@ Shopify.
 Typography uses open fonts only: Inter for UI and body text, Source Serif 4 for
 optional editorial headings, and IBM Plex Mono for code and numbers.
 
+## Design tokens
+
+Token sources live in `tokens/` as [DTCG](https://www.designtokens.org/)
+JSON: `core.tokens.json` for spacing, type, radii, motion, sizes and the like,
+and one `color.<mode>.tokens.json` per appearance (light, dark, and their
+increased-contrast variants).
+
+- `npm run tokens` builds `dist/sdk-tokens.css` (custom properties prefixed
+  `--sdk-`), `dist/tokens.json`, and the committed copy the theme loads,
+  `theme/assets/sdk-tokens.css`.
+- `npm run tokens:check` fails when that committed copy is stale. CI runs it.
+- `npm test` includes the token tests in `tests/tokens/`, named by catalog ID.
+  They check WCAG contrast for every text role in every mode.
+
+The CSS follows the OS appearance (`prefers-color-scheme`,
+`prefers-contrast: more`, `prefers-reduced-motion`). Set
+`data-theme="light"` or `data-theme="dark"` on `<html>` to override the
+color scheme.
+
 ## License
 
 MIT. See [LICENSE](LICENSE). Third-party material and its licenses are listed in
