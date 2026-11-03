@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Format frames · storefront-design-kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap">
+<link rel="stylesheet" href="/theme/assets/sdk-tokens.css">
+<link rel="stylesheet" href="/theme/assets/sdk-base.css">
+<link rel="stylesheet" href="/theme/assets/sdk-primitives.css">
+<link rel="stylesheet" href="/playground/assets/sketch.css">
+<link rel="stylesheet" href="/playground/assets/tools.css">
+</head>
+<!--
+  Format frames: one page shown at every format side by side. Each frame is
+  an iframe at the format's real size, scaled down to fit. Frames follow this
+  page's Design panel, and the print frame shows the page's print styles.
+-->
+<body>
+<header class="pg-toolbar">
+  <div class="sdk-center sdk-stack" data-gutter style="--measure: 120rem; --padding-block: var(--sdk-space-16); --child-gap: var(--sdk-space-12)">
+    <div class="sdk-cluster" data-align-y="center" style="--child-gap: var(--sdk-space-12)">
+      <a class="sdk-text-footnote" href="/playground/">Playground</a>
+      <h1 class="sdk-text-title-2">Format frames</h1>
+    </div>
+    <div class="sdk-cluster" data-align-y="end" style="--child-gap: var(--sdk-space-24)">
+      <form id="source" class="sdk-stack" style="--child-gap: var(--sdk-space-4)">
+        <label for="src" class="sdk-text-subhead sdk-text-semibold">Page</label>
+        <div class="sdk-cluster" style="--child-gap: var(--sdk-space-8)">
+          <input id="src" name="src" class="pg-field" list="pages" size="36" autocomplete="off" spellcheck="false" aria-describedby="src-error">
+          <datalist id="pages"></datalist>
+          <button class="pg-button" type="submit">Show</button>
+        </div>
+        <p id="src-error" class="sdk-text-footnote pg-error" data-error role="alert"></p>
+      </form>
+      <div class="sdk-stack" style="--child-gap: var(--sdk-space-4)">
+        <div class="sdk-cluster" data-align-x="between" style="--child-gap: var(--sdk-space-8)">
+          <label for="height" class="sdk-text-subhead sdk-text-semibold">Frame height</label>
+          <output id="height-value" for="height" class="sdk-text-subhead sdk-font-mono"></output>
+        </div>
+        <div class="sdk-cluster" data-align-y="center" style="--child-gap: var(--sdk-space-8)">
+          <input id="height" type="range" min="120" max="1200" step="10" aria-describedby="fit-hint">
+          <button id="fit" class="pg-button" data-variant="secondary" type="button">Fit</button>
+        </div>
+        <p id="fit-hint" class="sdk-text-footnote sdk-text-secondary">Fit puts every frame in one row.</p>
+      </div>
+    </div>
+    <p class="sdk-text-footnote sdk-text-secondary">
+      Use the <strong>Design</strong> button to restyle every frame at once.
+      Frames scroll on their own; the print frame emulates print media.
+    </p>
+  </div>
+</header>
+
+<main class="sdk-center" data-gutter style="--measure: 120rem; --padding-block: var(--sdk-space-32)">
+  <ul id="frames" class="pg-frames" role="list" aria-label="Formats"></ul>
+</main>
+
+<script type="module">
+  import { FORMATS, fitScale, rowFitHeight } from '/playground/dev/formats.js';
+  import { bindSourceForm } from '/playground/dev/tools.js';
+  import { el } from '/playground/dev/util.js';
+
+  const src = bindSourceForm(document.querySelector('#source'));
+  const list = document.querySelector('#frames');
+  const height = document.querySelector('#height');
+  const heightValue = document.querySelector('#height-value');
+  const toolbar = document.querySelector('.pg-toolbar');
+
+  // Fit: every frame side by side in one row, no taller than the window.
+  function fitHeight() {
+    const gap = Number.parseFloat(getComputedStyle(list).columnGap) || 0;
+    const row = rowFitHeight(FORMATS, { width: list.clientWidth - 8, gap });
+    const visible = innerHeight - toolbar.offsetHeight - 96;
+    // Round down to the slider step, so rounding never pushes a frame onto a second row.
+    height.value = String(Math.max(Number(height.min), Math.floor(Math.min(row, visible) / 10) * 10));
+  }
+
+  const frames = src
+    ? FORMATS.map((format) => {
+        const size = el('span', { class: 'sdk-text-footnote sdk-text-secondary sdk-font-mono' });
+        const frame = el('iframe', {
+          src,
+          'data-sdk-embed': format.print ? 'print' : 'frame',
+          width: format.width,
+          height: format.height,
+          title: `${format.label}, ${format.width} by ${format.height}: ${src}`,
+        });
+        const viewport = el('div', { class: 'pg-frame-viewport' }, [frame]);
+        list.append(
+          el('li', { class: 'pg-frame', 'data-format': format.id }, [
+            el('div', { class: 'sdk-cluster', 'data-align-y': 'baseline', style: '--child-gap: var(--sdk-space-8)' }, [
+              el('h2', { class: 'sdk-text-headline', text: format.label }),
+              size,
+            ]),
+            viewport,
+          ]),
+        );
+        return { format, frame, viewport, size };
+      })
+    : [];
+
+  function layout() {
+    const maxHeight = Number(height.value);
+    heightValue.textContent = `${maxHeight}px`;
+    const maxWidth = list.clientWidth;
+    for (const { format, frame, viewport, size } of frames) {
+      const scale = fitScale(format, { maxHeight, maxWidth });
+      frame.style.transform = `scale(${scale})`;
+      viewport.style.inlineSize = `${Math.round(format.width * scale)}px`;
+      viewport.style.blockSize = `${Math.round(format.height * scale)}px`;
+      size.textContent = `${format.width} × ${format.height} · ${Math.round(scale * 100)}%`;
+    }
+  }
+
+  height.addEventListener('input', layout);
+  document.querySelector('#fit').addEventListener('click', () => {
+    fitHeight();
+    layout();
+  });
+  fitHeight();
+  new ResizeObserver(layout).observe(list);
+  layout();
+</script>
+</body>
+</html>
