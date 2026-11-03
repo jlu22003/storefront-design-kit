@@ -194,6 +194,13 @@ describe('sizes and spacing', () => {
     assert.ok(core('size.measure-max').value <= 75);
     for (const name of ['size.measure', 'size.measure-max']) assert.equal(core(name).extensions.unit, 'ch');
   });
+
+  test('LAY-12 the regular, wide and xwide breakpoints are 40em, 64em and 80em', () => {
+    const css = renderCss(model);
+    for (const [name, value] of [['regular', '40em'], ['wide', '64em'], ['xwide', '80em']]) {
+      assert.match(css, new RegExp(`--sdk-breakpoint-${name}: ${value};`));
+    }
+  });
 });
 
 describe('motion', () => {

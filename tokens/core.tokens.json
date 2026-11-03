@@ -228,9 +228,6 @@
     "$type": "dimension",
     "hairline": {
       "$value": { "value": 1, "unit": "px" }
-    },
-    "thick": {
-      "$value": { "value": 2, "unit": "px" }
     }
   },
   "stroke-width": {
@@ -315,18 +312,33 @@
     }
   },
   "breakpoint": {
-    "$type": "dimension",
+    "$type": "number",
     "regular": {
-      "$value": { "value": 40, "unit": "rem" },
-      "$description": "Regular width starts here (640px); below it is compact."
+      "$value": 40,
+      "$description": "Regular width starts here (640px at a 16px default); below it is compact. In em, as media queries need.",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "unit": "em"
+        }
+      }
     },
     "wide": {
-      "$value": { "value": 64, "unit": "rem" },
-      "$description": "Wide width starts here (1024px)."
+      "$value": 64,
+      "$description": "Wide width starts here (1024px at a 16px default).",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "unit": "em"
+        }
+      }
     },
     "xwide": {
-      "$value": { "value": 80, "unit": "rem" },
-      "$description": "Extra-wide width starts here (1280px)."
+      "$value": 80,
+      "$description": "Extra-wide width starts here (1280px at a 16px default).",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "unit": "em"
+        }
+      }
     }
   },
   "duration": {

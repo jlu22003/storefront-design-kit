@@ -67,7 +67,6 @@
   --sdk-radius-24: 24px;
   --sdk-radius-full: 9999px;
   --sdk-border-width-hairline: 1px;
-  --sdk-border-width-thick: 2px;
   --sdk-stroke-width-icon: 2;
   --sdk-focus-width: 2px;
   --sdk-focus-offset: 2px;
@@ -79,9 +78,9 @@
   --sdk-size-icon-lg: 1.5em;
   --sdk-size-measure: 66ch;
   --sdk-size-measure-max: 75ch;
-  --sdk-breakpoint-regular: 40rem;
-  --sdk-breakpoint-wide: 64rem;
-  --sdk-breakpoint-xwide: 80rem;
+  --sdk-breakpoint-regular: 40em;
+  --sdk-breakpoint-wide: 64em;
+  --sdk-breakpoint-xwide: 80em;
   --sdk-duration-0: 0ms;
   --sdk-duration-fast: 120ms;
   --sdk-duration-base: 200ms;
