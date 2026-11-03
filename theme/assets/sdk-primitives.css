@@ -305,6 +305,9 @@
 }
 
 .sdk-switcher > * {
+  /* Children read the switcher's threshold, even a child that is a primitive itself and resets its own. */
+  --switch-at: inherit;
+
   flex-grow: 1;
   flex-basis: calc((var(--switch-at, 30rem) - 100%) * 999);
   min-inline-size: 0; /* wide content (code, tables) scrolls instead of widening the page */
