@@ -1,0 +1,12 @@
+# Example Shopify CLI environments file.
+#
+# Copy this file to `shopify.theme.toml` and fill in your own values.
+# The real `shopify.theme.toml` is gitignored because it can hold a
+# Theme Access password (`shptka_...`). Never commit it.
+#
+# Docs: https://shopify.dev/docs/storefronts/themes/tools/cli/environments
+
+[environments.development]
+store = "your-dev-store.myshopify.com"
+# theme = "000000000000"
+# password = ""

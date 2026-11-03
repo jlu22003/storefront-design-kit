@@ -1,0 +1,65 @@
+# --- Secrets & Shopify CLI ---------------------------------------------
+.env
+.env.*
+!.env.example
+shopify.theme.toml
+.shopify/
+*.pem
+*.key
+*.p12
+.npmrc.local
+
+# --- Client / merchant material (never in the public kit) --------------
+clients/
+**/client-*/
+# client theme state (the demo theme's sanitized copy is allow-listed below)
+**/config/settings_data.json
+!theme/config/settings_data.json
+
+# --- Restrictively licensed assets ------------------------------------
+*.ttf
+*.otf
+*.woff
+*.woff2
+*.dfont
+!assets/fonts/ofl/**
+*.dmg
+*.pkg
+apple-design-resources/
+design/vendor/
+**/sf-symbols/**
+*.symbols
+*.sketch
+
+# --- Dependencies & build ---------------------------------------------
+node_modules/
+dist/
+*.zip
+
+# --- Test artifacts ---------------------------------------------------
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+.lighthouseci/
+coverage/
+tests/**/__screenshots__/clients/
+
+# --- OS / editor / logs -------------------------------------------------
+.DS_Store
+._*
+Thumbs.db
+ehthumbs.db
+.Spotlight-V100
+.Trashes
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+*~
+*.log
+npm-debug.log*
+
+# --- Local agent settings ------------------------------------------------
+.claude/settings.local.json
