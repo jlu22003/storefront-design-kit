@@ -1,0 +1,4103 @@
+{
+  "$comment": "Source of truth for the standards catalog. Rules are web adaptations written in our own words, informed by Apple's Human Interface Guidelines; no HIG prose is copied. STANDARDS.md is generated from this file: run `npm run catalog:docs`.",
+  "version": 1,
+  "sources": {
+    "hig": "https://developer.apple.com/design/human-interface-guidelines/",
+    "wcag": "https://www.w3.org/TR/WCAG22/"
+  },
+  "units": "1 HIG pt = 1 CSS px, written in rem at a 16 px root unless the rule says px. The CSS pt unit is banned (LIB-01).",
+  "families": [
+    {
+      "id": "LAY",
+      "name": "Layout and adaptivity"
+    },
+    {
+      "id": "TYP",
+      "name": "Typography"
+    },
+    {
+      "id": "COL",
+      "name": "Color"
+    },
+    {
+      "id": "DRK",
+      "name": "Dark mode"
+    },
+    {
+      "id": "ACC",
+      "name": "Accessibility"
+    },
+    {
+      "id": "MOT",
+      "name": "Motion"
+    },
+    {
+      "id": "MAT",
+      "name": "Materials and depth"
+    },
+    {
+      "id": "ICN",
+      "name": "Icons"
+    },
+    {
+      "id": "IMG",
+      "name": "Imagery"
+    },
+    {
+      "id": "BTN",
+      "name": "Buttons and actions"
+    },
+    {
+      "id": "FRM",
+      "name": "Forms and inputs"
+    },
+    {
+      "id": "NAV",
+      "name": "Navigation and search"
+    },
+    {
+      "id": "MOD",
+      "name": "Modals, sheets, popovers, alerts"
+    },
+    {
+      "id": "LST",
+      "name": "Lists, collections, grids"
+    },
+    {
+      "id": "FBK",
+      "name": "Feedback, loading, progress"
+    },
+    {
+      "id": "WRT",
+      "name": "Writing"
+    },
+    {
+      "id": "COM",
+      "name": "Commerce patterns"
+    }
+  ],
+  "standards": [
+    {
+      "id": "LAY-01",
+      "family": "LAY",
+      "rule": "Put the most important content first in reading order (top, then the inline-start side). DOM order matches visual order.",
+      "threshold": "No `tabindex>0`. No CSS `order` or `*-reverse` on interactive siblings.",
+      "hig": [
+        {
+          "slug": "layout",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/layout"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.3.2",
+          "level": "A"
+        },
+        {
+          "sc": "2.4.3",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "LAY-02",
+      "family": "LAY",
+      "rule": "Align items to a shared grid. Indentation shows subordination. Group related items with spacing, containers, or separators.",
+      "threshold": "Spacing comes from tokens only",
+      "hig": [
+        {
+          "slug": "layout",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/layout"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.3.1",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "visual",
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "LAY-03",
+      "family": "LAY",
+      "rule": "Use progressive disclosure for secondary detail (accordion, menu, \"more\" page) rather than showing everything.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "layout",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/layout"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "LAY-04",
+      "family": "LAY",
+      "rule": "Adapt to available space (container or viewport width), never to user-agent or device type.",
+      "threshold": "No UA sniffing in JS",
+      "hig": [
+        {
+          "slug": "layout",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/layout"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.3.4",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "principle",
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "LAY-05",
+      "family": "LAY",
+      "rule": "Functionality is identical at every width. Only how much is visible, and how it is arranged, changes (e.g., nav links ↔ drawer, sidebar filters ↔ filter sheet).",
+      "threshold": "Key flows pass at 320 px and 1280 px",
+      "hig": [
+        {
+          "slug": "layout",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/layout"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.10",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "LAY-06",
+      "family": "LAY",
+      "rule": "Reflow: vertical content never needs two-dimensional scrolling at 320 CSS px width.",
+      "threshold": "`scrollWidth ≤ innerWidth` at 320 px",
+      "hig": [
+        {
+          "slug": "layout",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/layout"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.10",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "LAY-07",
+      "family": "LAY",
+      "rule": "Layout survives large text: adjacent items stack, containers grow, nothing clips or overlaps.",
+      "threshold": "200% root font-size: no clipped text, no horizontal scroll",
+      "hig": [
+        {
+          "slug": "layout",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/layout"
+        },
+        {
+          "slug": "typography",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/typography"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.4",
+          "level": "AA"
+        },
+        {
+          "sc": "1.4.12",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated",
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "LAY-08",
+      "family": "LAY",
+      "rule": "Respect safe areas. With `viewport-fit=cover`, backgrounds bleed edge to edge while controls sit inside `env(safe-area-inset-*)`.",
+      "threshold": "Fixed and sticky bars pad by `env()`",
+      "hig": [
+        {
+          "slug": "layout",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/layout"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated",
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "LAY-09",
+      "family": "LAY",
+      "rule": "Constrain prose to a readable measure.",
+      "threshold": "≤ 75ch max, 66ch target (ours)",
+      "hig": [
+        {
+          "slug": "layout",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/layout"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "LAY-10",
+      "family": "LAY",
+      "rule": "Full-bleed media fills its frame without distortion: scale or crop (`object-fit: cover`), never stretch.",
+      "threshold": "No `object-fit: fill` on media with mismatched ratio",
+      "hig": [
+        {
+          "slug": "layout",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/layout"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated",
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "LAY-11",
+      "family": "LAY",
+      "rule": "Fixed or sticky chrome (header, bottom cart bar) never fully hides the focused element or critical controls.",
+      "threshold": "Focused element at least partly visible; `scroll-padding` set",
+      "hig": [
+        {
+          "slug": "layout",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/layout",
+          "note": "macOS"
+        },
+        {
+          "slug": "scroll-views",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/scroll-views"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.4.11",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "LAY-12",
+      "family": "LAY",
+      "rule": "Use size classes: compact / regular / wide breakpoints at page level, container queries inside components.",
+      "threshold": "Breakpoints from tokens only",
+      "hig": [
+        {
+          "slug": "layout",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/layout"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "LAY-13",
+      "family": "LAY",
+      "rule": "RTL-ready: logical properties (`margin-inline-start`, `inset-inline-end`, `text-align: start`), so `dir=\"rtl\"` mirrors the layout.",
+      "threshold": "Stylelint bans physical left/right properties",
+      "hig": [
+        {
+          "slug": "right-to-left",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/right-to-left"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.3.2",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "LAY-14",
+      "family": "LAY",
+      "rule": "RTL exceptions: don't mirror numerals, logos, photos, media controls that point to real directions, or real-world objects. Do mirror back/forward chevrons, progress, and text-direction icons.",
+      "threshold": "`dir=rtl` screenshot set",
+      "hig": [
+        {
+          "slug": "right-to-left",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/right-to-left"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "visual",
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "TYP-01",
+      "family": "TYP",
+      "rule": "Default reading text is the Body style. No rendered text is smaller than the minimum.",
+      "threshold": "Body 17 px (1.0625rem); min 11 px anywhere; storefront legal or meta text ≥ 12 px (ours)",
+      "hig": [
+        {
+          "slug": "typography",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/typography"
+        },
+        {
+          "slug": "accessibility",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/accessibility"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "TYP-02",
+      "family": "TYP",
+      "rule": "Font sizes use `rem`/`em` so browser text-size settings scale them (the Dynamic Type analogue). Never set the root font-size in px.",
+      "threshold": "Stylelint: `font-size` units ∈ {rem, em, %}; `html` font-size not px",
+      "hig": [
+        {
+          "slug": "typography",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/typography"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.4",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "TYP-03",
+      "family": "TYP",
+      "rule": "Text enlarges to at least 200% with no loss of content or function.",
+      "threshold": "200% text-only and 200% page zoom",
+      "hig": [
+        {
+          "slug": "accessibility",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/accessibility"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.4",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "TYP-04",
+      "family": "TYP",
+      "rule": "No light weights for UI text. Use regular, semibold, or bold only. A thin display face needs larger sizes.",
+      "threshold": "Computed `font-weight ≥ 400`; token weights {400, 600, 700}",
+      "hig": [
+        {
+          "slug": "typography",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/typography"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "TYP-05",
+      "family": "TYP",
+      "rule": "Hierarchy comes from a fixed set of text styles (Large Title … Caption 2, plus 2 display sizes). No ad-hoc sizes.",
+      "threshold": "Stylelint: `font-size` must be a `var(--sdk-font-size-*)`",
+      "hig": [
+        {
+          "slug": "typography",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/typography"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.3.1",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "TYP-06",
+      "family": "TYP",
+      "rule": "Minimise typefaces.",
+      "threshold": "≤ 2 families per page (sans + optional serif/display); mono only in code, SKUs, and numbers",
+      "hig": [
+        {
+          "slug": "typography",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/typography"
+        },
+        {
+          "slug": "branding",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/branding"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": [],
+      "note": "Revised from the research report for the owner decision of 2026-11-03: open fonts only (Inter, Source Serif 4, IBM Plex Mono; all OFL-1.1), no SF Pro."
+    },
+    {
+      "id": "TYP-07",
+      "family": "TYP",
+      "rule": "Leading suits the use: tight for single-line UI, loose for long passages. Never tight leading on 3+ lines.",
+      "threshold": "UI ≥ 1.25; `.prose` ≥ 1.45",
+      "hig": [
+        {
+          "slug": "typography",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/typography"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.12",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "TYP-08",
+      "family": "TYP",
+      "rule": "User text-spacing overrides cause no clipping or overlap.",
+      "threshold": "Inject line-height 1.5, paragraph spacing 2em, letter-spacing 0.12em, word-spacing 0.16em; no overflow clip",
+      "hig": [
+        {
+          "slug": "typography",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/typography"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.12",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "TYP-09",
+      "family": "TYP",
+      "rule": "Minimise truncation as text grows. Important text (product titles, prices, errors) wraps. Any truncated text is available in full on the same or the next view.",
+      "threshold": "Clamp ≤ 3 lines on cards; full text on PDP",
+      "hig": [
+        {
+          "slug": "typography",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/typography"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.4",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "visual",
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "TYP-10",
+      "family": "TYP",
+      "rule": "At large text sizes, drop columns and stack secondary items (badges, prices, timestamps) under the text.",
+      "threshold": "200% matrix screenshots",
+      "hig": [
+        {
+          "slug": "typography",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/typography"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.10",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "TYP-11",
+      "family": "TYP",
+      "rule": "Keep hierarchy order stable as text grows (primary items stay first and on top).",
+      "threshold": "200% matrix screenshots",
+      "hig": [
+        {
+          "slug": "typography",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/typography"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.3.2",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "TYP-12",
+      "family": "TYP",
+      "rule": "Font delivery: open (OFL-1.1) fonts only. Inter for UI and body text, Source Serif 4 for optional editorial headings, IBM Plex Mono for code and numbers. No SF Pro, not even through system-font keywords; never ship Apple font files (§3.1).",
+      "threshold": "Asset scan rejects `SF-*`, `SFNS*`, `SFPro*`, `NewYork*`; `@font-face` must not name SF; font stacks do not name `-apple-system`, `BlinkMacSystemFont`, or SF fonts",
+      "hig": [
+        {
+          "slug": "typography",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/typography"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": [
+        "LIB-12"
+      ],
+      "note": "Revised from the research report for the owner decision of 2026-11-03: open fonts only (Inter, Source Serif 4, IBM Plex Mono; all OFL-1.1), no SF Pro."
+    },
+    {
+      "id": "TYP-13",
+      "family": "TYP",
+      "rule": "Custom (web) fonts still honour user text size; use `font-display: swap` and metric-matched fallbacks to avoid layout shift.",
+      "threshold": "CLS ≤ 0.1 (Lighthouse)",
+      "hig": [
+        {
+          "slug": "typography",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/typography"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "COL-01",
+      "family": "COL",
+      "rule": "Text contrast meets the minimum against its actual background, in every appearance mode.",
+      "threshold": "4.5:1; 3:1 for large text (≥ 24 px, or ≥ 18.66 px bold) (LIB-04)",
+      "hig": [
+        {
+          "slug": "accessibility",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/accessibility"
+        },
+        {
+          "slug": "color",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/color"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.3",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": [
+        "LIB-04"
+      ]
+    },
+    {
+      "id": "COL-02",
+      "family": "COL",
+      "rule": "Primary and secondary text roles aim higher, as HIG dark-mode guidance asks for custom colors.",
+      "threshold": "≥ 7:1 for `label`/`label-secondary` on base surfaces",
+      "hig": [
+        {
+          "slug": "dark-mode",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/dark-mode"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.6",
+          "level": "AAA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "COL-03",
+      "family": "COL",
+      "rule": "Component boundaries, focus indicators, and meaningful icons contrast with adjacent colors.",
+      "threshold": "≥ 3:1",
+      "hig": [
+        {
+          "slug": "accessibility",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/accessibility"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.11",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "COL-04",
+      "family": "COL",
+      "rule": "Never use color alone for meaning (sale price, error, stock state, selected swatch, link in text). Add text, an icon, a shape, or an underline.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "color",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/color"
+        },
+        {
+          "slug": "accessibility",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/accessibility"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.1",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated",
+        "principle"
+      ],
+      "automatedScope": "partial",
+      "liberties": []
+    },
+    {
+      "id": "COL-05",
+      "family": "COL",
+      "rule": "One meaning per color. Accent means interactive / primary action, so non-interactive text never uses the accent or link color.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "color",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/color"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle",
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "COL-06",
+      "family": "COL",
+      "rule": "Components use semantic role tokens only (`bg`, `label`, `separator`, `link`, `accent`, `status-*`) and never repurpose a role (e.g., separator as text).",
+      "threshold": "Stylelint: no hex/rgb/hsl/named colors outside the tokens build",
+      "hig": [
+        {
+          "slug": "color",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/color"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "COL-07",
+      "family": "COL",
+      "rule": "Every color role defines four values: light, dark, increased-contrast light, increased-contrast dark.",
+      "threshold": "Token schema test",
+      "hig": [
+        {
+          "slug": "color",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/color"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "COL-08",
+      "family": "COL",
+      "rule": "Use accent sparingly: at most 1–2 filled-accent (prominent) buttons per view.",
+      "threshold": "≤ 2 visible `.sdk-button--prominent` per viewport",
+      "hig": [
+        {
+          "slug": "buttons",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/buttons"
+        },
+        {
+          "slug": "branding",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/branding"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "COL-09",
+      "family": "COL",
+      "rule": "Over colourful content (hero images, colored sections), controls go monochrome rather than adding accent-coloured labels.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "color",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/color"
+        },
+        {
+          "slug": "buttons",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/buttons"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "COL-10",
+      "family": "COL",
+      "rule": "Images use or embed sRGB. P3 is optional, gated by `@media (color-gamut: p3)` with an sRGB fallback.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "color",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/color"
+        },
+        {
+          "slug": "images",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/images"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "COL-11",
+      "family": "COL",
+      "rule": "Don't hard-code Apple system color values. They are reference only; tokens are our own.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "color",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/color"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "COL-12",
+      "family": "COL",
+      "rule": "Status colors are consistent site-wide, and their cultural meaning is reviewed (red is not universally \"danger\").",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "color",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/color"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "DRK-01",
+      "family": "DRK",
+      "rule": "Follow the OS appearance (`prefers-color-scheme`) and declare `color-scheme: light dark`. Any site toggle defaults to \"System\" (LIB-15).",
+      "threshold": "Dark tokens render under `emulateMedia({colorScheme:'dark'})`",
+      "hig": [
+        {
+          "slug": "dark-mode",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/dark-mode"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": [
+        "LIB-15"
+      ]
+    },
+    {
+      "id": "DRK-02",
+      "family": "DRK",
+      "rule": "A dark palette is designed, not inverted: dimmer backgrounds, brighter foregrounds, base vs elevated surfaces. Sheets, popovers, and dialogs use elevated.",
+      "threshold": "Token test: luminance of elevated > base in dark",
+      "hig": [
+        {
+          "slug": "dark-mode",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/dark-mode"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated",
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "DRK-03",
+      "family": "DRK",
+      "rule": "Check contrast in light, dark, and both increased-contrast modes.",
+      "threshold": "axe run in every color project",
+      "hig": [
+        {
+          "slug": "dark-mode",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/dark-mode"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.3",
+          "level": "AA"
+        },
+        {
+          "sc": "1.4.11",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "DRK-04",
+      "family": "DRK",
+      "rule": "Soften white-background product images in dark mode so they don't glow.",
+      "threshold": "`--sdk-media-dim-dark: 0.92` brightness (ours)",
+      "hig": [
+        {
+          "slug": "dark-mode",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/dark-mode"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "DRK-05",
+      "family": "DRK",
+      "rule": "Icons work in both appearances. SVG icons use `currentColor`; raster logos get dark variants.",
+      "threshold": "Lint: SVG icons have no hard-coded fill",
+      "hig": [
+        {
+          "slug": "dark-mode",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/dark-mode"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.11",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated",
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "DRK-06",
+      "family": "DRK",
+      "rule": "Native form controls follow the scheme through `color-scheme`; custom fields use role tokens.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "dark-mode",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/dark-mode"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ACC-01",
+      "family": "ACC",
+      "rule": "Touch and click targets meet the default control size. The WCAG minimum is an absolute floor for dense inline cases.",
+      "threshold": "Default ≥ 44×44 px; floor 24×24 px with spacing exception",
+      "hig": [
+        {
+          "slug": "accessibility",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/accessibility"
+        },
+        {
+          "slug": "buttons",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/buttons"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.5.8",
+          "level": "AA"
+        },
+        {
+          "sc": "2.5.5",
+          "level": "AAA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ACC-02",
+      "family": "ACC",
+      "rule": "Space between targets matters as much as size.",
+      "threshold": "~12 px around bezeled controls, ~24 px around borderless ones",
+      "hig": [
+        {
+          "slug": "accessibility",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/accessibility"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.5.8",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "automatedSeverity": "warn",
+      "liberties": []
+    },
+    {
+      "id": "ACC-03",
+      "family": "ACC",
+      "rule": "Every control has an accessible name; icon-only buttons have labels; the visible label is part of the name.",
+      "threshold": "axe `button-name`, `link-name`, `label`, `label-content-name-mismatch`",
+      "hig": [
+        {
+          "slug": "voiceover",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/voiceover"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "4.1.2",
+          "level": "A"
+        },
+        {
+          "sc": "2.5.3",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ACC-04",
+      "family": "ACC",
+      "rule": "Meaningful images get alt text; decorative images get `alt=\"\"` or `aria-hidden`.",
+      "threshold": "axe `image-alt`, `svg-img-alt`, `role-img-alt`",
+      "hig": [
+        {
+          "slug": "voiceover",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/voiceover"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.1.1",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ACC-05",
+      "family": "ACC",
+      "rule": "Headings and landmarks give structure: one `h1`, no skipped levels, header/nav/main/footer.",
+      "threshold": "axe `page-has-heading-one`, `heading-order`, `landmark-one-main`, `region`",
+      "hig": [
+        {
+          "slug": "voiceover",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/voiceover"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.3.1",
+          "level": "A"
+        },
+        {
+          "sc": "2.4.6",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ACC-06",
+      "family": "ACC",
+      "rule": "Announce dynamic changes (cart count, add-to-cart result, filter result counts) through a live region.",
+      "threshold": "`role=\"status\"` updated after the action",
+      "hig": [
+        {
+          "slug": "voiceover",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/voiceover"
+        },
+        {
+          "slug": "feedback",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/feedback"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "4.1.3",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ACC-07",
+      "family": "ACC",
+      "rule": "Everything works by keyboard alone, including dropdown/mega navigation. No keyboard traps.",
+      "threshold": "Playwright Tab walk reaches every interactive element; Esc closes overlays",
+      "hig": [
+        {
+          "slug": "accessibility",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/accessibility"
+        },
+        {
+          "slug": "keyboards",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/keyboards"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.1.1",
+          "level": "A"
+        },
+        {
+          "sc": "2.1.2",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ACC-08",
+      "family": "ACC",
+      "rule": "Don't override browser or OS shortcuts. Custom shortcuts only for frequent commands, never single-character without a modifier.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "keyboards",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/keyboards"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.1.4",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ACC-09",
+      "family": "ACC",
+      "rule": "Every focusable element shows a visible focus indicator.",
+      "threshold": "`:focus-visible` outline ≥ 2 px, ≥ 3:1 vs unfocused state and adjacent color",
+      "hig": [
+        {
+          "slug": "focus-and-selection",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/focus-and-selection"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.4.7",
+          "level": "AA"
+        },
+        {
+          "sc": "2.4.13",
+          "level": "AAA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ACC-10",
+      "family": "ACC",
+      "rule": "Focus never moves without user action. Focus order follows DOM order. Only a dedicated search page may autofocus its field.",
+      "threshold": "No `autofocus` outside allowlist; no `tabindex>0`",
+      "hig": [
+        {
+          "slug": "focus-and-selection",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/focus-and-selection"
+        },
+        {
+          "slug": "search-fields",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/search-fields"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.4.3",
+          "level": "A"
+        },
+        {
+          "sc": "3.2.1",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ACC-11",
+      "family": "ACC",
+      "rule": "Sticky headers and bars never fully obscure focus.",
+      "threshold": "`scroll-padding-block-start` ≥ sticky header height",
+      "hig": [
+        {
+          "slug": "scroll-views",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/scroll-views"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.4.11",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ACC-12",
+      "family": "ACC",
+      "rule": "Every gesture (swipe carousel, drag slider, swipe-to-dismiss sheet) has a single-pointer, button-based alternative.",
+      "threshold": "Prev/next buttons; Close button",
+      "hig": [
+        {
+          "slug": "accessibility",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/accessibility"
+        },
+        {
+          "slug": "gestures",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/gestures"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.5.1",
+          "level": "A"
+        },
+        {
+          "sc": "2.5.7",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ACC-13",
+      "family": "ACC",
+      "rule": "No time-boxed UI for essential information. Toasts carrying errors or actions persist until dismissed.",
+      "threshold": "No auto-dismiss on `role=alert` or toasts with actions",
+      "hig": [
+        {
+          "slug": "accessibility",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/accessibility"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.2.1",
+          "level": "A"
+        },
+        {
+          "sc": "2.2.2",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ACC-14",
+      "family": "ACC",
+      "rule": "Media is under the user's control: no autoplay with sound; autoplaying motion has a pause control; captions on spoken video.",
+      "threshold": "`video[autoplay]` must be `muted` with a pause control; `<track kind=captions>` on spoken video",
+      "hig": [
+        {
+          "slug": "accessibility",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/accessibility"
+        },
+        {
+          "slug": "playing-video",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/playing-video"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.2.2",
+          "level": "A"
+        },
+        {
+          "sc": "1.4.2",
+          "level": "A"
+        },
+        {
+          "sc": "2.2.2",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated",
+        "principle"
+      ],
+      "automatedScope": "partial",
+      "liberties": []
+    },
+    {
+      "id": "ACC-15",
+      "family": "ACC",
+      "rule": "No flashing content.",
+      "threshold": "≤ 3 flashes per second",
+      "hig": [
+        {
+          "slug": "accessibility",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/accessibility"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.3.1",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ACC-16",
+      "family": "ACC",
+      "rule": "Declare the page language and the language of foreign-language passages.",
+      "threshold": "axe `html-has-lang`, `valid-lang`",
+      "hig": [
+        {
+          "slug": "inclusion",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/inclusion"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "3.1.1",
+          "level": "A"
+        },
+        {
+          "sc": "3.1.2",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ACC-17",
+      "family": "ACC",
+      "rule": "Forced colors (Windows contrast themes): no information lost, focus still visible.",
+      "threshold": "`forcedColors:'active'` project + axe + screenshot",
+      "hig": [
+        {
+          "slug": "accessibility",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/accessibility",
+          "note": "Increase Contrast analogue"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.11",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated",
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ACC-18",
+      "family": "ACC",
+      "rule": "Respect `prefers-contrast: more` by switching to the increased-contrast token set.",
+      "threshold": "`contrast:'more'` project",
+      "hig": [
+        {
+          "slug": "color",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/color"
+        },
+        {
+          "slug": "accessibility",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/accessibility"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.3",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ACC-19",
+      "family": "ACC",
+      "rule": "Charts, size guides, and infographics also expose their data as text or a table.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "charting-data",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/charting-data"
+        },
+        {
+          "slug": "voiceover",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/voiceover"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.1.1",
+          "level": "A"
+        },
+        {
+          "sc": "1.3.1",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MOT-01",
+      "family": "MOT",
+      "rule": "Motion is purposeful and brief. Durations and easings come from tokens.",
+      "threshold": "UI transitions ≤ 400 ms (ours)",
+      "hig": [
+        {
+          "slug": "motion",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/motion"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MOT-02",
+      "family": "MOT",
+      "rule": "Under `prefers-reduced-motion: reduce`, replace translate/scale/zoom/parallax with fades or nothing. No depth or blur animation. Carousels don't auto-advance.",
+      "threshold": "`document.getAnimations()` has no transform keyframes under reduce",
+      "hig": [
+        {
+          "slug": "accessibility",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/accessibility"
+        },
+        {
+          "slug": "motion",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/motion"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.3.3",
+          "level": "AAA"
+        },
+        {
+          "sc": "2.2.2",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MOT-03",
+      "family": "MOT",
+      "rule": "Motion never carries information alone; pair it with a text or state change.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "motion",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/motion"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.3.3",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MOT-04",
+      "family": "MOT",
+      "rule": "Motion is interruptible; nothing blocks input while it plays.",
+      "threshold": "No `pointer-events:none` overlays during transitions",
+      "hig": [
+        {
+          "slug": "motion",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/motion"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MOT-05",
+      "family": "MOT",
+      "rule": "No decorative motion on high-frequency interactions (e.g., scaling every product card on hover).",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "motion",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/motion"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MOT-06",
+      "family": "MOT",
+      "rule": "Feedback motion follows the spatial model: a sheet that rises from the bottom dismisses downward; a side drawer exits to its side.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "motion",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/motion"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MOT-07",
+      "family": "MOT",
+      "rule": "Auto-advancing content (carousels, tickers) is off by default; when on, it has pause/stop.",
+      "threshold": "Applies if it runs > 5 s; `marquee` and `blink` banned (axe)",
+      "hig": [
+        {
+          "slug": "accessibility",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/accessibility"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.2.2",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MAT-01",
+      "family": "MAT",
+      "rule": "Translucent \"glass\" material only for the functional layer floating above content (sticky header, bottom bar, sheet chrome), never for content cards.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "materials",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/materials"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle",
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MAT-02",
+      "family": "MAT",
+      "rule": "Use material sparingly, on the most important functional surfaces only.",
+      "threshold": "≤ 2 material surfaces per viewport (ours)",
+      "hig": [
+        {
+          "slug": "materials",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/materials"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MAT-03",
+      "family": "MAT",
+      "rule": "Text on material stays legible against the worst-case backdrop.",
+      "threshold": "Token test: label and secondary label ≥ 4.5:1 with the material composited over pure black and pure white (§4.3)",
+      "hig": [
+        {
+          "slug": "materials",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/materials"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.3",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MAT-04",
+      "family": "MAT",
+      "rule": "Fallbacks: no `backdrop-filter` → opaque; `prefers-reduced-transparency: reduce` → opaque; `prefers-contrast: more` → opaque + border; `forced-colors` → `Canvas`.",
+      "threshold": "CSS presence lint + Chromium emulation",
+      "hig": [
+        {
+          "slug": "materials",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/materials"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.3",
+          "level": "AA"
+        },
+        {
+          "sc": "1.4.11",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MAT-05",
+      "family": "MAT",
+      "rule": "\"Clear\" (very transparent) material only over media, with a dark scrim when the media is bright.",
+      "threshold": "Scrim 35% (HIG figure)",
+      "hig": [
+        {
+          "slug": "materials",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/materials"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.3",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MAT-06",
+      "family": "MAT",
+      "rule": "Elevation: light mode uses a shadow scale; dark mode uses lighter elevated surfaces plus a hairline border instead of shadows.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "dark-mode",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/dark-mode"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MAT-07",
+      "family": "MAT",
+      "rule": "Pick a material by role (thin/regular/thick), not by look. Thicker material for dense text.",
+      "threshold": "Thin: primary label only",
+      "hig": [
+        {
+          "slug": "materials",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/materials"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MAT-08",
+      "family": "MAT",
+      "rule": "One scroll-edge treatment (fade or blur) per view where content scrolls under floating chrome.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "scroll-views",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/scroll-views"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ICN-01",
+      "family": "ICN",
+      "rule": "Interface icons are simple and consistent (grid, stroke, corner style), with stroke weight matched to adjacent text.",
+      "threshold": "One icon set per site; stroke token",
+      "hig": [
+        {
+          "slug": "icons",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/icons"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "visual",
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ICN-02",
+      "family": "ICN",
+      "rule": "Icons are SVG, use `currentColor`, and are sized in `em`/tokens so they scale with text.",
+      "threshold": "No raster icons in `assets/icons`",
+      "hig": [
+        {
+          "slug": "icons",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/icons"
+        },
+        {
+          "slug": "typography",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/typography"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.4",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ICN-03",
+      "family": "ICN",
+      "rule": "Icon-only controls carry a text alternative; decorative icons are `aria-hidden=\"true\"`.",
+      "threshold": "axe + custom: an `svg` in a nameless button fails",
+      "hig": [
+        {
+          "slug": "icons",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/icons"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.1.1",
+          "level": "A"
+        },
+        {
+          "sc": "4.1.2",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ICN-04",
+      "family": "ICN",
+      "rule": "Familiar actions get familiar icons (search, cart, account, close, share, wishlist). Use a text label when it reads clearer.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "icons",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/icons"
+        },
+        {
+          "slug": "buttons",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/buttons"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ICN-05",
+      "family": "ICN",
+      "rule": "Provide a selected-state icon variant only when needed (filled heart), and expose state via `aria-pressed`.",
+      "threshold": "Toggle buttons have `aria-pressed`",
+      "hig": [
+        {
+          "slug": "icons",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/icons"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "4.1.2",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ICN-06",
+      "family": "ICN",
+      "rule": "No SF Symbols or confusingly similar glyphs; no renderings of Apple hardware (§3.1).",
+      "threshold": "Asset scan + review",
+      "hig": [
+        {
+          "slug": "sf-symbols",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/sf-symbols"
+        },
+        {
+          "slug": "icons",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/icons"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated",
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ICN-07",
+      "family": "ICN",
+      "rule": "Avoid text inside icons; localize any icon that must contain text.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "icons",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/icons"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.5",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "ICN-08",
+      "family": "ICN",
+      "rule": "RTL mirroring per LAY-14.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "right-to-left",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/right-to-left"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "IMG-01",
+      "family": "IMG",
+      "rule": "Serve resolution-appropriate images (1×–3× DPR) through `srcset`/`sizes` (Shopify `image_url` + `image_tag`).",
+      "threshold": "Content `<img>` has `srcset` and `sizes`; Theme Check `ImgWidthAndHeight`",
+      "hig": [
+        {
+          "slug": "images",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/images"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "IMG-02",
+      "family": "IMG",
+      "rule": "Photos as JPEG/WebP/AVIF; flat art and icons as SVG; PNG only for raster art that needs transparency.",
+      "threshold": "Asset lint",
+      "hig": [
+        {
+          "slug": "images",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/images"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "IMG-03",
+      "family": "IMG",
+      "rule": "Images are sRGB (or tagged); check them on real devices.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "images",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/images"
+        },
+        {
+          "slug": "color",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/color"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "IMG-04",
+      "family": "IMG",
+      "rule": "Text over images gets guaranteed contrast from a scrim/overlay token, never from the image itself.",
+      "threshold": "Overlay token required on text-over-media components",
+      "hig": [
+        {
+          "slug": "image-views",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/image-views"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.3",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated",
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "IMG-05",
+      "family": "IMG",
+      "rule": "Show media at its original aspect ratio and reserve its space.",
+      "threshold": "`width`/`height` or `aspect-ratio`; CLS ≤ 0.1",
+      "hig": [
+        {
+          "slug": "playing-video",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/playing-video"
+        },
+        {
+          "slug": "images",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/images"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "IMG-06",
+      "family": "IMG",
+      "rule": "Imagery and copy are inclusive (people, settings, no stereotypes).",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "inclusion",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/inclusion"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "BTN-01",
+      "family": "BTN",
+      "rule": "Same as ACC-01: the hit region meets the default size even when the visible shape is smaller.",
+      "threshold": "≥ 44×44 px hit region",
+      "hig": [
+        {
+          "slug": "buttons",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/buttons"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.5.8",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "BTN-02",
+      "family": "BTN",
+      "rule": "Custom buttons have distinct hover, pressed (`:active`), `:focus-visible`, and disabled states.",
+      "threshold": "All 4 states declared; state screenshots",
+      "hig": [
+        {
+          "slug": "buttons",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/buttons"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.4.7",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated",
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "BTN-03",
+      "family": "BTN",
+      "rule": "At most one prominent (filled accent) button per section, and at most two per view.",
+      "threshold": "See COL-08",
+      "hig": [
+        {
+          "slug": "buttons",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/buttons"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "BTN-04",
+      "family": "BTN",
+      "rule": "Mark the preferred option by style (filled / tinted / plain), not by size. Buttons in a set share a size.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "buttons",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/buttons"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "BTN-05",
+      "family": "BTN",
+      "rule": "Labels are verbs (\"Add to cart\", \"Check out\"). No \"click here\". Sentence-style capitalisation, no trailing punctuation.",
+      "threshold": "Locale lint",
+      "hig": [
+        {
+          "slug": "writing",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/writing"
+        },
+        {
+          "slug": "alerts",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/alerts"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.4.4",
+          "level": "A"
+        },
+        {
+          "sc": "2.4.6",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "BTN-06",
+      "family": "BTN",
+      "rule": "Roles are primary, cancel, and destructive. A destructive action is never the primary/default (Enter) button; it is styled as destructive.",
+      "threshold": "Dialog API rejects destructive + default",
+      "hig": [
+        {
+          "slug": "buttons",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/buttons"
+        },
+        {
+          "slug": "alerts",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/alerts"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "BTN-07",
+      "family": "BTN",
+      "rule": "Slow actions show progress inside the button, with an updated label (\"Adding…\") and `aria-busy`. The button keeps its size, and the result is announced.",
+      "threshold": "Add-to-cart test",
+      "hig": [
+        {
+          "slug": "buttons",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/buttons"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "4.1.3",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "BTN-08",
+      "family": "BTN",
+      "rule": "An action that needs more input before it completes ends its label with \"…\" (\"Choose options…\").",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "menus",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/menus"
+        },
+        {
+          "slug": "buttons",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/buttons"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "BTN-09",
+      "family": "BTN",
+      "rule": "Apple Pay / express checkout: never build or imitate Apple Pay buttons; use Shopify's dynamic checkout rendering. Platform buttons are never smaller or harder to reach than other payment buttons. Side by side, Apple Pay sits after \"Add to cart\", with a matching corner radius.",
+      "threshold": "No \"Apple Pay\" strings or logos in theme assets",
+      "hig": [
+        {
+          "slug": "apple-pay",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/apple-pay"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated",
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FRM-01",
+      "family": "FRM",
+      "rule": "Every field has a persistent visible label. Placeholder text is only a hint or example.",
+      "threshold": "axe `label`; custom: a placeholder is never the only label",
+      "hig": [
+        {
+          "slug": "text-fields",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/text-fields"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.3.1",
+          "level": "A"
+        },
+        {
+          "sc": "3.3.2",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FRM-02",
+      "family": "FRM",
+      "rule": "Use the right `type`/`inputmode`/`autocomplete` (email, tel, postal-code, `cc-*`) so the correct keyboard and autofill appear. Get data from the system (autofill) rather than retyping.",
+      "threshold": "Known-purpose fields carry an `autocomplete` token; axe `autocomplete-valid`",
+      "hig": [
+        {
+          "slug": "text-fields",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/text-fields"
+        },
+        {
+          "slug": "entering-data",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/entering-data"
+        },
+        {
+          "slug": "virtual-keyboards",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/virtual-keyboards"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.3.5",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FRM-03",
+      "family": "FRM",
+      "rule": "Field width hints at the expected length.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "text-fields",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/text-fields"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FRM-04",
+      "family": "FRM",
+      "rule": "Validate at the right time: format on blur, password rules before leaving the field. Errors sit next to the field, are linked by `aria-describedby`, and set `aria-invalid`.",
+      "threshold": "Form tests",
+      "hig": [
+        {
+          "slug": "text-fields",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/text-fields"
+        },
+        {
+          "slug": "entering-data",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/entering-data"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "3.3.1",
+          "level": "A"
+        },
+        {
+          "sc": "3.3.3",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FRM-05",
+      "family": "FRM",
+      "rule": "Error copy says how to fix the problem; no blame, no \"Oops\", no bare \"Invalid X\".",
+      "threshold": "Locale lint",
+      "hig": [
+        {
+          "slug": "writing",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/writing"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "3.3.3",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated",
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FRM-06",
+      "family": "FRM",
+      "rule": "Never prefill passwords. Use secure fields with show/hide, and support password managers and passkeys.",
+      "threshold": "`autocomplete` ∈ {`current-password`, `new-password`, `webauthn`}",
+      "hig": [
+        {
+          "slug": "entering-data",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/entering-data"
+        },
+        {
+          "slug": "managing-accounts",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/managing-accounts"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "3.3.8",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FRM-07",
+      "family": "FRM",
+      "rule": "Offer choices instead of typing where possible (select, radios, segmented, stepper).",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "entering-data",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/entering-data"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FRM-08",
+      "family": "FRM",
+      "rule": "Mark required data clearly. Keep submit enabled; validate on submit and focus the first error (LIB-16).",
+      "threshold": "`required`/`aria-required` present",
+      "hig": [
+        {
+          "slug": "entering-data",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/entering-data"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "3.3.2",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": [
+        "LIB-16"
+      ]
+    },
+    {
+      "id": "FRM-09",
+      "family": "FRM",
+      "rule": "Don't ask for the same data twice in a flow (e.g., billing defaults to shipping).",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "entering-data",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/entering-data"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "3.3.7",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FRM-10",
+      "family": "FRM",
+      "rule": "Switches only in list/settings rows. Elsewhere use a toggle button (`aria-pressed`) or checkbox. State is never shown by color alone.",
+      "threshold": "`role=switch` only inside the list-row component",
+      "hig": [
+        {
+          "slug": "toggles",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/toggles"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.1",
+          "level": "A"
+        },
+        {
+          "sc": "4.1.2",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FRM-11",
+      "family": "FRM",
+      "rule": "Radios for mutually exclusive options beyond two; a checkbox for a single on/off; select/picker for medium-to-long lists in logical order.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "toggles",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/toggles"
+        },
+        {
+          "slug": "pickers",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/pickers"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FRM-12",
+      "family": "FRM",
+      "rule": "Segmented controls (e.g., variant options): few segments of consistent width, either text or icons (not mixed), with noun labels.",
+      "threshold": "≤ 5 segments compact; ≤ 7 wide",
+      "hig": [
+        {
+          "slug": "segmented-controls",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/segmented-controls"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FRM-13",
+      "family": "FRM",
+      "rule": "A quantity stepper shows the value it changes and pairs with an editable number field. Min/max are enforced and changes announced.",
+      "threshold": "Quantity component test",
+      "hig": [
+        {
+          "slug": "steppers",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/steppers"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "4.1.3",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FRM-14",
+      "family": "FRM",
+      "rule": "Range sliders (price filter) pair with number inputs and use the familiar direction (min at the start), mirrored in RTL.",
+      "threshold": "Range filter has number inputs",
+      "hig": [
+        {
+          "slug": "sliders",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/sliders"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.5.7",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FRM-15",
+      "family": "FRM",
+      "rule": "Search: placeholder says what is searched; results refine as the user types (debounced); suggestions; clear button; filters default broad.",
+      "threshold": "Predictive-search test",
+      "hig": [
+        {
+          "slug": "search-fields",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/search-fields"
+        },
+        {
+          "slug": "searching",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/searching"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "3.3.2",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated",
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FRM-16",
+      "family": "FRM",
+      "rule": "Tabbing between fields follows the visual order.",
+      "threshold": "See ACC-10",
+      "hig": [
+        {
+          "slug": "text-fields",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/text-fields"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.4.3",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FRM-17",
+      "family": "FRM",
+      "rule": "Show search history only with privacy in mind (clearable, local).",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "searching",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/searching"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "NAV-01",
+      "family": "NAV",
+      "rule": "Primary navigation is for navigating, not for actions. It stays visible and consistent across sections.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "tab-bars",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/tab-bars"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "3.2.3",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "principle",
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "NAV-02",
+      "family": "NAV",
+      "rule": "Keep top-level destinations few, with no overflow \"More\" bucket; single-word labels where possible.",
+      "threshold": "Compact bottom bar ≤ 5 items (ours, LIB-20)",
+      "hig": [
+        {
+          "slug": "tab-bars",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/tab-bars"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": [
+        "LIB-20"
+      ]
+    },
+    {
+      "id": "NAV-03",
+      "family": "NAV",
+      "rule": "Never hide or disable a navigation item because its content is empty; show an empty state instead.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "tab-bars",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/tab-bars"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "3.2.3",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "NAV-04",
+      "family": "NAV",
+      "rule": "Nav items have text labels. The current location is marked.",
+      "threshold": "`aria-current=\"page\"` on the active link",
+      "hig": [
+        {
+          "slug": "tab-bars",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/tab-bars"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.3.1",
+          "level": "A"
+        },
+        {
+          "sc": "2.4.8",
+          "level": "AAA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "NAV-05",
+      "family": "NAV",
+      "rule": "Badges only for actionable or critical info (cart count), with accessible text (\"Cart, 3 items\").",
+      "threshold": "Badge text in the accessible name",
+      "hig": [
+        {
+          "slug": "tab-bars",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/tab-bars"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.1.1",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "NAV-06",
+      "family": "NAV",
+      "rule": "Sidebars and menus show at most two hierarchy levels; deeper content gets its own page.",
+      "threshold": "Menu depth ≤ 2 in sidebar/drawer",
+      "hig": [
+        {
+          "slug": "sidebars",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/sidebars"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "NAV-07",
+      "family": "NAV",
+      "rule": "Sidebar (filters/collections) on wide layouts ↔ sheet/drawer on compact, with identical functionality.",
+      "threshold": "See LAY-05",
+      "hig": [
+        {
+          "slug": "sidebars",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/sidebars"
+        },
+        {
+          "slug": "layout",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/layout"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "NAV-08",
+      "family": "NAV",
+      "rule": "Give search a prominent position when it matters (header at all widths, and a dedicated results page).",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "searching",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/searching"
+        },
+        {
+          "slug": "search-fields",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/search-fields"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "NAV-09",
+      "family": "NAV",
+      "rule": "Standard back/close affordances. Breadcrumbs for deep catalogs (web extension).",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "toolbars",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/toolbars"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.4.8",
+          "level": "AAA"
+        }
+      ],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": [
+        "LIB-25"
+      ]
+    },
+    {
+      "id": "NAV-10",
+      "family": "NAV",
+      "rule": "Header/toolbar is not overcrowded. Group by function: leading (logo, menu), center, trailing (search, account, cart). Trailing items stay visible at all widths.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "toolbars",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/toolbars"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "NAV-11",
+      "family": "NAV",
+      "rule": "Page titles are unique and concise, and don't lead with the store name.",
+      "threshold": "`document.title` unique per template; pattern \"Page – Store\"",
+      "hig": [
+        {
+          "slug": "toolbars",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/toolbars"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.4.2",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "NAV-12",
+      "family": "NAV",
+      "rule": "Carousel page indicators only for short sets; longer sets use thumbnails or a grid.",
+      "threshold": "≤ 10 dots",
+      "hig": [
+        {
+          "slug": "page-controls",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/page-controls"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "NAV-13",
+      "family": "NAV",
+      "rule": "Skip link to main content (web extension).",
+      "threshold": "axe `bypass`/`skip-link`",
+      "hig": [],
+      "wcag": [
+        {
+          "sc": "2.4.1",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": [
+        "LIB-25"
+      ]
+    },
+    {
+      "id": "MOD-01",
+      "family": "MOD",
+      "rule": "Use modality only when it clearly helps. Keep modal tasks short, with no navigation stacks inside a modal.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "modality",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/modality"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MOD-02",
+      "family": "MOD",
+      "rule": "One modal at a time. Close the first before opening another, and never stack two alerts.",
+      "threshold": "≤ 1 open modal `dialog`, + ≤ 1 alert",
+      "hig": [
+        {
+          "slug": "modality",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/modality"
+        },
+        {
+          "slug": "sheets",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/sheets"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MOD-03",
+      "family": "MOD",
+      "rule": "Obvious dismissal: visible Close, Esc, backdrop/swipe for sheets. Focus returns to the element that opened the modal.",
+      "threshold": "Dialog tests",
+      "hig": [
+        {
+          "slug": "modality",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/modality"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.1.2",
+          "level": "A"
+        },
+        {
+          "sc": "2.4.3",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MOD-04",
+      "family": "MOD",
+      "rule": "Confirm before closing a modal that would discard user input.",
+      "threshold": "Form-in-dialog test",
+      "hig": [
+        {
+          "slug": "modality",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/modality"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "3.3.4",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MOD-05",
+      "family": "MOD",
+      "rule": "Each modal is titled with its task.",
+      "threshold": "axe `aria-dialog-name`",
+      "hig": [
+        {
+          "slug": "modality",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/modality"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "4.1.2",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MOD-06",
+      "family": "MOD",
+      "rule": "Sheets (cart drawer, filters) pair Done/Apply with Cancel or Back. Resizable sheets show a grabber. Swipe-to-dismiss on touch, plus a button.",
+      "threshold": "Sheet component test",
+      "hig": [
+        {
+          "slug": "sheets",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/sheets"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.5.1",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MOD-07",
+      "family": "MOD",
+      "rule": "Long or complex flows get a page, not a sheet.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "sheets",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/sheets"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MOD-08",
+      "family": "MOD",
+      "rule": "Popovers (menus, previews): small content, one at a time, anchored to their trigger, never for warnings. On compact widths they become sheets.",
+      "threshold": "Popover → sheet below the compact breakpoint",
+      "hig": [
+        {
+          "slug": "popovers",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/popovers"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.4.13",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated",
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MOD-09",
+      "family": "MOD",
+      "rule": "Alerts are rare and actionable. No alert for undoable actions (remove from cart → undo toast). Nothing modal opens on page load (no entry newsletter pop-ups; legal age/consent gates excepted).",
+      "threshold": "No dialog opens within 10 s of load without interaction",
+      "hig": [
+        {
+          "slug": "alerts",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/alerts"
+        },
+        {
+          "slug": "launching",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/launching"
+        },
+        {
+          "slug": "onboarding",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/onboarding"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "3.2.1",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": [
+        "LIB-25"
+      ]
+    },
+    {
+      "id": "MOD-10",
+      "family": "MOD",
+      "rule": "Alert copy: concise title, message only if useful. Buttons are 1–2 word verbs; \"Cancel\" cancels; \"OK\" only for purely informational alerts; no Yes/No.",
+      "threshold": "Locale lint",
+      "hig": [
+        {
+          "slug": "alerts",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/alerts"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.4.6",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated",
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MOD-11",
+      "family": "MOD",
+      "rule": "Button order: the default action trails in a row (or tops a stack); Cancel leads (or sits at the bottom). Mirrored in RTL.",
+      "threshold": "Dialog footer DOM-order test",
+      "hig": [
+        {
+          "slug": "alerts",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/alerts"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.3.2",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MOD-12",
+      "family": "MOD",
+      "rule": "A destructive confirmation always offers Cancel. The destructive button looks destructive and is not the default.",
+      "threshold": "Dialog API test",
+      "hig": [
+        {
+          "slug": "alerts",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/alerts"
+        },
+        {
+          "slug": "action-sheets",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/action-sheets"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MOD-13",
+      "family": "MOD",
+      "rule": "Use action sheets for choices tied to an intentional action. Neither alerts nor action sheets should scroll.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "action-sheets",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/action-sheets"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "MOD-14",
+      "family": "MOD",
+      "rule": "Use native `<dialog>` (`showModal`) and the `popover` attribute; make the background inert.",
+      "threshold": "`dialog` Baseline (Safari 15.4); `popover` Safari 17 / Chrome 114 / Firefox 125 (BCD)",
+      "hig": [
+        {
+          "slug": "modality",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/modality"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.4.3",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "LST-01",
+      "family": "LST",
+      "rule": "Text-heavy data (orders, specs) as lists or tables; visual items (products) as grids.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "lists-and-tables",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/lists-and-tables"
+        },
+        {
+          "slug": "collections",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/collections"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.3.1",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "LST-02",
+      "family": "LST",
+      "rule": "Collections use the standard grid; cards in one grid share size and image ratio.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "collections",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/collections"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "LST-03",
+      "family": "LST",
+      "rule": "Items give press feedback. A product card has one primary link (single tab stop) with a visible focus ring.",
+      "threshold": "Card tests",
+      "hig": [
+        {
+          "slug": "collections",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/collections"
+        },
+        {
+          "slug": "lists-and-tables",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/lists-and-tables"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.4.7",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "LST-04",
+      "family": "LST",
+      "rule": "Row and card text is succinct; long titles wrap within a line cap, with the full text available.",
+      "threshold": "See TYP-09",
+      "hig": [
+        {
+          "slug": "lists-and-tables",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/lists-and-tables"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "LST-05",
+      "family": "LST",
+      "rule": "Tables have descriptive headers (`<th scope>`).",
+      "threshold": "axe `th-has-data-cells`, `scope-attr-valid`",
+      "hig": [
+        {
+          "slug": "lists-and-tables",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/lists-and-tables"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.3.1",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "LST-06",
+      "family": "LST",
+      "rule": "Insert/remove/reorder animation is subtle and respects reduced motion.",
+      "threshold": "See MOT-02",
+      "hig": [
+        {
+          "slug": "collections",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/collections"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.3.3",
+          "level": "AAA"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "LST-07",
+      "family": "LST",
+      "rule": "Avoid layout jumps from dynamic content (infinite scroll, lazy cards); reserve space.",
+      "threshold": "CLS ≤ 0.1",
+      "hig": [
+        {
+          "slug": "collections",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/collections"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "LST-08",
+      "family": "LST",
+      "rule": "No same-direction nested scroll containers (a horizontal rail inside the vertical page is fine).",
+      "threshold": "No `overflow-y:auto` inside `overflow-y:auto` except dialogs",
+      "hig": [
+        {
+          "slug": "scroll-views",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/scroll-views"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "LST-09",
+      "family": "LST",
+      "rule": "Show that more content exists: horizontal rails let the next item peek.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "scroll-views",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/scroll-views"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "LST-10",
+      "family": "LST",
+      "rule": "Disclosures (`details`/`summary`) have descriptive labels; at most one \"show more\" disclosure button per view.",
+      "threshold": "`summary` has text",
+      "hig": [
+        {
+          "slug": "disclosure-controls",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/disclosure-controls"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "4.1.2",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated",
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FBK-01",
+      "family": "FBK",
+      "rule": "Show something immediately. Skeletons and placeholders reserve the layout.",
+      "threshold": "CLS ≤ 0.1; Lighthouse perf ≥ 0.6 floor (§5)",
+      "hig": [
+        {
+          "slug": "loading",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/loading"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated",
+        "visual"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FBK-02",
+      "family": "FBK",
+      "rule": "People keep browsing while things load (async add-to-cart and filters).",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "loading",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/loading"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FBK-03",
+      "family": "FBK",
+      "rule": "Determinate progress when the length is known, a spinner only otherwise. Keep it moving, in a consistent place.",
+      "threshold": "`role=progressbar` with `aria-valuenow` when determinate",
+      "hig": [
+        {
+          "slug": "progress-indicators",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/progress-indicators"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "4.1.2",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated",
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FBK-04",
+      "family": "FBK",
+      "rule": "Feedback is multimodal: text + icon + color, announced via a live region.",
+      "threshold": "See ACC-06",
+      "hig": [
+        {
+          "slug": "feedback",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/feedback"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "4.1.3",
+          "level": "AA"
+        },
+        {
+          "sc": "1.4.1",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FBK-05",
+      "family": "FBK",
+      "rule": "Status sits next to the thing it describes (inline stock, inline errors), not in a global alert.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "feedback",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/feedback"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FBK-06",
+      "family": "FBK",
+      "rule": "Warn only for unexpected, irreversible loss. Expected removals get undo instead of a warning.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "feedback",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/feedback"
+        },
+        {
+          "slug": "undo-and-redo",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/undo-and-redo"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FBK-07",
+      "family": "FBK",
+      "rule": "Confirm significant completions (added to cart, order placed) without over-confirming.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "feedback",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/feedback"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FBK-08",
+      "family": "FBK",
+      "rule": "When something can't be done (sold out, can't ship to region), explain why and offer a next step.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "feedback",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/feedback"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "3.3.3",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FBK-09",
+      "family": "FBK",
+      "rule": "Empty states explain the situation and offer an action (empty cart → \"Continue shopping\").",
+      "threshold": "Empty-cart template renders a CTA",
+      "hig": [
+        {
+          "slug": "writing",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/writing"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated",
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FBK-10",
+      "family": "FBK",
+      "rule": "Let people cancel long operations where feasible.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "progress-indicators",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/progress-indicators"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "FBK-11",
+      "family": "FBK",
+      "rule": "Load quickly; no splash/interstitial screens.",
+      "threshold": "⚠ Core Web Vitals \"good\" thresholds not verified this pass; Theme Store floor perf ≥ 60 (verified)",
+      "hig": [
+        {
+          "slug": "launching",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/launching"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "WRT-01",
+      "family": "WRT",
+      "rule": "One defined voice; tone fits the context (errors are calm, marketing can be warmer).",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "writing",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/writing"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "WRT-02",
+      "family": "WRT",
+      "rule": "Action-oriented labels; descriptive link text (no bare \"click here\" or \"read more\").",
+      "threshold": "Locale lint",
+      "hig": [
+        {
+          "slug": "writing",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/writing"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "2.4.4",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "WRT-03",
+      "family": "WRT",
+      "rule": "One capitalisation style per element type, applied everywhere. The kit uses sentence case (LIB-17).",
+      "threshold": "Locale lint (heuristic)",
+      "hig": [
+        {
+          "slug": "writing",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/writing"
+        },
+        {
+          "slug": "alerts",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/alerts"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated",
+        "principle"
+      ],
+      "automatedSeverity": "warn",
+      "liberties": [
+        "LIB-17"
+      ]
+    },
+    {
+      "id": "WRT-04",
+      "family": "WRT",
+      "rule": "Multi-step flows use consistent step verbs (Continue/Next) and clear completion (Done).",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "writing",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/writing"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "3.2.4",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "WRT-05",
+      "family": "WRT",
+      "rule": "Use possessives sparingly; avoid \"we\" in errors (\"Unable to load products\").",
+      "threshold": "Locale lint for \"We're…\" or \"Oops\" in error strings",
+      "hig": [
+        {
+          "slug": "writing",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/writing"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "automatedSeverity": "warn",
+      "liberties": []
+    },
+    {
+      "id": "WRT-06",
+      "family": "WRT",
+      "rule": "Input-agnostic verbs (\"select\", \"choose\"), not \"click\" or \"tap\", in responsive UI (LIB-13).",
+      "threshold": "Locale lint",
+      "hig": [
+        {
+          "slug": "writing",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/writing"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "automatedSeverity": "warn",
+      "liberties": [
+        "LIB-13"
+      ]
+    },
+    {
+      "id": "WRT-07",
+      "family": "WRT",
+      "rule": "Error messages sit next to the problem and are actionable (see FRM-05).",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "writing",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/writing"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "3.3.1",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "WRT-08",
+      "family": "WRT",
+      "rule": "Hints show format examples (\"name@example.com\").",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "writing",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/writing"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "3.3.2",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "WRT-09",
+      "family": "WRT",
+      "rule": "Plain, inclusive language: define jargon, use people-first disability language and gender-neutral copy.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "inclusion",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/inclusion"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "3.1.5",
+          "level": "AAA"
+        }
+      ],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "WRT-10",
+      "family": "WRT",
+      "rule": "All UI strings live in Shopify `locales/*.json`; no hard-coded copy in Liquid.",
+      "threshold": "Theme Check `TranslationKeyExists`, `MatchingTranslations`, `ValidSchemaTranslations`",
+      "hig": [
+        {
+          "slug": "writing",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/writing"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "COM-01",
+      "family": "COM",
+      "rule": "Collect variant choices (size, color) before express-checkout buttons can act.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "apple-pay",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/apple-pay"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "3.3.2",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "COM-02",
+      "family": "COM",
+      "rule": "Offer express checkout on product pages. Never hide or grey out platform payment buttons. Don't require account creation before purchase.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "apple-pay",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/apple-pay"
+        },
+        {
+          "slug": "managing-accounts",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/managing-accounts"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "COM-03",
+      "family": "COM",
+      "rule": "Ratings show stars plus numeric text (\"4.5 out of 5, 120 reviews\"). Custom rating symbols must be clear. Never prompt for reviews mid-task or repeatedly.",
+      "threshold": "Rating component accessible text",
+      "hig": [
+        {
+          "slug": "rating-indicators",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/rating-indicators"
+        },
+        {
+          "slug": "ratings-and-reviews",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/ratings-and-reviews"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.1.1",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated",
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "COM-04",
+      "family": "COM",
+      "rule": "Accounts: explain the benefit, delay sign-in, name the auth method, make account deletion discoverable (mostly Shopify-managed).",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "managing-accounts",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/managing-accounts"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "3.3.8",
+          "level": "AA"
+        }
+      ],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "COM-05",
+      "family": "COM",
+      "rule": "Ask for permissions (location for pickup, notifications) only when needed, in context, with clear copy, never on load, with no misleading pre-prompts.",
+      "threshold": "No `geolocation`/`Notification.requestPermission` before a user gesture",
+      "hig": [
+        {
+          "slug": "privacy",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/privacy"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "3.2.1",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "COM-06",
+      "family": "COM",
+      "rule": "No launch splash or \"advert\" interstitials.",
+      "threshold": "See MOD-09",
+      "hig": [
+        {
+          "slug": "launching",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/launching"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "COM-07",
+      "family": "COM",
+      "rule": "Teach in context. Postpone non-essential prompts (newsletter, tours). Legal consent banners excepted (LIB-25).",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "onboarding",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/onboarding"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": [
+        "LIB-25"
+      ]
+    },
+    {
+      "id": "COM-08",
+      "family": "COM",
+      "rule": "Offer undo for reversible destructive actions (remove from cart).",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "undo-and-redo",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/undo-and-redo"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "COM-09",
+      "family": "COM",
+      "rule": "Share uses `navigator.share` where available, with a copy-link fallback.",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "collaboration-and-sharing",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/collaboration-and-sharing"
+        }
+      ],
+      "wcag": [],
+      "enforcement": [
+        "principle"
+      ],
+      "liberties": []
+    },
+    {
+      "id": "COM-10",
+      "family": "COM",
+      "rule": "Product video uses native controls at its original aspect ratio, with captions and no sound autoplay (ACC-14).",
+      "threshold": null,
+      "hig": [
+        {
+          "slug": "playing-video",
+          "url": "https://developer.apple.com/design/human-interface-guidelines/playing-video"
+        }
+      ],
+      "wcag": [
+        {
+          "sc": "1.2.2",
+          "level": "A"
+        }
+      ],
+      "enforcement": [
+        "automated"
+      ],
+      "liberties": []
+    }
+  ]
+}

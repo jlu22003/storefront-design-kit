@@ -8,6 +8,8 @@ Shopify themes and client websites first, with a C toolkit built on
 [Clay](https://github.com/nicbarker/clay) planned later. It pairs a design
 system with a standards catalog and a test suite that checks layouts against it.
 
+The standards catalog is in [catalog/STANDARDS.md](catalog/STANDARDS.md).
+
 The standards are informed by Apple's Human Interface Guidelines. Each rule is
 paraphrased and linked to its source; no HIG text or artwork is copied. This
 project is independent and is not affiliated with or endorsed by Apple or
