@@ -17,7 +17,8 @@
     "tokens:check": "node scripts/build-tokens.mjs --check",
     "lint:css": "stylelint \"**/*.css\"",
     "dev": "node playground/server.mjs",
-    "sketch": "node playground/new-sketch.mjs"
+    "sketch": "node playground/new-sketch.mjs",
+    "bookmarklet": "node scripts/build-bookmarklet.mjs"
   },
   "devDependencies": {
     "postcss": "8.5.32",

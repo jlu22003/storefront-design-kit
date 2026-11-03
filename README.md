@@ -95,6 +95,17 @@ Saved CSS is swapped in without a reload, so you keep your scroll position.
   Paste it into a sketch stylesheet, or carry the numbers into
   `tokens/*.tokens.json` and run `npm run tokens`.
 
+- **Format frames.** `/playground/frames.html` shows one page side by side
+  as phone, tablet, desktop, square social post, 9:16 story, 600px email
+  width, and a print page, each scaled to fit.
+- **Variant boards.** `/playground/variants.html` shows two to four copies
+  of a page, each with its own design panel. Mark a winner and copy its CSS.
+- **Design panel for any site.** `npm run bookmarklet` builds a bookmarklet
+  (or install it from `/playground/bookmarklet.html`) that opens a design
+  panel on any live site. Drag spacing, type, corners, and colors, and copy
+  out the values. It changes only the open tab, saves nothing, and sends
+  nothing.
+
 More detail is in [playground/README.md](playground/README.md).
 
 ## License
