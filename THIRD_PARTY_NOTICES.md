@@ -28,12 +28,6 @@ font files. Font files are not committed to this repository.
 IBM Plex carries the Reserved Font Name "Plex": a modified or subset copy that
 is redistributed must not use that name.
 
-## Layout vocabulary
-
-The layout primitives mirror the vocabulary of
-[Clay](https://github.com/nicbarker/clay) (zlib license,
-https://github.com/nicbarker/clay/blob/main/LICENSE.md). No Clay code is copied.
-
 ## Not included
 
 This repository contains no Apple fonts (SF Pro, SF Compact, SF Mono, New
