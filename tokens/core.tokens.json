@@ -1,0 +1,465 @@
+{
+  "$description": "Core design tokens for storefront-design-kit (DTCG format 2025.10). Mode-independent. Color roles live in the color.*.tokens.json files. Build with `npm run tokens`.",
+  "space": {
+    "0": {
+      "$value": { "value": 0, "unit": "rem" }
+    },
+    "2": {
+      "$value": { "value": 0.125, "unit": "rem" }
+    },
+    "4": {
+      "$value": { "value": 0.25, "unit": "rem" }
+    },
+    "8": {
+      "$value": { "value": 0.5, "unit": "rem" }
+    },
+    "12": {
+      "$value": { "value": 0.75, "unit": "rem" }
+    },
+    "16": {
+      "$value": { "value": 1, "unit": "rem" }
+    },
+    "20": {
+      "$value": { "value": 1.25, "unit": "rem" }
+    },
+    "24": {
+      "$value": { "value": 1.5, "unit": "rem" }
+    },
+    "32": {
+      "$value": { "value": 2, "unit": "rem" }
+    },
+    "40": {
+      "$value": { "value": 2.5, "unit": "rem" }
+    },
+    "48": {
+      "$value": { "value": 3, "unit": "rem" }
+    },
+    "64": {
+      "$value": { "value": 4, "unit": "rem" }
+    },
+    "80": {
+      "$value": { "value": 5, "unit": "rem" }
+    },
+    "96": {
+      "$value": { "value": 6, "unit": "rem" }
+    },
+    "$type": "dimension",
+    "gutter-compact": {
+      "$value": "{space.16}",
+      "$description": "Page gutter below the regular breakpoint."
+    },
+    "gutter-regular": {
+      "$value": "{space.24}",
+      "$description": "Page gutter from the regular breakpoint."
+    },
+    "gutter-wide": {
+      "$value": "{space.32}",
+      "$description": "Page gutter from the wide breakpoint."
+    },
+    "control-bezeled": {
+      "$value": "{space.12}",
+      "$description": "Space around bezeled controls (ACC-02)."
+    },
+    "control-borderless": {
+      "$value": "{space.24}",
+      "$description": "Space around borderless controls (ACC-02)."
+    }
+  },
+  "font": {
+    "family": {
+      "$type": "fontFamily",
+      "sans": {
+        "$value": ["Inter", "Helvetica Neue", "Arial", "sans-serif"],
+        "$description": "UI and body text. Inter (OFL-1.1), then a generic fallback (TYP-12, LIB-12)."
+      },
+      "serif": {
+        "$value": ["Source Serif 4", "Georgia", "Times New Roman", "serif"],
+        "$description": "Optional editorial headings. Source Serif 4 (OFL-1.1), then a generic fallback."
+      },
+      "mono": {
+        "$value": ["IBM Plex Mono", "Menlo", "Consolas", "Liberation Mono", "monospace"],
+        "$description": "Code, SKUs and numbers. IBM Plex Mono (OFL-1.1), then a generic fallback."
+      }
+    },
+    "weight": {
+      "$type": "fontWeight",
+      "regular": {
+        "$value": 400
+      },
+      "semibold": {
+        "$value": 600
+      },
+      "bold": {
+        "$value": 700
+      }
+    },
+    "size": {
+      "$type": "dimension",
+      "display-1": {
+        "$value": { "value": 3.5, "unit": "rem" },
+        "$description": "Hero heading. Fluid between 2.5rem and 3.5rem (LIB-03).",
+        "$extensions": {
+          "io.github.jlu22003.sdk": {
+            "fluid": {
+              "min": { "value": 2.5, "unit": "rem" },
+              "preferred": "1.75rem + 2.5vw"
+            }
+          }
+        }
+      },
+      "display-2": {
+        "$value": { "value": 2.5, "unit": "rem" },
+        "$description": "Section hero heading."
+      },
+      "large-title": {
+        "$value": { "value": 2.125, "unit": "rem" },
+        "$description": "Page title."
+      },
+      "title-1": {
+        "$value": { "value": 1.75, "unit": "rem" }
+      },
+      "title-2": {
+        "$value": { "value": 1.375, "unit": "rem" }
+      },
+      "title-3": {
+        "$value": { "value": 1.25, "unit": "rem" },
+        "$description": "Card title."
+      },
+      "headline": {
+        "$value": { "value": 1.0625, "unit": "rem" },
+        "$description": "Emphasized row text; pair with the semibold weight."
+      },
+      "body": {
+        "$value": { "value": 1.0625, "unit": "rem" },
+        "$description": "Default reading text (TYP-01)."
+      },
+      "callout": {
+        "$value": { "value": 1, "unit": "rem" }
+      },
+      "subhead": {
+        "$value": { "value": 0.9375, "unit": "rem" }
+      },
+      "footnote": {
+        "$value": { "value": 0.8125, "unit": "rem" },
+        "$description": "Meta text."
+      },
+      "caption-1": {
+        "$value": { "value": 0.75, "unit": "rem" },
+        "$description": "Legal and meta text floor (TYP-01)."
+      },
+      "caption-2": {
+        "$value": { "value": 0.6875, "unit": "rem" },
+        "$description": "Badges only; the absolute minimum size (TYP-01)."
+      }
+    },
+    "line-height": {
+      "$type": "number",
+      "display-1": {
+        "$value": 1.1
+      },
+      "display-2": {
+        "$value": 1.2
+      },
+      "large-title": {
+        "$value": 1.206
+      },
+      "title-1": {
+        "$value": 1.214
+      },
+      "title-2": {
+        "$value": 1.273
+      },
+      "title-3": {
+        "$value": 1.25
+      },
+      "headline": {
+        "$value": 1.294
+      },
+      "body": {
+        "$value": 1.294
+      },
+      "callout": {
+        "$value": 1.3125
+      },
+      "subhead": {
+        "$value": 1.333
+      },
+      "footnote": {
+        "$value": 1.385
+      },
+      "caption-1": {
+        "$value": 1.333
+      },
+      "caption-2": {
+        "$value": 1.25
+      },
+      "prose": {
+        "$value": 1.5,
+        "$description": "Line height for long passages (TYP-07)."
+      }
+    }
+  },
+  "radius": {
+    "4": {
+      "$value": { "value": 4, "unit": "px" }
+    },
+    "8": {
+      "$value": { "value": 8, "unit": "px" }
+    },
+    "12": {
+      "$value": { "value": 12, "unit": "px" },
+      "$description": "Controls."
+    },
+    "16": {
+      "$value": { "value": 16, "unit": "px" },
+      "$description": "Cards."
+    },
+    "24": {
+      "$value": { "value": 24, "unit": "px" },
+      "$description": "Sheets (top corners)."
+    },
+    "$type": "dimension",
+    "full": {
+      "$value": { "value": 9999, "unit": "px" },
+      "$description": "Capsule."
+    }
+  },
+  "border-width": {
+    "$type": "dimension",
+    "hairline": {
+      "$value": { "value": 1, "unit": "px" }
+    },
+    "thick": {
+      "$value": { "value": 2, "unit": "px" }
+    }
+  },
+  "stroke-width": {
+    "$type": "number",
+    "icon": {
+      "$value": 2,
+      "$description": "Icon stroke width in SVG user units, shared by the whole icon set (ICN-01)."
+    }
+  },
+  "focus": {
+    "$type": "dimension",
+    "width": {
+      "$value": { "value": 2, "unit": "px" },
+      "$description": "Focus ring width (ACC-09)."
+    },
+    "offset": {
+      "$value": { "value": 2, "unit": "px" },
+      "$description": "Focus ring offset (ACC-09)."
+    }
+  },
+  "size": {
+    "$type": "dimension",
+    "target-min": {
+      "$value": { "value": 2.75, "unit": "rem" },
+      "$description": "Default target size, 44px (ACC-01)."
+    },
+    "target-floor": {
+      "$value": { "value": 1.5, "unit": "rem" },
+      "$description": "Absolute floor for dense inline targets, 24px (ACC-01)."
+    },
+    "field-height": {
+      "$value": { "value": 2.75, "unit": "rem" },
+      "$description": "Text field height, 44px."
+    },
+    "icon-sm": {
+      "$type": "number",
+      "$value": 1,
+      "$description": "Icon size as a multiple of the current font size (ICN-02).",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "unit": "em"
+        }
+      }
+    },
+    "icon-md": {
+      "$type": "number",
+      "$value": 1.25,
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "unit": "em"
+        }
+      }
+    },
+    "icon-lg": {
+      "$type": "number",
+      "$value": 1.5,
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "unit": "em"
+        }
+      }
+    },
+    "measure": {
+      "$type": "number",
+      "$value": 66,
+      "$description": "Target prose measure, in characters (LAY-09).",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "unit": "ch"
+        }
+      }
+    },
+    "measure-max": {
+      "$type": "number",
+      "$value": 75,
+      "$description": "Maximum prose measure, in characters (LAY-09).",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "unit": "ch"
+        }
+      }
+    }
+  },
+  "breakpoint": {
+    "$type": "dimension",
+    "regular": {
+      "$value": { "value": 40, "unit": "rem" },
+      "$description": "Regular width starts here (640px); below it is compact."
+    },
+    "wide": {
+      "$value": { "value": 64, "unit": "rem" },
+      "$description": "Wide width starts here (1024px)."
+    },
+    "xwide": {
+      "$value": { "value": 80, "unit": "rem" },
+      "$description": "Extra-wide width starts here (1280px)."
+    }
+  },
+  "duration": {
+    "0": {
+      "$value": { "value": 0, "unit": "ms" }
+    },
+    "$type": "duration",
+    "fast": {
+      "$value": { "value": 120, "unit": "ms" },
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "reducedMotion": { "value": 120, "unit": "ms" }
+        }
+      }
+    },
+    "base": {
+      "$value": { "value": 200, "unit": "ms" },
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "reducedMotion": { "value": 150, "unit": "ms" }
+        }
+      }
+    },
+    "slow": {
+      "$value": { "value": 300, "unit": "ms" },
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "reducedMotion": { "value": 150, "unit": "ms" }
+        }
+      }
+    },
+    "sheet": {
+      "$value": { "value": 400, "unit": "ms" },
+      "$description": "The cap for UI transitions (MOT-01).",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "reducedMotion": { "value": 150, "unit": "ms" }
+        }
+      }
+    }
+  },
+  "ease": {
+    "$type": "cubicBezier",
+    "standard": {
+      "$value": [0.2, 0, 0, 1]
+    },
+    "enter": {
+      "$value": [0, 0, 0.2, 1]
+    },
+    "exit": {
+      "$value": [0.4, 0, 1, 1]
+    },
+    "spring": {
+      "$value": [0.34, 1.36, 0.64, 1],
+      "$description": "A slight overshoot for sheets and popovers."
+    }
+  },
+  "motion": {
+    "$type": "number",
+    "movement": {
+      "$value": 1,
+      "$description": "Multiply translate, scale and parallax distances by this. It is 0 under prefers-reduced-motion, which leaves only fades (MOT-02).",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "reducedMotion": 0
+        }
+      }
+    }
+  },
+  "material": {
+    "$type": "number",
+    "thin": {
+      "$value": 0.65,
+      "$description": "Opacity of the thin material over bg-elevated. Primary label text only (MAT-03, MAT-07).",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "textRoles": ["label"]
+        }
+      }
+    },
+    "regular": {
+      "$value": 0.8,
+      "$description": "Opacity of the regular material over bg-elevated.",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "textRoles": ["label", "label-secondary"]
+        }
+      }
+    },
+    "thick": {
+      "$value": 0.92,
+      "$description": "Opacity of the thick material over bg-elevated. For dense text.",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "textRoles": ["label", "label-secondary"]
+        }
+      }
+    },
+    "blur": {
+      "$type": "dimension",
+      "$value": { "value": 20, "unit": "px" },
+      "$description": "Backdrop blur radius."
+    },
+    "saturate": {
+      "$value": 1.8,
+      "$description": "Backdrop saturation factor."
+    }
+  },
+  "z": {
+    "$type": "number",
+    "base": {
+      "$value": 0
+    },
+    "raised": {
+      "$value": 10
+    },
+    "sticky": {
+      "$value": 100
+    },
+    "header": {
+      "$value": 200
+    },
+    "popover": {
+      "$value": 300
+    },
+    "sheet": {
+      "$value": 400
+    },
+    "dialog": {
+      "$value": 500
+    },
+    "toast": {
+      "$value": 600
+    }
+  }
+}

@@ -1,0 +1,335 @@
+{
+  "$description": "Color roles, elevation and media treatment for the dark mode. Every mode file defines the same tokens (COL-07).",
+  "color": {
+    "$type": "color",
+    "bg": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0, 0, 0],
+        "hex": "#000000"
+      },
+      "$description": "Base page background.",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "usage": "surface"
+        }
+      }
+    },
+    "bg-secondary": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0.0863, 0.0863, 0.102],
+        "hex": "#16161A"
+      },
+      "$description": "Secondary background for grouped or inset areas.",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "usage": "surface"
+        }
+      }
+    },
+    "bg-elevated": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0.1176, 0.1176, 0.1333],
+        "hex": "#1E1E22"
+      },
+      "$description": "Sheets, popovers and dialogs. Lighter than bg in dark mode (DRK-02).",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "usage": "surface"
+        }
+      }
+    },
+    "bg-grouped": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0, 0, 0],
+        "hex": "#000000"
+      },
+      "$description": "Background behind grouped lists and cards.",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "usage": "surface"
+        }
+      }
+    },
+    "label": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0.9608, 0.9608, 0.9686],
+        "hex": "#F5F5F7"
+      },
+      "$description": "Primary text.",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "usage": "text"
+        }
+      }
+    },
+    "label-secondary": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0.7412, 0.7412, 0.7686],
+        "hex": "#BDBDC4"
+      },
+      "$description": "Secondary text.",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "usage": "text"
+        }
+      }
+    },
+    "label-tertiary": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0.6039, 0.6039, 0.6353],
+        "hex": "#9A9AA2"
+      },
+      "$description": "Tertiary text.",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "usage": "text"
+        }
+      }
+    },
+    "label-disabled": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0.3608, 0.3608, 0.3882],
+        "hex": "#5C5C63"
+      },
+      "$description": "Disabled text. Exempt from contrast minimums (WCAG 1.4.3), so never use it for live content.",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "usage": "disabled"
+        }
+      }
+    },
+    "placeholder": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0.5569, 0.5569, 0.5882],
+        "hex": "#8E8E96"
+      },
+      "$description": "Placeholder text in fields. A hint only, never the label (FRM-01).",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "usage": "text"
+        }
+      }
+    },
+    "separator": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0.2196, 0.2196, 0.2392],
+        "hex": "#38383D"
+      },
+      "$description": "Decorative divider. Never the only boundary of a control (COL-03).",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "usage": "decorative"
+        }
+      }
+    },
+    "separator-opaque": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0.4863, 0.4863, 0.5176],
+        "hex": "#7C7C84"
+      },
+      "$description": "Control borders, such as text fields (COL-03).",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "usage": "boundary"
+        }
+      }
+    },
+    "border-elevated": {
+      "$value": "{color.separator}",
+      "$description": "Hairline around elevated surfaces where shadows are off (MAT-06).",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "usage": "decorative"
+        }
+      }
+    },
+    "accent": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0.302, 0.6157, 1],
+        "hex": "#4D9DFF"
+      },
+      "$description": "Interactive and primary-action color (COL-05). Also the prominent button fill.",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "usage": "text"
+        }
+      }
+    },
+    "link": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0.3529, 0.6549, 1],
+        "hex": "#5AA7FF"
+      },
+      "$description": "Links.",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "usage": "text"
+        }
+      }
+    },
+    "focus": {
+      "$value": "{color.link}",
+      "$description": "Focus ring (ACC-09).",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "usage": "boundary"
+        }
+      }
+    },
+    "on-accent": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0, 0, 0],
+        "hex": "#000000"
+      },
+      "$description": "Text and icons on an accent fill.",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "usage": "on-accent"
+        }
+      }
+    },
+    "danger": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [1, 0.4196, 0.4706],
+        "hex": "#FF6B78"
+      },
+      "$description": "Errors and destructive actions. Pair with text or an icon (COL-04).",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "usage": "text"
+        }
+      }
+    },
+    "sale": {
+      "$value": "{color.danger}",
+      "$description": "Sale prices. Pair with text such as \"Sale\" (COL-04).",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "usage": "text"
+        }
+      }
+    },
+    "success": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0.298, 0.8471, 0.451],
+        "hex": "#4CD873"
+      },
+      "$description": "Success and in-stock state.",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "usage": "text"
+        }
+      }
+    },
+    "warning": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [1, 0.7608, 0.302],
+        "hex": "#FFC24D"
+      },
+      "$description": "Warnings and low stock, as text.",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "usage": "text"
+        }
+      }
+    },
+    "scrim": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0, 0, 0],
+        "alpha": 0.55,
+        "hex": "#000000"
+      },
+      "$description": "Backdrop behind modal sheets and dialogs.",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "usage": "overlay"
+        }
+      }
+    },
+    "overlay-media": {
+      "$value": {
+        "colorSpace": "srgb",
+        "components": [0, 0, 0],
+        "alpha": 0.35,
+        "hex": "#000000"
+      },
+      "$description": "Scrim over bright media under clear material (MAT-05).",
+      "$extensions": {
+        "io.github.jlu22003.sdk": {
+          "usage": "overlay"
+        }
+      }
+    }
+  },
+  "shadow": {
+    "1": {
+      "$value": {
+        "color": {
+          "colorSpace": "srgb",
+          "components": [0, 0, 0],
+          "alpha": 0,
+          "hex": "#000000"
+        },
+        "offsetX": { "value": 0, "unit": "px" },
+        "offsetY": { "value": 1, "unit": "px" },
+        "blur": { "value": 2, "unit": "px" },
+        "spread": { "value": 0, "unit": "px" }
+      },
+      "$description": "Shadows are transparent in dark modes; elevated surfaces use bg-elevated plus border-elevated instead (MAT-06)."
+    },
+    "2": {
+      "$value": {
+        "color": {
+          "colorSpace": "srgb",
+          "components": [0, 0, 0],
+          "alpha": 0,
+          "hex": "#000000"
+        },
+        "offsetX": { "value": 0, "unit": "px" },
+        "offsetY": { "value": 4, "unit": "px" },
+        "blur": { "value": 12, "unit": "px" },
+        "spread": { "value": 0, "unit": "px" }
+      }
+    },
+    "3": {
+      "$value": {
+        "color": {
+          "colorSpace": "srgb",
+          "components": [0, 0, 0],
+          "alpha": 0,
+          "hex": "#000000"
+        },
+        "offsetX": { "value": 0, "unit": "px" },
+        "offsetY": { "value": 12, "unit": "px" },
+        "blur": { "value": 32, "unit": "px" },
+        "spread": { "value": 0, "unit": "px" }
+      }
+    },
+    "$type": "shadow"
+  },
+  "media": {
+    "$type": "number",
+    "brightness": {
+      "$value": 0.92,
+      "$description": "Brightness filter for product images, softened in dark modes (DRK-04)."
+    }
+  }
+}
