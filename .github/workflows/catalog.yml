@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           cache: npm
-      # Dev dependencies are Stylelint only; the catalog, token, and playground tooling use Node built-ins.
+      # Dev dependencies are Stylelint and PostCSS; the catalog, token, and playground tooling use Node built-ins.
       - name: Install dev dependencies
         run: npm ci
       - name: Unit tests

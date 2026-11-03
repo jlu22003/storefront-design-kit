@@ -91,8 +91,9 @@ Saved CSS is swapped in without a reload, so you keep your scroll position.
   sliders for spacing, type scale, and corner radius, plus color pickers for
   the main color roles. Changes show up on the page at once, and contrast
   ratios update as you go. **Copy CSS** copies only the values you changed,
-  as a `:root { … }` block. Paste it into a sketch stylesheet, or carry the
-  numbers into `tokens/*.tokens.json` and run `npm run tokens`.
+  as a `:root { … }` block plus one block per appearance for picked colors.
+  Paste it into a sketch stylesheet, or carry the numbers into
+  `tokens/*.tokens.json` and run `npm run tokens`.
 
 More detail is in [playground/README.md](playground/README.md).
 
