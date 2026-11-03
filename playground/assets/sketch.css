@@ -93,7 +93,9 @@
 .pg-nav-link {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-block-size: var(--sdk-size-target-min);
+  min-inline-size: var(--sdk-size-target-min);
   color: var(--sdk-color-label);
   text-decoration: none;
 }
@@ -170,6 +172,10 @@
   direction: ltr;
   unicode-bidi: isolate;
   overflow: auto;
+
+  /* Wrap long lines instead of scrolling, so narrow screens and large text need no keyboard scrolling. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   padding: var(--sdk-space-12);
   border-radius: var(--sdk-radius-8);
   background: var(--sdk-color-bg-secondary);
