@@ -24,10 +24,36 @@ describe('extractIds', () => {
     const source = [
       "test('COL-01 label on bg >= 4.5', () => {});",
       'it("checks LAY-02 and LAY-03", () => {});',
-      'describe.skip(`LAY-04 group`, () => {});',
+      'describe(`LAY-04 group`, () => {});',
       "test.describe('nested COL-02', () => {});",
     ].join('\n');
     assert.deepEqual(extractIds(source, FAMILIES).sort(), ['COL-01', 'COL-02', 'LAY-02', 'LAY-03', 'LAY-04']);
+  });
+
+  test('ignores skipped, fixme and todo tests, including their tags and nested tests', () => {
+    const source = [
+      'describe.skip(`LAY-04 group`, () => {',
+      "  test('LAY-05 inside a skipped group', { tag: ['@LAY-06'] }, () => {});",
+      '});',
+      "test.describe.skip('COL-02 group', () => {});",
+      "test.fixme('LAY-07 reflow', { tag: '@LAY-08' }, async () => { expect(f(')')).ok(); });",
+      "it.todo('COL-03 later');",
+      "xit('COL-04 disabled', () => {});",
+      "test('COL-01 runs', () => {});",
+    ].join('\n');
+    assert.deepEqual(extractIds(source, FAMILIES), ['COL-01']);
+  });
+
+  test('ignores tags and test calls inside comments but not comment-like text in strings', () => {
+    const source = [
+      "// test('x', { tag: ['@LAY-06'] }, () => {});",
+      "/* test('LAY-07 reflow', () => {}); */",
+      '/**',
+      " * { tag: ['@COL-02'] }",
+      ' */',
+      "test('COL-01 at http://example.com', { tag: '@LAY-01' }, () => {});",
+    ].join('\n');
+    assert.deepEqual(extractIds(source, FAMILIES).sort(), ['COL-01', 'LAY-01']);
   });
 
   test('ignores untagged IDs outside titles and unrelated tokens in titles', () => {

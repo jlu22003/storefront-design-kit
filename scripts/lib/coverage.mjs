@@ -4,6 +4,7 @@
 //   - Playwright tags, e.g. test('reflow 320', { tag: ['@LAY-06'] }, ...)
 //   - the ID in a test title, e.g. test('COL-01 label on bg >= 4.5', ...)
 // The scan is static: it reads test sources as text and does not run them.
+// Comments and skipped, fixme or todo calls are dropped first: they test nothing.
 // Lint rules map to IDs in catalog/lint-map.json ({ "COL-06": ["stylelint: color-no-hex"] }).
 
 import { readdir, readFile } from 'node:fs/promises';
@@ -15,6 +16,63 @@ const SKIP_DIRS = new Set(['node_modules', '__screenshots__']);
 const TAG = /@([A-Z]{3}-\d{2})\b/g;
 const TITLE_CALL = /\b(?:test|it|describe)(?:\.\w+)*\s*\(\s*(['"`])((?:\\.|(?!\1)[^\\])*)\1/g;
 const ID_IN_TITLE = /(?<![\w-])([A-Z]{3}-\d{2})\b/g;
+const SKIPPED_CALL = /\b(?:(?:test|it|describe)(?:\.\w+)*\.(?:skip|fixme|todo)|x(?:test|it|describe))\s*\(/g;
+
+const isQuote = (ch) => ch === '"' || ch === "'" || ch === '`';
+
+function stringEnd(source, start) {
+  let i = start + 1;
+  while (i < source.length && source[i] !== source[start]) i += source[i] === '\\' ? 2 : 1;
+  return i + 1;
+}
+
+function stripComments(source) {
+  let out = '';
+  let i = 0;
+  while (i < source.length) {
+    if (isQuote(source[i])) {
+      const end = stringEnd(source, i);
+      out += source.slice(i, end);
+      i = end;
+    } else if (source.startsWith('//', i)) {
+      const end = source.indexOf('\n', i);
+      i = end === -1 ? source.length : end;
+    } else if (source.startsWith('/*', i)) {
+      const end = source.indexOf('*/', i + 2);
+      i = end === -1 ? source.length : end + 2;
+      out += ' ';
+    } else {
+      out += source[i++];
+    }
+  }
+  return out;
+}
+
+function callEnd(code, open) {
+  let depth = 0;
+  let i = open;
+  while (i < code.length) {
+    if (isQuote(code[i])) {
+      i = stringEnd(code, i);
+      continue;
+    }
+    if (code[i] === '(') depth++;
+    else if (code[i] === ')' && --depth === 0) return i + 1;
+    i++;
+  }
+  return code.length;
+}
+
+function dropSkippedCalls(code) {
+  let out = '';
+  let last = 0;
+  for (const match of code.matchAll(SKIPPED_CALL)) {
+    if (match.index < last) continue;
+    out += `${code.slice(last, match.index)} `;
+    last = callEnd(code, match.index + match[0].length - 1);
+  }
+  return out + code.slice(last);
+}
 
 /** Lists test files under `dir`, sorted, as paths relative to `root`. */
 export async function findTestFiles(dir, root = dir) {
@@ -40,13 +98,15 @@ export async function findTestFiles(dir, root = dir) {
 /**
  * Returns the catalog-style IDs a test source references: every `@ID` tag,
  * and every ID inside a test()/it()/describe() title. Each ID appears once.
+ * IDs inside comments or skipped, fixme or todo calls are not references.
  * `families` limits untagged title matches to real family prefixes, so
  * unrelated tokens such as "ISO-99" are not mistaken for references.
  */
 export function extractIds(source, families) {
+  const code = dropSkippedCalls(stripComments(source));
   const ids = new Set();
-  for (const [, id] of source.matchAll(TAG)) ids.add(id);
-  for (const [, , title] of source.matchAll(TITLE_CALL)) {
+  for (const [, id] of code.matchAll(TAG)) ids.add(id);
+  for (const [, , title] of code.matchAll(TITLE_CALL)) {
     for (const [, id] of title.matchAll(ID_IN_TITLE)) {
       if (families.has(id.slice(0, 3))) ids.add(id);
     }
