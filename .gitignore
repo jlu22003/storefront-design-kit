@@ -43,7 +43,6 @@ blob-report/
 playwright/.cache/
 .lighthouseci/
 coverage/
-*.trace.zip
 tests/**/__screenshots__/clients/
 
 # --- OS / editor / logs -------------------------------------------------
