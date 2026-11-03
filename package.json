@@ -9,9 +9,11 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "test": "node --test \"scripts/test/*.test.mjs\"",
+    "test": "node --test \"scripts/test/*.test.mjs\" \"tests/**/*.test.mjs\"",
     "catalog:docs": "node scripts/catalog-docs.mjs",
     "catalog:docs:check": "node scripts/catalog-docs.mjs --check",
-    "catalog:check": "node scripts/catalog-check.mjs"
+    "catalog:check": "node scripts/catalog-check.mjs",
+    "tokens": "node scripts/build-tokens.mjs",
+    "tokens:check": "node scripts/build-tokens.mjs --check"
   }
 }

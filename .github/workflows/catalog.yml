@@ -22,10 +22,12 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node }}
-      # No dependencies to install: the catalog tooling uses Node built-ins only.
+      # No dependencies to install: the catalog and token tooling use Node built-ins only.
       - name: Unit tests
         run: npm test
       - name: Generated docs are up to date
         run: npm run catalog:docs:check
+      - name: Generated tokens are up to date
+        run: npm run tokens:check
       - name: Coverage gate (report-only)
         run: npm run catalog:check
