@@ -1,0 +1,186 @@
+{
+  "$comment": "Notable liberties: where the kit departs from, reinterprets, or extends Apple's Human Interface Guidelines for the web. LIBERTIES.md is generated from this file: run `npm run catalog:docs`.",
+  "version": 1,
+  "liberties": [
+    {
+      "id": "LIB-01",
+      "title": "pt → px 1:1, then rem.",
+      "detail": "A HIG point equals one CSS px at the device's scale factor. Evidence: Playwright 1.64.1 describes iPhone 17 Pro as 402 px wide @3× DPR, and Apple publishes 402 pt wide for that phone (⚠ the live HIG no longer lists device specs, so the pt figure comes from memory and is unverified). Sizes are then written in rem at a 16 px root. The CSS `pt` unit (1/72 in = 1.333 px) is **banned**, because it would turn 17 pt into 22.7 px.",
+      "rationale": "Correct, testable translation. Stylelint `unit-disallowed-list: [\"pt\"]`."
+    },
+    {
+      "id": "LIB-02",
+      "title": "Dynamic Type → rem plus browser text size and zoom.",
+      "detail": "No web API exposes the iOS Dynamic Type category. Optional: WebKit's `font: -apple-system-body` on `html` reportedly tracks Dynamic Type in Safari, then the family is reset. ⚠ Not verified this pass; test on a device before adopting.",
+      "rationale": "The nearest web mechanism."
+    },
+    {
+      "id": "LIB-03",
+      "title": "One type scale (iOS \"Large\" defaults) for all widths.",
+      "detail": "The macOS 13 pt body is too small for web reading. Two display sizes above Large Title are added for storefront heroes, using fluid `clamp()` with rem bounds and covered by the 200% zoom tests.",
+      "rationale": "Storefront marketing needs bigger headings than HIG apps."
+    },
+    {
+      "id": "LIB-04",
+      "title": "WCAG's definition of large text replaces HIG's table.",
+      "detail": "HIG's contrast table gives 3:1 for bold text at any size and for 18 pt and up. WCAG's \"large text\" is ≥ 18 pt (24 px) regular or ≥ 14 pt (18.66 px) bold. So small bold text still needs 4.5:1. HIG's dark-mode \"strive for 7:1\" is adopted for primary and secondary text.",
+      "rationale": "HIG's table is looser than the WCAG text it cites; WCAG is the legal and audit standard."
+    },
+    {
+      "id": "LIB-05",
+      "title": "Targets: 44 px by default; HIG's 28 pt \"minimum\" is not used.",
+      "detail": "WCAG's 24 px floor applies only to dense inline cases.",
+      "rationale": "HIG's 28 pt minimum is below the comfortable touch size; 44 also equals WCAG 2.5.5 AAA."
+    },
+    {
+      "id": "LIB-06",
+      "title": "Accessibility settings → media queries.",
+      "detail": "Increase Contrast → `prefers-contrast: more` (Chrome 96 / Safari 14.1 / Firefox 101). Reduce Transparency → `prefers-reduced-transparency` (Chrome 118; **not** Safari; Firefox behind a flag), so opaque fallbacks also key off `prefers-contrast`. Bold Text has **no web equivalent** and is dropped. Windows `forced-colors` is added.",
+      "rationale": "Browser support per BCD 8.1.8."
+    },
+    {
+      "id": "LIB-07",
+      "title": "Liquid Glass → `backdrop-filter` material",
+      "detail": "(blur + saturate over a role-tinted surface at a fixed opacity floor), with opaque fallbacks. No lensing, refraction, or specular highlights. `-webkit-backdrop-filter` is still emitted (BCD: unprefixed Safari 18; Chrome 76; Firefox 103).",
+      "rationale": "Cheap, legible, and avoids imitating Apple trade dress (§3.1)."
+    },
+    {
+      "id": "LIB-08",
+      "title": "Safe areas → `env(safe-area-inset-*)`",
+      "detail": "with `viewport-fit=cover` (Chrome 69 / Safari 11.1 / Firefox 65). Dynamic Island and camera housing are covered by the same insets.",
+      "rationale": "Direct web equivalent."
+    },
+    {
+      "id": "LIB-09",
+      "title": "Size classes → width breakpoints plus container queries",
+      "detail": "(Chrome 105 / Safari 16 / Firefox 110). The vertical size class is approximated by a `max-height` query only for landscape phones.",
+      "rationale": "The web has no size-class API."
+    },
+    {
+      "id": "LIB-10",
+      "title": "System colors → our own palette",
+      "detail": "under HIG-style semantic role names. Apple's measured values are not reused (system blue light is 3.52:1 on white). Our tertiary label meets 4.5:1, unlike HIG's low-alpha tertiary/quaternary; quaternary is reserved for disabled UI.",
+      "rationale": "Accessibility and independence from Apple's values."
+    },
+    {
+      "id": "LIB-11",
+      "title": "SF Symbols → Lucide",
+      "detail": "(ISC + MIT). A stroke-width token stands in for symbol weights, and icons size in `em`.",
+      "rationale": "License (§3.1)."
+    },
+    {
+      "id": "LIB-12",
+      "title": "One open font set everywhere; no San Francisco.",
+      "detail": "Inter for UI and body text, Source Serif 4 for optional editorial headings, IBM Plex Mono for code and numbers. All are OFL-1.1 and in Shopify's font library. System-font keywords that would render SF Pro on Apple devices are not used either.",
+      "rationale": "Owner decision (2026-11-03): zero licensing ambiguity (§3.1), and the same rendering on every platform, which keeps visual baselines deterministic.",
+      "note": "Revised from the research report, which proposed SF Pro through system-font keywords with an Inter fallback."
+    },
+    {
+      "id": "LIB-13",
+      "title": "Haptics and audio cues dropped.",
+      "detail": "Feedback is visual plus a live region. Copy says \"select\", not \"tap\"/\"click\".",
+      "rationale": "⚠ Web Vibration support on iOS Safari not verified; HIG haptic patterns don't apply."
+    },
+    {
+      "id": "LIB-14",
+      "title": "Platform-only guidance dropped:",
+      "detail": "menu bar, Dock, windows/panels, widgets, Live Activities, complications, Digital Crown, Apple Pencil, Action button, Camera Control, tvOS focus engine and safe-area figures, visionOS spatial/ornaments, game controls, Siri/Shortcuts, App Clips, app icons (favicon/touch icon only), Spotlight, Quick Look.",
+      "rationale": "Not applicable to responsive web storefronts."
+    },
+    {
+      "id": "LIB-15",
+      "title": "Optional site appearance toggle,",
+      "detail": "defaulting to System. HIG advises against app-specific appearance settings.",
+      "rationale": "Some merchants require a brand-fixed theme. Allowed only when it defaults to System."
+    },
+    {
+      "id": "LIB-16",
+      "title": "Submit stays enabled.",
+      "detail": "HIG suggests enabling Next only once required data is present. Disabled buttons are not focusable and give no reason, so the kit validates on submit and focuses the first error.",
+      "rationale": "Web a11y practice (WCAG 3.3.1/3.3.3)."
+    },
+    {
+      "id": "LIB-17",
+      "title": "Sentence case everywhere.",
+      "detail": "HIG's Alerts page says button titles take sentence-style capitalisation, but Menus says menu items take title-style. The kit unifies on sentence case.",
+      "rationale": "Consistency, as HIG Writing itself requires."
+    },
+    {
+      "id": "LIB-18",
+      "title": "All controls are Tab-focusable.",
+      "detail": "HIG's iPadOS keyboard note discourages keyboard navigation on buttons and switches, leaving that to Full Keyboard Access.",
+      "rationale": "On the web, WCAG 2.1.1 requires it."
+    },
+    {
+      "id": "LIB-19",
+      "title": "Dialog button order uses logical flex order,",
+      "detail": "so it mirrors in RTL.",
+      "rationale": "HIG gives physical (trailing) placement."
+    },
+    {
+      "id": "LIB-20",
+      "title": "Tab bar → header navigation plus an optional compact bottom bar (≤ 5 items, ours).",
+      "detail": "HIG's floating Liquid Glass tab bar is not replicated.",
+      "rationale": "Storefront convention. The live Tab bars page gives no numeric limit, so 5 is ours."
+    },
+    {
+      "id": "LIB-21",
+      "title": "Sheet detents → CSS bottom sheets",
+      "detail": "with 50% / 90% `dvh` snap points via scroll-snap, plus a grabber.",
+      "rationale": "Nearest web pattern."
+    },
+    {
+      "id": "LIB-22",
+      "title": "Elevated dark surfaces are explicit tokens",
+      "detail": "applied by components, not automatic.",
+      "rationale": "The web has no automatic elevated trait."
+    },
+    {
+      "id": "LIB-23",
+      "title": "Motion numbers are ours.",
+      "detail": "HIG gives no durations; tokens are capped at 400 ms.",
+      "rationale": "Needed for automated checks."
+    },
+    {
+      "id": "LIB-24",
+      "title": "Readable width is ours:",
+      "detail": "66ch target / 75ch max. HIG mentions readable-width guides but gives no number.",
+      "rationale": "Needed for automated checks."
+    },
+    {
+      "id": "LIB-25",
+      "title": "Web and commerce extensions not in HIG:",
+      "detail": "skip link, breadcrumbs, cookie/age-consent banners (legal, so exempt from MOD-09), performance budgets, Shopify Theme Store floors.",
+      "rationale": "Web requirements."
+    },
+    {
+      "id": "LIB-26",
+      "title": "Apple Pay rules constrain only our layout.",
+      "detail": "Shopify's dynamic checkout renders the actual buttons.",
+      "rationale": "We don't control those buttons."
+    },
+    {
+      "id": "LIB-27",
+      "title": "Clay vocabulary, adapted:",
+      "detail": "Clay's physical `LEFT`/`RIGHT` become logical `start`/`end` on the web. Clay's `PERCENT` subtracts padding *and* gaps; CSS % does not, so the web shim uses `calc()`. Clay has no wrap or grid, so `Cluster` and `Grid` are web-only primitives (§4.5).",
+      "rationale": "Fidelity where natural, per the captain's intent."
+    },
+    {
+      "id": "LIB-28",
+      "title": "HIG spacing advice (~12/24 pt) is a warning, not an error.",
+      "rationale": "It is approximate in HIG itself."
+    },
+    {
+      "id": "LIB-29",
+      "title": "Shopify Theme Store floors adopted",
+      "detail": "(Lighthouse perf ≥ 60, a11y ≥ 90 average; contrast; 24 px targets), with stricter kit targets on top.",
+      "rationale": "Client themes may later be listed."
+    },
+    {
+      "id": "LIB-30",
+      "title": "Haptic \"press\" feel → a pressed visual state",
+      "detail": "(scale ≤ 0.98 or a fill change), disabled under reduced motion.",
+      "rationale": "Web substitute."
+    }
+  ]
+}

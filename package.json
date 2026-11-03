@@ -1,0 +1,17 @@
+{
+  "name": "storefront-design-kit",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Responsive design system, layout primitives, and standards test suite for Shopify themes and client sites",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "test": "node --test \"scripts/test/*.test.mjs\"",
+    "catalog:docs": "node scripts/catalog-docs.mjs",
+    "catalog:docs:check": "node scripts/catalog-docs.mjs --check",
+    "catalog:check": "node scripts/catalog-check.mjs"
+  }
+}
