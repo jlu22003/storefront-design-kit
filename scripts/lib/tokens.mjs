@@ -5,9 +5,8 @@
 //   color.<mode>.tokens.json      one file per appearance mode, all with the same tokens
 //
 // The output is an emitter-neutral model: every token with its path, type, resolved
-// value, description and kit extensions. Emitters (CSS today, other formats
-// can be added) render
-// that model and never read the JSON themselves.
+// value, description and kit extensions. Emitters (CSS today, other formats can be
+// added) render that model and never read the JSON themselves.
 
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
