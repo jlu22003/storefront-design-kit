@@ -18,58 +18,81 @@ const TITLE_CALL = /\b(?:test|it|describe)(?:\.\w+)*\s*\(\s*(['"`])((?:\\.|(?!\1
 const ID_IN_TITLE = /(?<![\w-])([A-Z]{3}-\d{2})\b/g;
 const SKIPPED_CALL = /\b(?:(?:test|it|describe)(?:\.\w+)*\.(?:skip|fixme|todo)|x(?:test|it|describe))\s*\(/g;
 
-const isQuote = (ch) => ch === '"' || ch === "'" || ch === '`';
+const REGEX_PREFIX = /(?:[(,=:[!&|?{};+\-*%<>~^]|\b(?:return|typeof|case|do|else|in|of|new|delete|void|throw|yield|await))$/;
 
-function stringEnd(source, start) {
-  let i = start + 1;
-  while (i < source.length && source[i] !== source[start]) i += source[i] === '\\' ? 2 : 1;
-  return i + 1;
-}
-
-function stripComments(source) {
-  let out = '';
+function scan(source) {
+  let code = '';
+  const literal = [];
+  const keep = (text, isLiteral) => {
+    code += text;
+    while (literal.length < code.length) literal.push(isLiteral);
+  };
+  const templateDepths = [];
+  let depth = 0;
   let i = 0;
   while (i < source.length) {
-    if (isQuote(source[i])) {
-      const end = stringEnd(source, i);
-      out += source.slice(i, end);
-      i = end;
+    const ch = source[i];
+    let end = i + 1;
+    if (ch === '`' || (ch === '}' && templateDepths.at(-1) === depth)) {
+      if (ch === '}') templateDepths.pop();
+      while (end < source.length && source[end] !== '`' && !source.startsWith('${', end)) end += source[end] === '\\' ? 2 : 1;
+      if (source.startsWith('${', end)) {
+        end += 2;
+        templateDepths.push(depth);
+      } else {
+        end += 1;
+      }
+      keep(source.slice(i, end), true);
+    } else if (ch === '"' || ch === "'") {
+      while (end < source.length && source[end] !== ch && source[end] !== '\n') end += source[end] === '\\' ? 2 : 1;
+      if (source[end] === ch) end += 1;
+      keep(source.slice(i, end), true);
     } else if (source.startsWith('//', i)) {
-      const end = source.indexOf('\n', i);
-      i = end === -1 ? source.length : end;
+      end = source.indexOf('\n', i);
+      if (end === -1) end = source.length;
     } else if (source.startsWith('/*', i)) {
-      const end = source.indexOf('*/', i + 2);
-      i = end === -1 ? source.length : end + 2;
-      out += ' ';
+      end = source.indexOf('*/', i + 2);
+      end = end === -1 ? source.length : end + 2;
+      keep(' ', false);
+    } else if (ch === '/' && (code.trim() === '' || REGEX_PREFIX.test(code.slice(-64).trimEnd()))) {
+      let inClass = false;
+      while (end < source.length && source[end] !== '\n' && (inClass || source[end] !== '/')) {
+        if (source[end] === '\\') end += 1;
+        else if (source[end] === '[') inClass = true;
+        else if (source[end] === ']') inClass = false;
+        end += 1;
+      }
+      end += 1;
+      while (end < source.length && /\w/.test(source[end])) end += 1;
+      keep(source.slice(i, end), true);
     } else {
-      out += source[i++];
+      if (ch === '{') depth += 1;
+      else if (ch === '}') depth -= 1;
+      keep(ch, false);
     }
+    i = end;
   }
-  return out;
+  return { code, literal };
 }
 
-function callEnd(code, open) {
+function callEnd(code, literal, open) {
   let depth = 0;
-  let i = open;
-  while (i < code.length) {
-    if (isQuote(code[i])) {
-      i = stringEnd(code, i);
-      continue;
-    }
+  for (let i = open; i < code.length; i++) {
+    if (literal[i]) continue;
     if (code[i] === '(') depth++;
     else if (code[i] === ')' && --depth === 0) return i + 1;
-    i++;
   }
   return code.length;
 }
 
-function dropSkippedCalls(code) {
+function activeCode(source) {
+  const { code, literal } = scan(source);
   let out = '';
   let last = 0;
   for (const match of code.matchAll(SKIPPED_CALL)) {
-    if (match.index < last) continue;
+    if (match.index < last || literal[match.index]) continue;
     out += `${code.slice(last, match.index)} `;
-    last = callEnd(code, match.index + match[0].length - 1);
+    last = callEnd(code, literal, match.index + match[0].length - 1);
   }
   return out + code.slice(last);
 }
@@ -103,7 +126,7 @@ export async function findTestFiles(dir, root = dir) {
  * unrelated tokens such as "ISO-99" are not mistaken for references.
  */
 export function extractIds(source, families) {
-  const code = dropSkippedCalls(stripComments(source));
+  const code = activeCode(source);
   const ids = new Set();
   for (const [, id] of code.matchAll(TAG)) ids.add(id);
   for (const [, , title] of code.matchAll(TITLE_CALL)) {

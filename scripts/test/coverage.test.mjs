@@ -44,6 +44,20 @@ describe('extractIds', () => {
     assert.deepEqual(extractIds(source, FAMILIES), ['COL-01']);
   });
 
+  test('reads regex literals and template interpolations as literals, not code', () => {
+    const quoteInRegex = "await expect(page.getByText(/it's/)).toBeVisible();\n// test('LAY-06 reflow', () => {});";
+    assert.deepEqual(extractIds(quoteInRegex, FAMILIES), []);
+
+    const openParenInSkipped = 'test.fixme("x", async () => { await expect(t).toHaveText(/\\(/); });\ntest("COL-01 runs", () => {});';
+    assert.deepEqual(extractIds(openParenInSkipped, FAMILIES), ['COL-01']);
+
+    const closeParenInSkipped = 'test.fixme("x", async () => { expect(t).toHaveText(/\\)/); test("LAY-02 inner", () => {}); });';
+    assert.deepEqual(extractIds(closeParenInSkipped, FAMILIES), []);
+
+    const nestedTemplate = "const u = `${`/*`}`;\ntest('LAY-03 after', () => { const r = a / b; const s = '//x'; });\nconst v = `${ { a: '`' }.a }`;\n// test('COL-02 gone', () => {});";
+    assert.deepEqual(extractIds(nestedTemplate, FAMILIES), ['LAY-03']);
+  });
+
   test('ignores tags and test calls inside comments but not comment-like text in strings', () => {
     const source = [
       "// test('x', { tag: ['@LAY-06'] }, () => {});",
