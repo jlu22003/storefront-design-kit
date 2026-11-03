@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Landing starter · storefront-design-kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap">
+<link rel="stylesheet" href="/theme/assets/sdk-tokens.css">
+<link rel="stylesheet" href="/theme/assets/sdk-base.css">
+<link rel="stylesheet" href="/theme/assets/sdk-primitives.css">
+<link rel="stylesheet" href="/playground/assets/sketch.css">
+</head>
+<!--
+  Landing page starter. Layout comes only from the sdk- primitives and tokens;
+  pg- classes are placeholder visuals. Copy it with `npm run sketch -- <name>`.
+-->
+<body class="pg-page">
+<header class="pg-header">
+  <nav class="sdk-center sdk-row" data-gutter data-align-x="between" data-align-y="center" aria-label="Main" style="--measure: 72rem; --padding-block: var(--sdk-space-8)">
+    <a class="pg-nav-link sdk-text-headline" href="#top">Sample Store</a>
+    <ul class="sdk-cluster" role="list" style="--child-gap: var(--sdk-space-24)">
+      <li><a class="pg-nav-link" href="#featured">Shop</a></li>
+      <li><a class="pg-nav-link" href="#features">About</a></li>
+      <li><a class="pg-nav-link" href="#newsletter">Journal</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main id="top">
+  <!-- Hero: text and media side by side, stacking when narrow. -->
+  <section class="sdk-center" data-gutter style="--measure: 72rem; --padding-block: var(--sdk-space-64)" aria-labelledby="hero-title">
+    <div class="sdk-switcher" style="--switch-at: 52rem; --child-gap: var(--sdk-space-48)">
+      <div class="sdk-stack" data-align-y="center" style="--child-gap: var(--sdk-space-24)">
+        <p class="sdk-text-subhead sdk-text-secondary sdk-text-semibold">New season</p>
+        <h1 id="hero-title" class="sdk-text-display-1 sdk-font-serif">Everyday goods, made to last.</h1>
+        <p class="sdk-text-title-3 sdk-text-secondary">
+          A short line that says what the store sells and why it is worth a look.
+        </p>
+        <div class="sdk-cluster" style="--child-gap: var(--sdk-space-12)">
+          <a class="pg-button" href="#featured">Shop the collection</a>
+          <a class="pg-button" data-variant="secondary" href="#features">Our story</a>
+        </div>
+      </div>
+      <div class="sdk-aspect pg-media" style="--ratio: 4 / 5" role="img" aria-label="Placeholder product photo"></div>
+    </div>
+  </section>
+
+  <!-- Feature grid. -->
+  <section id="features" class="pg-band" aria-labelledby="features-title">
+    <div class="sdk-center sdk-stack" data-gutter style="--measure: 72rem; --padding-block: var(--sdk-space-64); --child-gap: var(--sdk-space-32)">
+      <h2 id="features-title" class="sdk-text-title-1">Why shop with us</h2>
+      <ul class="sdk-grid" role="list" style="--min: 14rem; --child-gap: var(--sdk-space-24)">
+        <li class="sdk-stack" style="--child-gap: var(--sdk-space-8)">
+          <h3 class="sdk-text-headline">Free returns</h3>
+          <p class="sdk-text-secondary">Thirty days to change your mind, no questions asked.</p>
+        </li>
+        <li class="sdk-stack" style="--child-gap: var(--sdk-space-8)">
+          <h3 class="sdk-text-headline">Small batches</h3>
+          <p class="sdk-text-secondary">Made in limited runs, so nothing sits in a warehouse.</p>
+        </li>
+        <li class="sdk-stack" style="--child-gap: var(--sdk-space-8)">
+          <h3 class="sdk-text-headline">Repair service</h3>
+          <p class="sdk-text-secondary">Send it back for a fix instead of buying a new one.</p>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Featured products: a scrolling row on small screens is easy too, see the collection starter. -->
+  <section id="featured" class="sdk-center sdk-stack" data-gutter style="--measure: 72rem; --padding-block: var(--sdk-space-64); --child-gap: var(--sdk-space-32)" aria-labelledby="featured-title">
+    <div class="sdk-row" data-align-x="between" data-align-y="baseline">
+      <h2 id="featured-title" class="sdk-text-title-1">Featured</h2>
+      <a href="/playground/starters/collection.html">View all</a>
+    </div>
+    <ul class="sdk-grid" role="list" style="--min: 13rem; --child-gap: var(--sdk-space-24)">
+      <li class="sdk-stack" style="--child-gap: var(--sdk-space-12)">
+        <div class="sdk-aspect pg-media" style="--ratio: 1"></div>
+        <div class="sdk-stack" style="--child-gap: var(--sdk-space-4)">
+          <h3 class="sdk-text-headline"><a href="/playground/starters/product.html">Canvas tote</a></h3>
+          <p class="sdk-text-secondary">$48</p>
+        </div>
+      </li>
+      <li class="sdk-stack" style="--child-gap: var(--sdk-space-12)">
+        <div class="sdk-aspect pg-media" data-tone="2" style="--ratio: 1"></div>
+        <div class="sdk-stack" style="--child-gap: var(--sdk-space-4)">
+          <h3 class="sdk-text-headline"><a href="/playground/starters/product.html">Stoneware mug</a></h3>
+          <p class="sdk-text-secondary">$24</p>
+        </div>
+      </li>
+      <li class="sdk-stack" style="--child-gap: var(--sdk-space-12)">
+        <div class="sdk-aspect pg-media" data-tone="3" style="--ratio: 1"></div>
+        <div class="sdk-stack" style="--child-gap: var(--sdk-space-4)">
+          <h3 class="sdk-text-headline"><a href="/playground/starters/product.html">Wool throw</a></h3>
+          <p class="sdk-text-secondary">$120</p>
+        </div>
+      </li>
+      <li class="sdk-stack" style="--child-gap: var(--sdk-space-12)">
+        <div class="sdk-aspect pg-media" style="--ratio: 1"></div>
+        <div class="sdk-stack" style="--child-gap: var(--sdk-space-4)">
+          <h3 class="sdk-text-headline"><a href="/playground/starters/product.html">Linen napkins, set of 4</a></h3>
+          <p class="sdk-text-secondary">$36</p>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <!-- Newsletter: a centered narrow column. -->
+  <section id="newsletter" class="pg-band" aria-labelledby="newsletter-title">
+    <div class="sdk-center sdk-stack" data-gutter data-align-x="center" style="--measure: 32rem; --padding-block: var(--sdk-space-64)">
+      <h2 id="newsletter-title" class="sdk-text-title-2">Get the occasional email</h2>
+      <p class="sdk-text-secondary">New arrivals and restocks, about once a month.</p>
+      <form class="sdk-row" data-w="grow" style="--child-gap: var(--sdk-space-8)" action="#" onsubmit="return false">
+        <label class="sdk-visually-hidden" for="email">Email address</label>
+        <input class="pg-field" data-w="grow" id="email" type="email" autocomplete="email" placeholder="you@example.com">
+        <button class="pg-button" type="submit">Subscribe</button>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="pg-footer">
+  <div class="sdk-center sdk-switcher" data-gutter style="--measure: 72rem; --padding-block: var(--sdk-space-40); --switch-at: 40rem">
+    <p class="sdk-text-footnote sdk-text-secondary">© Sample Store. Placeholder content.</p>
+    <ul class="sdk-cluster" role="list" data-align-x="end" style="--child-gap: var(--sdk-space-16)">
+      <li><a class="sdk-text-footnote" href="#top">Shipping</a></li>
+      <li><a class="sdk-text-footnote" href="#top">Returns</a></li>
+      <li><a class="sdk-text-footnote" href="#top">Contact</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>

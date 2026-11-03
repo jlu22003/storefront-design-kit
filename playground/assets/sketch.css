@@ -1,0 +1,177 @@
+/*
+ * Sketch helpers for the playground pages and starters (pg- prefix).
+ *
+ * These are stand-ins for the kit's components, which come later: just enough
+ * surface, media, and button styling to make a layout readable. They use only
+ * --sdk-* tokens, so the design panel restyles them too. The layout itself
+ * always comes from the sdk- primitives.
+ */
+
+.pg-page {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 100svh;
+}
+
+.pg-page > main {
+  flex: 1 0 auto;
+}
+
+.pg-header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: var(--sdk-z-header);
+  border-block-end: var(--sdk-border-width-hairline) solid var(--sdk-color-separator);
+  background: var(--sdk-color-bg);
+}
+
+.pg-footer {
+  border-block-start: var(--sdk-border-width-hairline) solid var(--sdk-color-separator);
+  background: var(--sdk-color-bg-secondary);
+}
+
+.pg-band {
+  background: var(--sdk-color-bg-secondary);
+}
+
+.pg-surface {
+  border: var(--sdk-border-width-hairline) solid var(--sdk-color-border-elevated);
+  border-radius: var(--sdk-radius-16);
+  background: var(--sdk-color-bg-elevated);
+  box-shadow: var(--sdk-shadow-1);
+}
+
+/* Placeholder media: a soft tinted block where a photo would go. */
+.pg-media {
+  border-radius: var(--sdk-radius-12);
+  background:
+    radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--sdk-color-accent) 22%, transparent), transparent 60%),
+    linear-gradient(135deg, var(--sdk-color-bg-secondary), color-mix(in srgb, var(--sdk-color-accent) 12%, var(--sdk-color-bg-secondary)));
+  filter: brightness(var(--sdk-media-brightness));
+}
+
+.pg-media[data-tone="2"] {
+  background:
+    radial-gradient(circle at 70% 40%, color-mix(in srgb, var(--sdk-color-success) 20%, transparent), transparent 60%),
+    linear-gradient(160deg, var(--sdk-color-bg-secondary), color-mix(in srgb, var(--sdk-color-success) 10%, var(--sdk-color-bg-secondary)));
+}
+
+.pg-media[data-tone="3"] {
+  background:
+    radial-gradient(circle at 50% 70%, color-mix(in srgb, var(--sdk-color-warning) 20%, transparent), transparent 60%),
+    linear-gradient(200deg, var(--sdk-color-bg-secondary), color-mix(in srgb, var(--sdk-color-warning) 10%, var(--sdk-color-bg-secondary)));
+}
+
+.pg-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sdk-space-8);
+  min-block-size: var(--sdk-size-target-min);
+  padding-inline: var(--sdk-space-20);
+  border: var(--sdk-border-width-hairline) solid transparent;
+  border-radius: var(--sdk-radius-12);
+  background: var(--sdk-color-accent);
+  color: var(--sdk-color-on-accent);
+  font-weight: var(--sdk-font-weight-semibold);
+  text-decoration: none;
+  transition: background-color var(--sdk-duration-fast) var(--sdk-ease-standard);
+}
+
+.pg-button[data-variant="secondary"] {
+  border-color: var(--sdk-color-separator-opaque);
+  background: var(--sdk-color-bg-elevated);
+  color: var(--sdk-color-label);
+}
+
+.pg-button[data-variant="plain"] {
+  padding-inline: var(--sdk-space-12);
+  background: transparent;
+  color: var(--sdk-color-link);
+}
+
+.pg-nav-link {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--sdk-size-target-min);
+  color: var(--sdk-color-label);
+  text-decoration: none;
+}
+
+.pg-badge {
+  padding-block: var(--sdk-space-2);
+  padding-inline: var(--sdk-space-8);
+  border-radius: var(--sdk-radius-full);
+  background: var(--sdk-color-label);
+  color: var(--sdk-color-bg);
+  font-size: var(--sdk-font-size-caption-1);
+  font-weight: var(--sdk-font-weight-semibold);
+}
+
+.pg-price-sale {
+  color: var(--sdk-color-sale);
+  font-weight: var(--sdk-font-weight-semibold);
+}
+
+.pg-price-was {
+  color: var(--sdk-color-label-secondary);
+  text-decoration: line-through;
+}
+
+.pg-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sdk-space-8);
+  min-block-size: var(--sdk-size-target-min);
+  padding-inline: var(--sdk-space-16);
+  border: var(--sdk-border-width-hairline) solid var(--sdk-color-separator-opaque);
+  border-radius: var(--sdk-radius-12);
+  background: var(--sdk-color-bg-elevated);
+}
+
+.pg-choice:has(input:checked) {
+  border-color: var(--sdk-color-accent);
+  box-shadow: inset 0 0 0 1px var(--sdk-color-accent);
+}
+
+.pg-choice input {
+  accent-color: var(--sdk-color-accent);
+}
+
+.pg-field {
+  min-block-size: var(--sdk-size-field-height);
+  padding-inline: var(--sdk-space-12);
+  border: var(--sdk-border-width-hairline) solid var(--sdk-color-separator-opaque);
+  border-radius: var(--sdk-radius-12);
+  background: var(--sdk-color-bg-elevated);
+}
+
+/* Primitives demo: dashed outlines show each box, tinted chips show children. */
+.pg-outline {
+  border: var(--sdk-border-width-hairline) dashed var(--sdk-color-separator-opaque);
+  border-radius: var(--sdk-radius-8);
+}
+
+.pg-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: var(--sdk-size-target-min);
+  padding-inline: var(--sdk-space-12);
+  border-radius: var(--sdk-radius-8);
+  background: color-mix(in srgb, var(--sdk-color-accent) 14%, var(--sdk-color-bg-elevated));
+  color: var(--sdk-color-label);
+  font-family: var(--sdk-font-family-mono);
+  font-size: var(--sdk-font-size-footnote);
+}
+
+/* Code reads left to right even on a right-to-left page (LAY-14). */
+.pg-code {
+  direction: ltr;
+  unicode-bidi: isolate;
+  overflow: auto;
+  padding: var(--sdk-space-12);
+  border-radius: var(--sdk-radius-8);
+  background: var(--sdk-color-bg-secondary);
+  font-size: var(--sdk-font-size-footnote);
+}

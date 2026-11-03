@@ -1,0 +1,219 @@
+/* Design panel styles. Lives in the panel's shadow root, so it never touches the page. */
+
+:host {
+  all: initial;
+  position: fixed;
+  inset-block-end: var(--sdk-space-16);
+  inset-inline-end: var(--sdk-space-16);
+  z-index: 2147483000;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  gap: var(--sdk-space-8);
+  max-block-size: calc(100svh - 2 * var(--sdk-space-16));
+  font-family: var(--sdk-font-family-sans);
+  font-size: var(--sdk-font-size-subhead);
+  line-height: 1.35;
+  color: var(--sdk-color-label);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+button,
+select,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: var(--sdk-focus-width) solid var(--sdk-color-focus);
+  outline-offset: var(--sdk-focus-offset);
+}
+
+button,
+select {
+  min-block-size: var(--sdk-size-target-min);
+  padding-inline: var(--sdk-space-16);
+  border: var(--sdk-border-width-hairline) solid var(--sdk-color-separator-opaque);
+  border-radius: var(--sdk-radius-12);
+  background: var(--sdk-color-bg-elevated);
+  cursor: pointer;
+}
+
+.toggle {
+  border-radius: var(--sdk-radius-full);
+  box-shadow: var(--sdk-shadow-2);
+  font-weight: var(--sdk-font-weight-semibold);
+}
+
+.primary {
+  border-color: transparent;
+  background: var(--sdk-color-accent);
+  color: var(--sdk-color-on-accent);
+  font-weight: var(--sdk-font-weight-semibold);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sdk-space-12);
+  inline-size: min(22rem, calc(100vw - 2 * var(--sdk-space-16)));
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: var(--sdk-space-16);
+  border: var(--sdk-border-width-hairline) solid var(--sdk-color-separator);
+  border-radius: var(--sdk-radius-16);
+  background: var(--sdk-color-bg-elevated);
+  box-shadow: var(--sdk-shadow-3);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+h2 {
+  margin: 0;
+  font-size: var(--sdk-font-size-headline);
+  font-weight: var(--sdk-font-weight-semibold);
+}
+
+.close {
+  inline-size: var(--sdk-size-target-min);
+  padding: 0;
+  border-color: transparent;
+  font-size: var(--sdk-font-size-headline);
+}
+
+fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sdk-space-12);
+  margin: 0;
+  padding: var(--sdk-space-12);
+  border: var(--sdk-border-width-hairline) solid var(--sdk-color-separator);
+  border-radius: var(--sdk-radius-12);
+}
+
+legend {
+  padding-inline: var(--sdk-space-4);
+  font-weight: var(--sdk-font-weight-semibold);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sdk-space-4);
+}
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  font-variant-numeric: tabular-nums;
+}
+
+input[type="range"] {
+  inline-size: 100%;
+  min-block-size: var(--sdk-size-target-min);
+  margin: 0;
+  accent-color: var(--sdk-color-accent);
+}
+
+.hint,
+.status {
+  margin: 0;
+  font-size: var(--sdk-font-size-footnote);
+  color: var(--sdk-color-label-secondary);
+}
+
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+  gap: var(--sdk-space-8);
+}
+
+.swatch {
+  display: flex;
+  align-items: center;
+  gap: var(--sdk-space-8);
+  font-size: var(--sdk-font-size-footnote);
+}
+
+input[type="color"] {
+  flex: none;
+  inline-size: var(--sdk-size-target-min);
+  block-size: var(--sdk-size-target-min);
+  padding: var(--sdk-space-4);
+  border: var(--sdk-border-width-hairline) solid var(--sdk-color-separator-opaque);
+  border-radius: var(--sdk-radius-8);
+  background: var(--sdk-color-bg-elevated);
+  cursor: pointer;
+}
+
+.contrast {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sdk-space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--sdk-font-size-footnote);
+}
+
+.contrast li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--sdk-space-4);
+}
+
+.ratio {
+  font-family: var(--sdk-font-family-mono);
+  font-weight: var(--sdk-font-weight-semibold);
+  color: var(--sdk-color-success);
+}
+
+[data-pass="false"] .ratio {
+  color: var(--sdk-color-danger);
+}
+
+.output {
+  max-block-size: 12rem;
+  margin: 0;
+  overflow: auto;
+  padding: var(--sdk-space-8);
+  border-radius: var(--sdk-radius-8);
+  background: var(--sdk-color-bg-secondary);
+  font-family: var(--sdk-font-family-mono);
+  font-size: var(--sdk-font-size-footnote);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+.actions {
+  display: flex;
+  gap: var(--sdk-space-8);
+}
+
+@media (forced-colors: active) {
+  .primary {
+    border-color: ButtonText;
+  }
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: var(--sdk-space-8);
+}

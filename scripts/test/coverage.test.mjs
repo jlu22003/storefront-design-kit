@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, before, describe, test } from 'node:test';
@@ -176,7 +176,10 @@ describe('scanning the file system', () => {
   test('the CLI is report-only by default and enforcing with --enforce', async () => {
     const tests = join(root, 'tests');
     const report = await run(process.execPath, [CLI, '--tests', tests]);
-    assert.match(report.stdout, /catalog:check \(report-only\): 2\/118 automated standards have tests \(2 test files scanned\)/);
+    // The CLI also counts the repository's own catalog/lint-map.json.
+    const repoLintIds = Object.keys(JSON.parse(await readFile(join(import.meta.dirname, '..', '..', 'catalog', 'lint-map.json'), 'utf8')));
+    const covered = new Set(['LAY-06', 'COL-01', ...repoLintIds]).size;
+    assert.match(report.stdout, new RegExp(`catalog:check \\(report-only\\): ${covered}/118 automated standards have tests \\(2 test files scanned\\)`));
 
     await assert.rejects(run(process.execPath, [CLI, '--enforce', '--tests', tests]), (error) => {
       assert.equal(error.code, 1);

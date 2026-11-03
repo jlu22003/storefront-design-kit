@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Layout primitives · storefront-design-kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap">
+<link rel="stylesheet" href="/theme/assets/sdk-tokens.css">
+<link rel="stylesheet" href="/theme/assets/sdk-base.css">
+<link rel="stylesheet" href="/theme/assets/sdk-primitives.css">
+<link rel="stylesheet" href="/playground/assets/sketch.css">
+</head>
+<body>
+<main class="sdk-center sdk-stack" data-gutter style="--measure: 64rem; --padding-block: var(--sdk-space-48); --child-gap: var(--sdk-space-64)">
+  <header class="sdk-stack" style="--child-gap: var(--sdk-space-12)">
+    <p><a href="/playground/">Playground</a></p>
+    <h1 class="sdk-text-display-2">Layout primitives</h1>
+    <div class="sdk-prose sdk-text-secondary">
+      <p>
+        A layout is a tree of boxes. Each container lays its children out in one
+        direction, with a gap between them, padding inside, and alignment on both
+        axes. Each child is sized along each axis: <strong>grow</strong> into the
+        leftover space, <strong>fit</strong> its content, a <strong>fixed</strong> size,
+        or a <strong>percent</strong> of the container.
+      </p>
+      <p>
+        Keywords are data attributes (<code>data-direction</code>, <code>data-align-x</code>,
+        <code>data-w="grow"</code>); amounts are custom properties (<code>--child-gap</code>,
+        <code>--padding</code>, <code>--w</code>). Start and end follow the reading
+        direction, so a right-to-left page mirrors with no extra CSS: try the
+        Direction control in the Design panel.
+      </p>
+    </div>
+  </header>
+
+  <!-- box -->
+  <section class="sdk-stack" aria-labelledby="box">
+    <h2 id="box" class="sdk-text-title-2"><code>.sdk-box</code>: direction, gap, padding, alignment</h2>
+    <p class="sdk-text-secondary">A row by default; <code>data-direction="column"</code> turns it. No gap or padding until you set them.</p>
+    <div class="sdk-box pg-outline" data-align-x="between" data-align-y="center" style="--child-gap: var(--sdk-space-12); --padding: var(--sdk-space-16); min-block-size: 8rem">
+      <div class="pg-chip">start</div>
+      <div class="pg-chip">middle</div>
+      <div class="pg-chip">end</div>
+    </div>
+    <pre class="pg-code"><code>&lt;div class="sdk-box" data-align-x="between" data-align-y="center"
+     style="--child-gap: var(--sdk-space-12); --padding: var(--sdk-space-16)"&gt;</code></pre>
+    <div class="sdk-box pg-outline" data-direction="column" data-align-x="center" style="--child-gap: var(--sdk-space-8); --padding: var(--sdk-space-16)">
+      <div class="pg-chip">column</div>
+      <div class="pg-chip">centered on x</div>
+    </div>
+    <pre class="pg-code"><code>&lt;div class="sdk-box" data-direction="column" data-align-x="center" …&gt;</code></pre>
+  </section>
+
+  <!-- sizing -->
+  <section class="sdk-stack" aria-labelledby="sizing">
+    <h2 id="sizing" class="sdk-text-title-2">Child sizing: grow, fit, fixed, percent</h2>
+    <div class="sdk-row pg-outline" style="--padding: var(--sdk-space-12); --child-gap: var(--sdk-space-8)">
+      <div class="pg-chip" data-w="fixed" style="--w: 6rem">fixed 6rem</div>
+      <div class="pg-chip" data-w="grow">grow</div>
+      <div class="pg-chip" data-w="fit">fit</div>
+    </div>
+    <div class="sdk-row pg-outline" style="--padding: var(--sdk-space-12); --child-gap: var(--sdk-space-8)">
+      <div class="pg-chip" data-w="percent" style="--w: 0.25">0.25</div>
+      <div class="pg-chip" data-w="percent" style="--w: 0.75">0.75</div>
+    </div>
+    <div class="sdk-row pg-outline" style="--padding: var(--sdk-space-12); --child-gap: var(--sdk-space-8)">
+      <div class="pg-chip" data-w="grow" style="--w-max: 10rem">grow, max 10rem</div>
+      <div class="pg-chip" data-w="grow" style="--w-min: 12rem">grow, min 12rem</div>
+    </div>
+    <pre class="pg-code"><code>&lt;div class="sdk-row"&gt;
+  &lt;div data-w="fixed" style="--w: 6rem"&gt;…&lt;/div&gt;
+  &lt;div data-w="grow"&gt;…&lt;/div&gt;
+  &lt;div data-w="fit"&gt;…&lt;/div&gt;
+&lt;/div&gt;
+&lt;div data-w="percent" style="--w: 0.25"&gt;   &lt;!-- 0 to 1 --&gt;
+&lt;div data-w="grow" style="--w-min: 12rem; --w-max: 30rem"&gt;</code></pre>
+  </section>
+
+  <!-- stack and row -->
+  <section class="sdk-stack" aria-labelledby="stack">
+    <h2 id="stack" class="sdk-text-title-2"><code>.sdk-stack</code> and <code>.sdk-row</code></h2>
+    <p class="sdk-text-secondary">A column and a row with a default gap of <code>--sdk-space-16</code>. Nest them freely: parameters never leak into children.</p>
+    <div class="sdk-row pg-outline" style="--padding: var(--sdk-space-12)">
+      <div class="sdk-stack pg-outline" data-w="grow" style="--padding: var(--sdk-space-12); --child-gap: var(--sdk-space-8)">
+        <div class="pg-chip">stack</div>
+        <div class="pg-chip">gap 8</div>
+      </div>
+      <div class="sdk-stack pg-outline" data-w="grow" style="--padding: var(--sdk-space-12)">
+        <div class="pg-chip">stack</div>
+        <div class="pg-chip">default gap</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- grid -->
+  <section class="sdk-stack" aria-labelledby="grid">
+    <h2 id="grid" class="sdk-text-title-2"><code>.sdk-grid</code></h2>
+    <p class="sdk-text-secondary">As many columns as fit at <code>--min</code> wide, no media queries. Resize the window.</p>
+    <div class="sdk-grid pg-outline" style="--min: 10rem; --padding: var(--sdk-space-12); --child-gap: var(--sdk-space-12)">
+      <div class="pg-chip">1</div><div class="pg-chip">2</div><div class="pg-chip">3</div>
+      <div class="pg-chip">4</div><div class="pg-chip">5</div><div class="pg-chip">6</div>
+      <div class="pg-chip">7</div>
+    </div>
+    <pre class="pg-code"><code>&lt;ul class="sdk-grid" role="list" style="--min: 10rem"&gt;</code></pre>
+  </section>
+
+  <!-- cluster -->
+  <section class="sdk-stack" aria-labelledby="cluster">
+    <h2 id="cluster" class="sdk-text-title-2"><code>.sdk-cluster</code></h2>
+    <p class="sdk-text-secondary">A row that wraps: tags, filters, button groups.</p>
+    <div class="sdk-cluster pg-outline" style="--padding: var(--sdk-space-12)">
+      <span class="pg-chip">Linen</span><span class="pg-chip">Under 50</span><span class="pg-chip">In stock</span>
+      <span class="pg-chip">New arrivals</span><span class="pg-chip">Organic cotton</span><span class="pg-chip">Gift ideas</span>
+    </div>
+  </section>
+
+  <!-- switcher -->
+  <section class="sdk-stack" aria-labelledby="switcher">
+    <h2 id="switcher" class="sdk-text-title-2"><code>.sdk-switcher</code></h2>
+    <p class="sdk-text-secondary">
+      A row that becomes a stack when its own width drops below <code>--switch-at</code>.
+      It reacts to the space it has, so it also stacks when text gets bigger.
+    </p>
+    <div class="sdk-switcher pg-outline" style="--switch-at: 36rem; --padding: var(--sdk-space-12)">
+      <div class="pg-chip">one</div><div class="pg-chip">two</div><div class="pg-chip">three</div>
+    </div>
+    <pre class="pg-code"><code>&lt;div class="sdk-switcher" style="--switch-at: 36rem"&gt;</code></pre>
+  </section>
+
+  <!-- center -->
+  <section class="sdk-stack" aria-labelledby="center">
+    <h2 id="center" class="sdk-text-title-2"><code>.sdk-center</code></h2>
+    <p class="sdk-text-secondary">Caps width at <code>--measure</code> and centers it. <code>data-gutter</code> adds the responsive page gutter.</p>
+    <div class="pg-outline">
+      <div class="sdk-center pg-outline" style="--measure: 24rem">
+        <div class="pg-chip">max 24rem, centered</div>
+      </div>
+    </div>
+    <pre class="pg-code"><code>&lt;main class="sdk-center" data-gutter style="--measure: 72rem"&gt;</code></pre>
+  </section>
+
+  <!-- float -->
+  <section class="sdk-stack" aria-labelledby="float">
+    <h2 id="float" class="sdk-text-title-2"><code>.sdk-float</code></h2>
+    <p class="sdk-text-secondary">Pins a child to an edge or corner of its parent. <code>--offset-x</code> and <code>--offset-y</code> move it inward.</p>
+    <div class="pg-outline" style="block-size: 12rem">
+      <span class="sdk-float pg-chip" style="--offset-x: var(--sdk-space-8); --offset-y: var(--sdk-space-8)">start start</span>
+      <span class="sdk-float pg-chip" data-attach-x="end" style="--offset-x: var(--sdk-space-8); --offset-y: var(--sdk-space-8)">end start</span>
+      <span class="sdk-float pg-chip" data-attach-x="center" data-attach-y="center">center</span>
+      <span class="sdk-float pg-chip" data-attach-x="end" data-attach-y="end" style="--offset-x: var(--sdk-space-8); --offset-y: var(--sdk-space-8)">end end</span>
+    </div>
+    <pre class="pg-code"><code>&lt;span class="sdk-float" data-attach-x="end" data-attach-y="start"
+      style="--offset-x: var(--sdk-space-8); --offset-y: var(--sdk-space-8)"&gt;Sale&lt;/span&gt;</code></pre>
+  </section>
+
+  <!-- clip -->
+  <section class="sdk-stack" aria-labelledby="clip">
+    <h2 id="clip" class="sdk-text-title-2"><code>.sdk-clip</code></h2>
+    <p class="sdk-text-secondary">Clips overflow; <code>data-scroll="x"</code> scrolls instead, and <code>data-snap</code> snaps to each child.</p>
+    <div class="sdk-clip sdk-row pg-outline" data-scroll="x" data-snap style="--padding: var(--sdk-space-12)" tabindex="0" aria-label="Scrolling row example">
+      <div class="pg-chip" data-w="fixed" style="--w: 12rem">1</div>
+      <div class="pg-chip" data-w="fixed" style="--w: 12rem">2</div>
+      <div class="pg-chip" data-w="fixed" style="--w: 12rem">3</div>
+      <div class="pg-chip" data-w="fixed" style="--w: 12rem">4</div>
+      <div class="pg-chip" data-w="fixed" style="--w: 12rem">5</div>
+      <div class="pg-chip" data-w="fixed" style="--w: 12rem">6</div>
+    </div>
+  </section>
+
+  <!-- aspect -->
+  <section class="sdk-stack" aria-labelledby="aspect">
+    <h2 id="aspect" class="sdk-text-title-2"><code>.sdk-aspect</code></h2>
+    <p class="sdk-text-secondary">Holds a shape with <code>--ratio</code>. Images inside crop to fill it instead of stretching.</p>
+    <div class="sdk-grid" style="--min: 8rem">
+      <div class="sdk-aspect pg-media" style="--ratio: 1"></div>
+      <div class="sdk-aspect pg-media" data-tone="2" style="--ratio: 4 / 5"></div>
+      <div class="sdk-aspect pg-media" data-tone="3" style="--ratio: 16 / 9"></div>
+    </div>
+    <pre class="pg-code"><code>&lt;div class="sdk-aspect" style="--ratio: 4 / 5"&gt;&lt;img src="…" alt="…"&gt;&lt;/div&gt;</code></pre>
+  </section>
+
+  <!-- type -->
+  <section class="sdk-stack" aria-labelledby="type">
+    <h2 id="type" class="sdk-text-title-2">Text styles</h2>
+    <div class="sdk-stack" style="--child-gap: var(--sdk-space-8)">
+      <p class="sdk-text-display-1">Display 1</p>
+      <p class="sdk-text-display-2">Display 2</p>
+      <p class="sdk-text-large-title">Large title</p>
+      <p class="sdk-text-title-1">Title 1</p>
+      <p class="sdk-text-title-2">Title 2</p>
+      <p class="sdk-text-title-3">Title 3</p>
+      <p class="sdk-text-headline">Headline</p>
+      <p class="sdk-text-body">Body: the default reading size.</p>
+      <p class="sdk-text-callout">Callout</p>
+      <p class="sdk-text-subhead">Subhead</p>
+      <p class="sdk-text-footnote">Footnote</p>
+      <p class="sdk-text-caption-1">Caption 1</p>
+      <p class="sdk-text-caption-2">Caption 2 (badges only)</p>
+      <p class="sdk-text-title-2 sdk-font-serif">Source Serif 4 for editorial headings</p>
+      <p class="sdk-font-mono">IBM Plex Mono for SKUs and code: SKU-0042</p>
+    </div>
+  </section>
+</main>
+</body>
+</html>

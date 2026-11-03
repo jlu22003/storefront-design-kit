@@ -1,0 +1,22 @@
+{
+  "LAY-13": [
+    "stylelint: property-disallowed-list (physical left/right properties)",
+    "stylelint: declaration-property-value-disallowed-list (float, clear, text-align left/right)"
+  ],
+  "TYP-02": [
+    "stylelint: declaration-property-unit-allowed-list (font-size in rem, em, %)",
+    "stylelint: unit-disallowed-list (pt)"
+  ],
+  "TYP-05": [
+    "stylelint: declaration-property-value-allowed-list (font-size is var(--sdk-font-size-*))"
+  ],
+  "COL-06": [
+    "stylelint: color-no-hex",
+    "stylelint: color-named",
+    "stylelint: function-disallowed-list (rgb, hsl, and other color functions)"
+  ],
+  "MOT-01": [
+    "stylelint: declaration-property-value-allowed-list (durations and easings are --sdk-* tokens)",
+    "stylelint: declaration-property-value-disallowed-list (no literal times in transition/animation)"
+  ]
+}
