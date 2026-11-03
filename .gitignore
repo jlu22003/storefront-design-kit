@@ -23,7 +23,6 @@ clients/
 *.woff2
 *.dfont
 !assets/fonts/ofl/**
-!theme/assets/fonts/ofl/**
 *.dmg
 *.pkg
 apple-design-resources/

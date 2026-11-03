@@ -41,5 +41,8 @@ MIT. See [LICENSE](LICENSE). Third-party material and its licenses are listed in
 - **OS, editor, and log files**, plus local agent settings
   (`.claude/settings.local.json`).
 
-`.shopifyignore` keeps repo-only folders (tokens, scripts, tests, catalog,
-docs) out of `shopify theme push`.
+The demo Shopify theme lives in `theme/`; push it with
+`shopify theme push --path theme`. Repo-only folders (tokens, scripts, tests,
+catalog, docs) sit outside `theme/`, so they never reach Shopify.
+`theme/.shopifyignore` keeps docs, tests, Markdown files, and npm manifests
+placed inside the theme out of pushes and pulls.
