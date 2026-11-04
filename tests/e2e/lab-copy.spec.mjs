@@ -5,6 +5,7 @@
 // scripts themselves, load every file from the copy, and never contact the
 // site it came from.
 
+import { createHash } from 'node:crypto';
 import { readFile, readdir, rm } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { join, resolve } from 'node:path';
@@ -19,6 +20,14 @@ const NAME = `e2e-lab-copy-${process.pid}-${Date.now()}`;
 const svg = (body, size = 10) => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">${body}</svg>`;
 const square = (fill, size) => svg(`<rect width="${size ?? 10}" height="${size ?? 10}" fill="${fill}"/>`, size);
 
+const STYLES_CSS = `@import url("imported.css");
+@font-face { font-family: Fixture; src: url("font.woff2") format("woff2"); }
+body { font-family: Fixture, sans-serif; }
+@media (max-width: 500px) { .phone-only { background-image: url("phone.svg"); } }
+`;
+// Subresource Integrity hash of styles.css as the site serves it: the copy rewrites the file, so it must drop the hash.
+const STYLES_SRI = `sha384-${createHash('sha384').update(STYLES_CSS).digest('base64')}`;
+
 /** The fixture shop. {{CDN}} becomes the CDN origin. The page lives at /shop/ and uses <base href="/">. */
 const SITE_FILES = {
   '/shop/': [
@@ -32,7 +41,7 @@ const SITE_FILES = {
 <base href="/">
 <link rel="preconnect" href="{{CDN}}">
 <link rel="icon" href="favicon.svg">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css" integrity="${STYLES_SRI}">
 <link rel="stylesheet" href="{{CDN}}/cdn.css">
 <style>.inline-style { color: rgb(7, 8, 9); background-image: url("pattern.svg"); }</style>
 <style id="css-in-js"></style>
@@ -64,14 +73,7 @@ document.getElementById('css-in-js').sheet.insertRule('#from-js { color: rgb(1, 
 </html>
 `,
   ],
-  '/styles.css': [
-    'text/css',
-    `@import url("imported.css");
-@font-face { font-family: Fixture; src: url("font.woff2") format("woff2"); }
-body { font-family: Fixture, sans-serif; }
-@media (max-width: 500px) { .phone-only { background-image: url("phone.svg"); } }
-`,
-  ],
+  '/styles.css': ['text/css', STYLES_CSS],
   '/imported.css': ['text/css', '.imported { color: rgb(4, 5, 6); }\n'],
   '/app.js': ['text/javascript', "document.documentElement.classList.replace('no-js', 'js');\n"],
   '/favicon.svg': ['image/svg+xml', square('#0a5fd1')],
@@ -149,10 +151,10 @@ test('the copy keeps what scripts rendered and none of the scripts', () => {
   expect(html).toContain('Rendered by JavaScript');
   expect(html).toContain('#from-js { color: rgb(1, 2, 3); }');
   expect(html).toMatch(/<html lang="en" class="js">/);
-  for (const gone of [/<script/i, /onclick/i, /<base/i, /Content-Security-Policy/i, /preconnect/i, /<noscript/i, /<iframe/i, /javascript:/i, /data-sdk-ref/, /data-sdk-current/]) {
+  for (const gone of [/<script/i, /onclick/i, /<base/i, /Content-Security-Policy/i, /preconnect/i, /<noscript/i, /<iframe/i, /javascript:/i, /data-sdk-ref/, /data-sdk-current/, /integrity=/]) {
     expect(html).not.toMatch(gone);
   }
-  expect(copy.manifest.removed).toEqual({ scripts: 2, eventHandlers: 2, frames: 1, other: 4 });
+  expect(copy.manifest.removed).toEqual({ scripts: 2, eventHandlers: 2, frames: 1, other: 5 });
   expect(assetFiles.filter((file) => file.endsWith('.js'))).toEqual([]);
 });
 
@@ -231,6 +233,7 @@ test('the playground serves the copy with the live panel, and it never contacts 
   await expect(page.locator('#from-js')).toHaveCSS('color', 'rgb(1, 2, 3)');
   await expect(page.locator('.imported')).toHaveCSS('color', 'rgb(4, 5, 6)');
   await expect(page.locator('#inline')).toHaveCSS('color', 'rgb(7, 8, 9)');
+  await expect(page.locator('body')).toHaveCSS('font-family', 'Fixture, sans-serif');
 
   // The panel starts closed; the Design button opens it.
   const toggle = page.locator('[data-sdk-live-panel] button.toggle');

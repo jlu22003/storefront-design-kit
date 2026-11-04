@@ -109,8 +109,8 @@ npm run lab:copy -- https://example.com/ --viewport phone   # copy at phone widt
 This makes a frozen copy of one page in `lab/copies/<host>-<date>-<time>/`
 and prints its URL. With `npm run dev` running, open it at
 `/lab/copies/<host>-<date>-<time>/`, or list every copy at `/lab/copies/`.
-Copies show up in the **Page** field of the format frames and variant boards
-too. Press **Design** on a copy for the same panel the bookmarklet opens: its
+Copies show up in the **Page** field of the format frames too. Variant boards
+for copies come later, with a version board built on the live panel. Press **Design** on a copy for the same panel the bookmarklet opens: its
 site variables, page overrides, and Copy CSS. On a copy that panel can read every
 stylesheet, since they are all served from this server.
 
@@ -139,6 +139,8 @@ It removes:
 - scripts, `on…` event handler attributes, and `javascript:` links
 - `<base>`, Content-Security-Policy and refresh `<meta>` tags, and preload and
   preconnect hints
+- `integrity` (Subresource Integrity) attributes, since the saved stylesheets
+  are rewritten to point at the copy
 
 Iframes, `<object>`, and `<embed>` become a labelled box of the same size. Links
 still point at the live site.

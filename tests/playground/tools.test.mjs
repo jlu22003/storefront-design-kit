@@ -71,6 +71,16 @@ describe('format frames', () => {
     }
   });
 
+  test('framedPath with copies: false (variant boards) refuses local copies only', () => {
+    const options = { copies: false };
+    assert.equal(framedPath('/sketches/idea/', ORIGIN, options), '/sketches/idea/');
+    assert.equal(framedPath('/playground/starters/product.html', ORIGIN, options), '/playground/starters/product.html');
+    for (const copy of ['/lab/copies/shop.example-20261104-090507/', 'lab/copies/x/index.html', `${ORIGIN}/lab/copies/x/`]) {
+      assert.equal(framedPath(copy, ORIGIN, options), null, copy);
+      assert.notEqual(framedPath(copy, ORIGIN), null, copy);
+    }
+  });
+
   test('printMediaText turns print styles on and screen styles off', () => {
     assert.equal(printMediaText('print'), 'all');
     assert.equal(printMediaText('only print and (min-width: 40rem)'), 'all and (min-width: 40rem)');

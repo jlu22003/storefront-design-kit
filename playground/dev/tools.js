@@ -12,6 +12,7 @@ const STARTERS = [
 ];
 
 const PICK_ERROR = 'Pick a page under /playground/, /sketches/, or /lab/ on this server.';
+const PICK_ERROR_NO_COPIES = 'Pick a page under /playground/ or /sketches/ on this server. Local copies (/lab/) open in the format frames.';
 
 // Folders listed by the dev server under `dir`: your sketches, or local copies of sites.
 async function folderPaths(dir) {
@@ -29,28 +30,29 @@ async function folderPaths(dir) {
 
 /**
  * Wires a page-picker form: fills its <datalist> with the starters, your
- * sketches, and local copies of sites, and keeps ?src= in the address bar.
- * Returns the current path.
+ * sketches, and (unless `copies: false`) local copies of sites, and keeps
+ * ?src= in the address bar. Returns the current path.
  */
-export function bindSourceForm(form) {
+export function bindSourceForm(form, { copies = true } = {}) {
   const input = form.querySelector('input[name="src"]');
   const list = form.querySelector('datalist');
   const error = form.querySelector('[data-error]');
   const params = new URLSearchParams(location.search);
   const requested = params.get('src');
-  const src = framedPath(requested ?? DEFAULT_SRC, location.origin);
+  const pickError = copies ? PICK_ERROR : PICK_ERROR_NO_COPIES;
+  const src = framedPath(requested ?? DEFAULT_SRC, location.origin, { copies });
   input.value = src ?? requested;
-  if (requested && !src) error.textContent = PICK_ERROR;
+  if (requested && !src) error.textContent = pickError;
 
   list.append(...STARTERS.map(([value, label]) => el('option', { value, label })));
   folderPaths('/sketches/').then((paths) => list.append(...paths.map((value) => el('option', { value, label: 'Sketch' }))));
-  folderPaths('/lab/copies/').then((paths) => list.append(...paths.map((value) => el('option', { value, label: 'Local copy' }))));
+  if (copies) folderPaths('/lab/copies/').then((paths) => list.append(...paths.map((value) => el('option', { value, label: 'Local copy' }))));
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    const next = framedPath(input.value, location.origin);
+    const next = framedPath(input.value, location.origin, { copies });
     if (!next) {
-      error.textContent = PICK_ERROR;
+      error.textContent = pickError;
       input.focus();
       return;
     }

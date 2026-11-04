@@ -128,7 +128,7 @@ function prepareDom() {
     removed.frames += 1;
   }
 
-  // Event handlers, javascript: URLs, and every URL the copy has to rewrite.
+  // Event handlers, integrity hashes (the saved files are rewritten), javascript: URLs, and every URL the copy has to rewrite.
   const refs = [];
   const styles = [];
   let next = 0;
@@ -139,6 +139,11 @@ function prepareDom() {
       if (name.startsWith('on')) {
         node.removeAttribute(attr.name);
         removed.eventHandlers += 1;
+        continue;
+      }
+      if (name === 'integrity') {
+        node.removeAttribute(attr.name);
+        removed.other += 1;
         continue;
       }
       let kind = null;
