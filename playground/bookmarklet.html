@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en" data-sdk-panel="off">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Design panel bookmarklet · storefront-design-kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap">
+<link rel="stylesheet" href="/theme/assets/sdk-tokens.css">
+<link rel="stylesheet" href="/theme/assets/sdk-base.css">
+<link rel="stylesheet" href="/theme/assets/sdk-primitives.css">
+<link rel="stylesheet" href="/playground/assets/sketch.css">
+<link rel="stylesheet" href="/playground/assets/tools.css">
+</head>
+<!--
+  Install page for the live-site design panel. The bookmarklet is built in
+  the browser from playground/dev/live-panel.js by playground/dev/bookmarklet.js
+  (`npm run bookmarklet` builds the same thing into dist/). This page turns off
+  the playground's own Design button so "Try it here" shows the live panel.
+-->
+<body>
+<main class="sdk-center sdk-stack" data-gutter style="--measure: 48rem; --padding-block: var(--sdk-space-48); --child-gap: var(--sdk-space-32)">
+  <header class="sdk-stack" style="--child-gap: var(--sdk-space-12)">
+    <p class="sdk-text-footnote"><a href="/playground/">Playground</a></p>
+    <h1 class="sdk-text-large-title">Design panel for any site</h1>
+    <p class="sdk-text-title-3 sdk-text-secondary">
+      A bookmarklet that opens a design panel on top of the page you are looking at,
+      so you can drag spacing, type, corners, and colors on a real site and copy
+      out the values you like.
+    </p>
+  </header>
+
+  <section class="sdk-stack" aria-labelledby="install" style="--child-gap: var(--sdk-space-16)">
+    <h2 id="install" class="sdk-text-title-2">Install</h2>
+    <ol class="sdk-stack" style="--child-gap: var(--sdk-space-8); padding-inline-start: var(--sdk-space-24)">
+      <li>Show your browser's bookmarks bar.</li>
+      <li>Drag this button onto it:</li>
+    </ol>
+    <div class="sdk-cluster" data-align-y="center" style="--child-gap: var(--sdk-space-12)">
+      <a id="bookmarklet" class="pg-button" href="#install" aria-describedby="bookmarklet-status">SDK Design</a>
+      <button id="copy-url" class="pg-button" data-variant="secondary" type="button">Copy bookmarklet URL</button>
+      <button id="try" class="pg-button" data-variant="secondary" type="button">Try it here</button>
+    </div>
+    <p id="bookmarklet-status" class="sdk-text-footnote sdk-text-secondary" role="status">Building…</p>
+    <pre id="url-fallback" class="pg-code" tabindex="0" aria-label="Bookmarklet URL" hidden></pre>
+    <p class="sdk-text-subhead sdk-text-secondary">
+      Can't drag? Press <strong>Copy bookmarklet URL</strong>, add any bookmark, edit it, and paste
+      the copied text as its URL. From a terminal, <code>npm run bookmarklet</code> writes the same URL
+      to <code>dist/bookmarklet.txt</code>. Rebuild after updating the kit to get the latest panel.
+    </p>
+  </section>
+
+  <section class="sdk-stack" aria-labelledby="use" style="--child-gap: var(--sdk-space-12)">
+    <h2 id="use" class="sdk-text-title-2">Use</h2>
+    <p>Open any site, then click <strong>SDK Design</strong> in your bookmarks bar. Click it again to hide or show the panel.</p>
+    <ul class="sdk-stack" style="--child-gap: var(--sdk-space-8); padding-inline-start: var(--sdk-space-24)">
+      <li>
+        <strong>Site variables.</strong> When the site defines CSS custom properties on
+        <code>:root</code>, the panel sorts them into spacing, type, and radius sliders
+        and color pickers. Shopify themes that store colors as <code>18, 18, 18</code>
+        get the same format back.
+      </li>
+      <li>
+        <strong>Page overrides.</strong> Body text size, line height, container spacing
+        (padding and gaps of sections, headers, footers, and containers), corner radius,
+        and text, background, accent, and text-on-accent colors. These work on any site.
+      </li>
+      <li><strong>Contrast</strong> shows WCAG ratios for text and accent as you pick colors.</li>
+      <li>
+        <strong>Copy CSS</strong> copies only what you changed: a <code>:root</code> block for
+        variables, then plain rules for the overrides.
+      </li>
+    </ul>
+  </section>
+
+  <section class="sdk-stack" aria-labelledby="safety" style="--child-gap: var(--sdk-space-12)">
+    <h2 id="safety" class="sdk-text-title-2">What it does to the site</h2>
+    <ul class="sdk-stack" style="--child-gap: var(--sdk-space-8); padding-inline-start: var(--sdk-space-24)">
+      <li>Changes only this tab, until you press <strong>Remove</strong> or reload. Nothing is saved: no storage, no cookies.</li>
+      <li>Sends nothing anywhere. The panel's code and styles are inside the bookmark, and it makes no network requests.</li>
+      <li>Adds one stylesheet and marks the containers it scales with a <code>data-sdk-live-box</code> attribute; Remove takes both away.</li>
+    </ul>
+  </section>
+
+  <section class="sdk-stack" aria-labelledby="limits" style="--child-gap: var(--sdk-space-12)">
+    <h2 id="limits" class="sdk-text-title-2">Limits</h2>
+    <ul class="sdk-stack" style="--child-gap: var(--sdk-space-8); padding-inline-start: var(--sdk-space-24)">
+      <li>Some sites block bookmarklets with a strict Content Security Policy; the click then does nothing.</li>
+      <li>Variables redefined on inner elements (per-section color schemes, for example) keep their own values. Use the page overrides for those.</li>
+      <li>Only <code>:root</code> variables in readable stylesheets or the computed style are found; stylesheets from other domains cannot be scanned.</li>
+      <li>Container spacing is measured when you first move that slider; the copied rules name each container by id or tag and classes, are fixed px for the window width you measured at, and leave out any name whose containers differ.</li>
+    </ul>
+  </section>
+</main>
+
+<script type="module">
+  import { buildBookmarklet } from '/playground/dev/bookmarklet.js';
+  import { copyText } from '/playground/dev/tools.js';
+
+  const link = document.querySelector('#bookmarklet');
+  const status = document.querySelector('#bookmarklet-status');
+  const fallback = document.querySelector('#url-fallback');
+  let built = null;
+
+  try {
+    built = await buildBookmarklet(async (path) => {
+      const res = await fetch(`/${path}`);
+      if (!res.ok) throw new Error(`${path}: ${res.status}`);
+      return res.text();
+    });
+    link.href = built.url;
+    status.textContent = `Ready: ${(built.url.length / 1024).toFixed(1)} KB.`;
+  } catch (error) {
+    status.textContent = `Could not build the bookmarklet: ${error.message}`;
+  }
+
+  // Clicking the link on this page would run it here; point people at dragging instead.
+  link.addEventListener('click', (event) => {
+    event.preventDefault();
+    status.textContent = 'Drag the button to your bookmarks bar, or press Try it here.';
+  });
+  document.querySelector('#copy-url').addEventListener('click', () => {
+    if (built) copyText(built.url, { status, fallback });
+  });
+  document.querySelector('#try').addEventListener('click', () => {
+    // The same code the bookmark runs; this page has the kit's tokens, so they show up as site variables.
+    if (built) new Function(built.code)();
+  });
+</script>
+</body>
+</html>

@@ -6,8 +6,20 @@
 // appearance (light or dark) and apply only in that appearance. "Copy CSS"
 // copies only the tokens you changed, ready to paste into a sketch stylesheet
 // or to carry back into tokens/*.tokens.json.
+//
+// Three ways to use it:
+// - mountDesignPanel() adds the floating Design button to the page (dev client).
+// - mountDesignPanel({ root, container, storageKey, inline: true }) puts an
+//   always-open panel in `container` that styles another document's <html>,
+//   such as a same-origin iframe (variant boards).
+// - followDesign({ root }) applies saved settings without any UI and follows
+//   changes made in other windows (format frames).
 
-const STORAGE_KEY = 'sdk-playground-design';
+import { contrastRatio, el, normalizeHex, scaleValue } from './util.js';
+
+export { contrastRatio, normalizeHex, scaleValue } from './util.js';
+
+export const STORAGE_KEY = 'sdk-playground-design';
 
 const SPACE = [2, 4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80, 96].map((n) => `--sdk-space-${n}`);
 const FONT_SIZES = [
@@ -81,50 +93,27 @@ const PANEL_PINNED = [
   '--sdk-color-danger',
 ];
 
+const CHANGEABLE = [...SPACE, ...FONT_SIZES, ...RADII, ...COLORS.map((c) => c.name)];
+
 // ---------------------------------------------------------------- helpers
 
-const storage = {
-  load() {
-    try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY)) ?? {};
-    } catch {
-      return {};
-    }
-  },
-  save(state) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch {
-      // Storage can be unavailable (private windows); the panel still works for this page view.
-    }
-  },
-};
-
-const round = (n) => Math.round(n * 10000) / 10000;
-
-/** Multiplies every length in a token value: "1rem" → "1.25rem", clamp(…) included. */
-export function scaleValue(value, factor) {
-  return value.replace(/(-?\d*\.?\d+)(rem|px|em|vw|vh|svh|ch)\b/g, (_, n, unit) => `${round(Number(n) * factor)}${unit}`);
-}
-
-/** Returns "#rrggbb" for a #rgb or #rrggbb value, or null for anything else. */
-export function normalizeHex(value) {
-  const hex = value.trim().toLowerCase();
-  if (/^#[0-9a-f]{6}$/.test(hex)) return hex;
-  if (/^#[0-9a-f]{3}$/.test(hex)) return `#${[...hex.slice(1)].map((c) => c + c).join('')}`;
-  return null;
-}
-
-function luminance(hex) {
-  const channels = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
-  const [r, g, b] = channels.map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
-
-/** WCAG 2.2 contrast ratio between two #rrggbb colors. */
-export function contrastRatio(a, b) {
-  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
-  return (hi + 0.05) / (lo + 0.05);
+function storageFor(key) {
+  return {
+    load() {
+      try {
+        return JSON.parse(localStorage.getItem(key)) ?? {};
+      } catch {
+        return {};
+      }
+    },
+    save(state) {
+      try {
+        localStorage.setItem(key, JSON.stringify(state));
+      } catch {
+        // Storage can be unavailable (private windows); the panel still works for this page view.
+      }
+    },
+  };
 }
 
 const declarations = (values, indent) =>
@@ -166,29 +155,38 @@ export function changedCss(scaled, colors = {}) {
   return blocks.join('\n\n');
 }
 
-function el(tag, attributes = {}, children = []) {
-  const node = document.createElement(tag);
-  for (const [key, value] of Object.entries(attributes)) {
-    if (key === 'text') node.textContent = value;
-    else if (value !== false && value !== undefined) node.setAttribute(key, value === true ? '' : value);
-  }
-  node.append(...children);
-  return node;
-}
+// ------------------------------------------------------------------ state
 
-// ------------------------------------------------------------------ panel
-
-export function mountDesignPanel() {
-  if (document.querySelector('[data-sdk-design-panel]')) return;
-  const root = document.documentElement;
-  const state = { open: false, appearance: 'system', scales: {}, colors: {}, ...storage.load() };
-  const darkQuery = matchMedia('(prefers-color-scheme: dark)');
+/**
+ * The panel's settings and how they apply to one document. `root` is the
+ * <html> element to style; setRoot() points it at a new document (an iframe
+ * that reloaded). Settings are saved under `storageKey`.
+ */
+export function createDesign({ root, storageKey = STORAGE_KEY, onSchemeChange = () => {} }) {
+  const store = storageFor(storageKey);
+  const fresh = () => ({ open: false, appearance: 'system', scales: {}, colors: {} });
+  const state = { ...fresh(), ...store.load() };
   let base = {};
+  let query = null;
+
+  const view = () => root.ownerDocument.defaultView;
+  const computed = () => view().getComputedStyle(root);
+
+  function onQueryChange() {
+    refresh();
+    onSchemeChange();
+  }
+
+  function watchScheme() {
+    query?.removeEventListener('change', onQueryChange);
+    query = view().matchMedia('(prefers-color-scheme: dark)');
+    query.addEventListener('change', onQueryChange);
+  }
 
   // The appearance the page is showing: light or dark.
   function scheme() {
     if (state.appearance !== 'system') return state.appearance;
-    return darkQuery.matches ? 'dark' : 'light';
+    return query.matches ? 'dark' : 'light';
   }
 
   function picks() {
@@ -197,24 +195,19 @@ export function mountDesignPanel() {
     return state.colors[key];
   }
 
-  const host = el('div', { 'data-sdk-design-panel': true });
-  const shadow = host.attachShadow({ mode: 'open' });
-  shadow.append(el('link', { rel: 'stylesheet', href: '/playground/dev/panel.css' }));
-
   // Reads the page's token values without the panel's overrides.
   function readBase() {
     const saved = root.style.cssText;
     root.style.cssText = '';
-    const computed = getComputedStyle(root);
-    const read = (name) => computed.getPropertyValue(name).trim();
+    const style = computed();
+    const read = (name) => style.getPropertyValue(name).trim();
     base = {};
-    for (const name of [...SPACE, ...FONT_SIZES, ...RADII, ...COLORS.map((c) => c.name), ...PANEL_PINNED]) base[name] = read(name);
+    for (const name of [...CHANGEABLE, ...PANEL_PINNED]) base[name] = read(name);
     for (const [fg, bg] of CONTRAST_PAIRS) {
       base[fg] = read(fg);
       base[bg] = read(bg);
     }
     root.style.cssText = saved;
-    for (const name of PANEL_PINNED) host.style.setProperty(name, base[name]);
   }
 
   function scaled() {
@@ -232,19 +225,106 @@ export function mountDesignPanel() {
     else root.setAttribute('data-theme', state.appearance);
   }
 
-  function apply() {
-    for (const name of [...SPACE, ...FONT_SIZES, ...RADII, ...COLORS.map((c) => c.name)]) root.style.removeProperty(name);
-    const sizes = scaled();
-    for (const [name, value] of Object.entries({ ...sizes, ...picks() })) root.style.setProperty(name, value);
-    output.textContent = changedCss(sizes, state.colors);
-    syncColorInputs();
-    updateContrast();
-    storage.save(state);
+  function applyValues() {
+    for (const name of CHANGEABLE) root.style.removeProperty(name);
+    for (const [name, value] of Object.entries({ ...scaled(), ...picks() })) root.style.setProperty(name, value);
   }
 
-  // The live value, so aliases (link and focus follow accent in light mode) stay accurate.
-  function currentColor(name) {
-    return picks()[name] ?? normalizeHex(getComputedStyle(root).getPropertyValue(name));
+  function refresh() {
+    applyAppearance();
+    readBase();
+    applyValues();
+  }
+
+  watchScheme();
+
+  return {
+    state,
+    get root() {
+      return root;
+    },
+    base: (name) => base[name],
+    scheme,
+    picks,
+    readBase,
+    applyAppearance,
+    applyValues,
+    refresh,
+    save: () => store.save(state),
+    // The live value, so aliases (link and focus follow accent in light mode) stay accurate.
+    currentColor: (name) => picks()[name] ?? normalizeHex(computed().getPropertyValue(name)),
+    css: () => changedCss(scaled(), state.colors),
+    setRoot(next) {
+      root = next;
+      watchScheme();
+      refresh();
+    },
+    // Re-reads the saved settings (another window changed them).
+    load() {
+      Object.assign(state, fresh(), { open: state.open }, store.load());
+    },
+    reset() {
+      Object.assign(state, fresh(), { open: state.open });
+      refresh();
+    },
+  };
+}
+
+/**
+ * Applies the saved settings to `root` with no UI, and follows changes saved
+ * by a panel in another window or frame of this origin (the storage event).
+ */
+export function followDesign({ root = document.documentElement, storageKey = STORAGE_KEY } = {}) {
+  const design = createDesign({ root, storageKey });
+  design.refresh();
+  root.ownerDocument.defaultView.addEventListener('storage', (event) => {
+    if (event.key !== storageKey) return;
+    design.load();
+    design.refresh();
+  });
+  return design;
+}
+
+// ------------------------------------------------------------------ panel
+
+/**
+ * Mounts the panel UI. With no options it is the floating Design button for
+ * this page. Returns { design, host, css(), setRoot(root) }, or undefined when
+ * a floating panel is already on the page.
+ */
+export function mountDesignPanel({
+  root = document.documentElement,
+  container = document.body,
+  storageKey = STORAGE_KEY,
+  inline = false,
+  title = 'Design panel',
+  idPrefix = 'sdk-dp',
+} = {}) {
+  if (!inline && document.querySelector('[data-sdk-design-panel]:not([data-inline])')) return undefined;
+  const design = createDesign({ root, storageKey, onSchemeChange: () => sync() });
+  const { state } = design;
+
+  const host = el('div', { 'data-sdk-design-panel': true, 'data-inline': inline });
+  const shadow = host.attachShadow({ mode: 'open' });
+  shadow.append(el('link', { rel: 'stylesheet', href: '/playground/dev/panel.css' }));
+
+  // Keep the floating panel readable whatever the sliders do to its own page.
+  function pin() {
+    if (host.ownerDocument !== design.root.ownerDocument) return;
+    for (const name of PANEL_PINNED) host.style.setProperty(name, design.base(name));
+  }
+
+  function apply() {
+    design.applyValues();
+    output.textContent = design.css();
+    syncColorInputs();
+    updateContrast();
+    design.save();
+  }
+
+  function sync() {
+    pin();
+    apply();
   }
 
   // ---- toggle
@@ -252,27 +332,27 @@ export function mountDesignPanel() {
     type: 'button',
     class: 'toggle',
     'aria-expanded': 'false',
-    'aria-controls': 'sdk-design-panel',
+    'aria-controls': `${idPrefix}-panel`,
     text: 'Design',
   });
 
   // ---- panel body
-  const panel = el('section', { id: 'sdk-design-panel', class: 'panel', 'aria-labelledby': 'sdk-design-title', hidden: true });
+  const panel = el('section', { id: `${idPrefix}-panel`, class: 'panel', 'aria-labelledby': `${idPrefix}-title`, hidden: !inline });
   const header = el('div', { class: 'header' }, [
-    el('h2', { id: 'sdk-design-title', text: 'Design panel' }),
-    el('button', { type: 'button', class: 'close', 'aria-label': 'Close design panel', text: '×' }),
+    el('h2', { id: `${idPrefix}-title`, text: title }),
+    ...(inline ? [] : [el('button', { type: 'button', class: 'close', 'aria-label': `Close ${title.toLowerCase()}`, text: '×' })]),
   ]);
 
-  const appearance = el('select', { id: 'sdk-dp-appearance' }, [
+  const appearance = el('select', { id: `${idPrefix}-appearance` }, [
     el('option', { value: 'system', text: 'System' }),
     el('option', { value: 'light', text: 'Light' }),
     el('option', { value: 'dark', text: 'Dark' }),
   ]);
   appearance.value = state.appearance;
-  const appearanceRow = el('div', { class: 'field' }, [el('label', { for: 'sdk-dp-appearance', text: 'Appearance' }), appearance]);
+  const appearanceRow = el('div', { class: 'field' }, [el('label', { for: `${idPrefix}-appearance`, text: 'Appearance' }), appearance]);
 
   const scaleFields = SCALES.map((scale) => {
-    const id = `sdk-dp-${scale.key}`;
+    const id = `${idPrefix}-${scale.key}`;
     const input = el('input', {
       id,
       type: 'range',
@@ -304,11 +384,11 @@ export function mountDesignPanel() {
   });
 
   const colorFields = COLORS.map((color) => {
-    const id = `sdk-dp-${color.name.slice(2)}`;
+    const id = `${idPrefix}-${color.name.slice(2)}`;
     const input = el('input', { id, type: 'color' });
     input.addEventListener('input', () => {
-      if (normalizeHex(base[color.name] ?? '') === input.value) delete picks()[color.name];
-      else picks()[color.name] = input.value;
+      if (normalizeHex(design.base(color.name) ?? '') === input.value) delete design.picks()[color.name];
+      else design.picks()[color.name] = input.value;
       apply();
     });
     return { color, input, node: el('div', { class: 'swatch' }, [input, el('label', { for: id, text: color.label })]) };
@@ -318,8 +398,8 @@ export function mountDesignPanel() {
   function updateContrast() {
     contrastList.replaceChildren(
       ...CONTRAST_PAIRS.map(([fg, bg, label, minimum]) => {
-        const a = currentColor(fg);
-        const b = currentColor(bg);
+        const a = design.currentColor(fg);
+        const b = design.currentColor(bg);
         if (!a || !b) return el('li', { text: `${label}: n/a` });
         const ratio = contrastRatio(a, b);
         const pass = ratio >= minimum;
@@ -344,13 +424,21 @@ export function mountDesignPanel() {
     el('fieldset', {}, [el('legend', { text: 'Contrast (WCAG)' }), contrastList]),
     el('fieldset', {}, [el('legend', { text: 'Changed values' }), output, el('div', { class: 'actions' }, [copy, reset]), status]),
   );
-  shadow.append(toggle, panel);
+  shadow.append(...(inline ? [] : [toggle]), panel);
 
   function syncColorInputs() {
     for (const field of colorFields) {
-      const value = currentColor(field.color.name);
+      const value = design.currentColor(field.color.name);
       field.input.disabled = !value;
       if (value) field.input.value = value;
+    }
+  }
+
+  function syncControls() {
+    appearance.value = state.appearance;
+    for (const [i, scale] of SCALES.entries()) {
+      scaleFields[i].input.value = state.scales[scale.key] ?? 1;
+      scaleFields[i].show();
     }
   }
 
@@ -358,25 +446,25 @@ export function mountDesignPanel() {
     state.open = open;
     panel.hidden = !open;
     toggle.setAttribute('aria-expanded', String(open));
-    storage.save(state);
+    design.save();
     if (focus) (open ? appearance : toggle).focus();
   }
 
-  toggle.addEventListener('click', () => setOpen(!state.open));
-  header.querySelector('.close').addEventListener('click', () => setOpen(false));
-  panel.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      event.stopPropagation();
-      setOpen(false);
-    }
-  });
+  if (!inline) {
+    toggle.addEventListener('click', () => setOpen(!state.open));
+    header.querySelector('.close').addEventListener('click', () => setOpen(false));
+    panel.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        event.stopPropagation();
+        setOpen(false);
+      }
+    });
+  }
 
   appearance.addEventListener('change', () => {
     state.appearance = appearance.value;
-    applyAppearance();
-    readBase();
-    syncColorInputs();
-    apply();
+    design.refresh();
+    sync();
   });
 
   copy.addEventListener('click', async () => {
@@ -395,32 +483,24 @@ export function mountDesignPanel() {
   });
 
   reset.addEventListener('click', () => {
-    state.scales = {};
-    state.colors = {};
-    state.appearance = 'system';
-    appearance.value = 'system';
-    applyAppearance();
-    readBase();
-    for (const field of scaleFields) {
-      field.input.value = 1;
-      field.show();
-    }
-    syncColorInputs();
-    apply();
+    design.reset();
+    syncControls();
+    sync();
     status.textContent = 'Reset to the token values.';
   });
 
-  // Follow OS appearance changes while on System.
-  darkQuery.addEventListener('change', () => {
-    readBase();
-    syncColorInputs();
-    apply();
-  });
+  container.append(host);
+  design.refresh();
+  sync();
+  if (!inline) setOpen(Boolean(state.open), { focus: false });
 
-  document.body.append(host);
-  applyAppearance();
-  readBase();
-  syncColorInputs();
-  apply();
-  setOpen(Boolean(state.open), { focus: false });
+  return {
+    design,
+    host,
+    css: () => design.css(),
+    setRoot(next) {
+      design.setRoot(next);
+      sync();
+    },
+  };
 }

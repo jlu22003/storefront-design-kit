@@ -17,6 +17,19 @@
   color: var(--sdk-color-label);
 }
 
+:host([data-inline]) {
+  position: static;
+  z-index: auto;
+  display: block;
+  max-block-size: none;
+}
+
+:host([data-inline]) .panel {
+  inline-size: auto;
+  overflow: visible;
+  box-shadow: none;
+}
+
 *,
 *::before,
 *::after {
