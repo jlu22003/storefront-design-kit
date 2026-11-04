@@ -1,6 +1,9 @@
 // Dev client, injected into every HTML page by playground/server.mjs.
 // - Live reload: saved CSS is swapped in place; any other saved file reloads the page.
 // - Design panel: see panel.js. A page opts out with <html data-sdk-panel="off">.
+// - Local copies of other sites (/lab/, from `npm run lab:copy`) get the
+//   live-site panel (live-panel.js, the bookmarklet's panel) instead, closed
+//   until you press Design: those pages use their own CSS, not the kit's tokens.
 // - Framed pages: inside an <iframe data-sdk-embed="…"> on a playground page
 //   (format frames, variant boards) the client opens no connection of its own;
 //   the host page swaps the frame's CSS and reloads it. "frame" and "print"
@@ -105,6 +108,17 @@ function emulatePrint(doc) {
   }
 }
 
+/** Adds the live-site design panel to a local copy, closed. */
+async function mountCopyPanel() {
+  const [{ toggleLivePanel }, { livePanelCss }, tokensCss, panelCss] = await Promise.all([
+    import('./live-panel.js'),
+    import('./bookmarklet.js'),
+    fetch('/theme/assets/sdk-tokens.css').then((res) => res.text()),
+    fetch('/playground/dev/panel.css').then((res) => res.text()),
+  ]);
+  toggleLivePanel(livePanelCss(tokensCss, panelCss), { open: false });
+}
+
 const embed = embedMode();
 if (embed) {
   // Browsers allow only a handful of open connections per host, so frames
@@ -123,5 +137,6 @@ if (embed) {
   }
 } else {
   connect();
-  if (document.documentElement.dataset.sdkPanel !== 'off') mountDesignPanel();
+  if (/^\/lab\/copies\/[^/]+\//.test(location.pathname)) mountCopyPanel();
+  else if (document.documentElement.dataset.sdkPanel !== 'off') mountDesignPanel();
 }

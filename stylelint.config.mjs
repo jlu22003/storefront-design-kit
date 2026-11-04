@@ -13,6 +13,8 @@ export default {
     'node_modules/**',
     // Private, gitignored scratch work.
     'sketches/**',
+    // Local copies of other sites (`npm run lab:copy`): their CSS, not ours.
+    'lab/**',
   ],
   rules: {
     // LAY-13: physical left/right properties do not mirror under dir="rtl".

@@ -11,23 +11,26 @@ const STARTERS = [
   ['/playground/primitives.html', 'Layout primitives'],
 ];
 
-// Sketch folders, read from the dev server's /sketches/ listing.
-async function sketchPaths() {
+const PICK_ERROR = 'Pick a page under /playground/, /sketches/, or /lab/ on this server.';
+
+// Folders listed by the dev server under `dir`: your sketches, or local copies of sites.
+async function folderPaths(dir) {
   try {
-    const res = await fetch('/sketches/');
+    const res = await fetch(dir);
     if (!res.ok) return [];
     const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
     return [...doc.querySelectorAll('main li a')]
       .map((a) => a.getAttribute('href'))
-      .filter((href) => href?.startsWith('/sketches/') && href.endsWith('/'));
+      .filter((href) => href?.startsWith(dir) && href.endsWith('/'));
   } catch {
     return [];
   }
 }
 
 /**
- * Wires a page-picker form: fills its <datalist> with the starters and your
- * sketches, and keeps ?src= in the address bar. Returns the current path.
+ * Wires a page-picker form: fills its <datalist> with the starters, your
+ * sketches, and local copies of sites, and keeps ?src= in the address bar.
+ * Returns the current path.
  */
 export function bindSourceForm(form) {
   const input = form.querySelector('input[name="src"]');
@@ -37,18 +40,17 @@ export function bindSourceForm(form) {
   const requested = params.get('src');
   const src = framedPath(requested ?? DEFAULT_SRC, location.origin);
   input.value = src ?? requested;
-  if (requested && !src) {
-    error.textContent = 'Pick a page under /playground/ or /sketches/ on this server.';
-  }
+  if (requested && !src) error.textContent = PICK_ERROR;
 
   list.append(...STARTERS.map(([value, label]) => el('option', { value, label })));
-  sketchPaths().then((paths) => list.append(...paths.map((value) => el('option', { value, label: 'Sketch' }))));
+  folderPaths('/sketches/').then((paths) => list.append(...paths.map((value) => el('option', { value, label: 'Sketch' }))));
+  folderPaths('/lab/copies/').then((paths) => list.append(...paths.map((value) => el('option', { value, label: 'Local copy' }))));
 
   form.addEventListener('submit', (event) => {
     event.preventDefault();
     const next = framedPath(input.value, location.origin);
     if (!next) {
-      error.textContent = 'Pick a page under /playground/ or /sketches/ on this server.';
+      error.textContent = PICK_ERROR;
       input.focus();
       return;
     }

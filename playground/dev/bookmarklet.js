@@ -89,12 +89,17 @@ export function toBookmarkletUrl(code) {
   return `javascript:${code.replace(/[%#"]|[^\x20-\x7e]/gu, (c) => encodeURIComponent(c))}`;
 }
 
+/** The live panel's stylesheet: panel.css plus the token values it needs, in px. Also used on local copies (client.js). */
+export function livePanelCss(tokensCss, panelCss) {
+  return remToPx(`${hostTokenCss(tokensCss, panelCss)}\n${panelCss}`);
+}
+
 /** Builds the bookmarklet. read(path) returns a source file's text. Returns { code, url }. */
 export async function buildBookmarklet(read) {
   const [util, live, panelCss, tokensCss] = await Promise.all(
     [SOURCES.util, SOURCES.live, SOURCES.panelCss, SOURCES.tokensCss].map((path) => read(path)),
   );
-  const css = remToPx(`${hostTokenCss(tokensCss, panelCss)}\n${panelCss}`);
+  const css = livePanelCss(tokensCss, panelCss);
   const code = compactJs(
     ['(() => {', stripModule(util, SOURCES.util), stripModule(live, SOURCES.live), `toggleLivePanel(${JSON.stringify(css)});`, '})();'].join(
       '\n',

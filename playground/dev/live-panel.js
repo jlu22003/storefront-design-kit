@@ -9,9 +9,10 @@
 // does too. Nothing is stored and nothing is sent anywhere: the panel makes no
 // network requests and never touches storage or cookies.
 //
-// Built into a bookmarklet by bookmarklet.js. The bundler inlines util.js and
-// strips import/export lines, so keep every import relative and single-line,
-// and avoid multi-line template literals.
+// The dev client also mounts it, closed, on local copies of sites (/lab/, see
+// client.js). Built into a bookmarklet by bookmarklet.js. The bundler inlines
+// util.js and strips import/export lines, so keep every import relative and
+// single-line, and avoid multi-line template literals.
 
 import { contrastRatio, el, normalizeHex, round, scaleValue } from './util.js';
 
@@ -339,7 +340,7 @@ function swatch(id, label, value, onInput) {
   return { input, node: el('div', { class: 'swatch' }, [input, el('label', { for: id, text: label })]) };
 }
 
-function createLivePanel(panelCss) {
+function createLivePanel(panelCss, { open = true } = {}) {
   const doc = document;
   const found = detectVariables(doc);
   const base = pageBase(doc);
@@ -500,10 +501,10 @@ function createLivePanel(panelCss) {
   );
   shadow.append(toggle, panel);
 
-  function setOpen(open) {
-    panel.hidden = !open;
-    toggle.setAttribute('aria-expanded', String(open));
-    (open ? (panel.querySelector('input') ?? close) : toggle).focus();
+  function setOpen(show, { focus = true } = {}) {
+    panel.hidden = !show;
+    toggle.setAttribute('aria-expanded', String(show));
+    if (focus) (show ? (panel.querySelector('input') ?? close) : toggle).focus();
   }
 
   toggle.addEventListener('click', () => setOpen(panel.hidden));
@@ -555,15 +556,19 @@ function createLivePanel(panelCss) {
 
   (doc.body ?? doc.documentElement).append(host);
   apply();
-  setOpen(true);
+  setOpen(open, { focus: open });
   return { toggle: () => setOpen(panel.hidden), remove: destroy };
 }
 
-/** The bookmarklet's entry point: opens the panel, or toggles it when it is already on the page. */
-export function toggleLivePanel(panelCss) {
+/**
+ * The bookmarklet's entry point: opens the panel, or toggles it when it is
+ * already on the page. Local copies (client.js) pass { open: false } to start
+ * with only the Design button showing.
+ */
+export function toggleLivePanel(panelCss, options) {
   if (window[GLOBAL]) {
     window[GLOBAL].toggle();
     return;
   }
-  window[GLOBAL] = createLivePanel(panelCss);
+  window[GLOBAL] = createLivePanel(panelCss, options);
 }
