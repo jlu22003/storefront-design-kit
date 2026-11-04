@@ -12,8 +12,8 @@ npm run dev   # serves http://127.0.0.1:4400/playground/ and opens it
 
 Options: `npm run dev -- --port 5000` picks a port, and `--no-open` skips
 opening the browser. The server listens on 127.0.0.1 only and answers only to
-localhost host names. It serves `theme/assets/`, `playground/`, and `sketches/`,
-and nothing else from the repo.
+localhost host names. It serves `theme/assets/`, `playground/`, `sketches/`,
+and `lab/` (local copies of sites, below), and nothing else from the repo.
 
 Saving an HTML or JS file reloads the page. Saving a CSS file swaps the
 stylesheets in place, so the page keeps its scroll position and panel settings.
@@ -98,6 +98,79 @@ corners, and colors on each. Mark one **Winner** and press **Copy winner's
 CSS**, or use **Copy CSS** in any variant's panel. Settings and the winner
 are kept in this browser's localStorage; each panel's **Reset** clears its
 variant.
+
+## Local copies of a site
+
+```sh
+npm run lab:copy -- https://example.com/products/shirt
+npm run lab:copy -- https://example.com/ --viewport phone   # copy at phone width
+```
+
+This makes a frozen copy of one page in `lab/copies/<host>-<date>-<time>/`
+and prints its URL. With `npm run dev` running, open it at
+`/lab/copies/<host>-<date>-<time>/`, or list every copy at `/lab/copies/`.
+Copies show up in the **Page** field of the format frames and variant boards
+too. Press **Design** on a copy for the same panel the bookmarklet opens: its
+site variables, page overrides, and Copy CSS. On a copy that panel can read every
+stylesheet, since they are all served from this server.
+
+`lab/` is gitignored. A copy holds another site's pages, images, and fonts, so
+it never reaches this public repo. Copy only sites you own or have permission
+to test.
+
+The first time, install the browser it uses: `npx playwright install chromium`.
+
+### What a copy keeps
+
+Headless Chromium opens the page at desktop width (1280 px; `--viewport phone`
+for a 412 px phone), waits for it to load, and scrolls through it so lazy
+images load. Then it saves:
+
+- **The page as its scripts left it**, so content rendered by JavaScript is
+  kept. CSS-in-JS rules are written out as stylesheet text.
+- **Every stylesheet, image, font, and video it loaded**, from any domain, in
+  `assets/`. Files a stylesheet mentions but the page didn't load, such as another
+  breakpoint's background image, are fetched too.
+- **`manifest.json`**: the URL, time, viewport, size, and every file saved,
+  failed (with the HTTP status), or skipped (with the reason).
+
+It removes:
+
+- scripts, `on…` event handler attributes, and `javascript:` links
+- `<base>`, Content-Security-Policy and refresh `<meta>` tags, and preload and
+  preconnect hints
+
+Iframes, `<object>`, and `<embed>` become a labelled box of the same size. Links
+still point at the live site.
+
+Options:
+
+- `--max-mb 100` caps the saved files. Files past the cap are skipped and listed
+  in the manifest.
+- `--timeout 60` sets how many seconds the page may take to load.
+
+### How a copy is served
+
+Everything under `/lab/` is sent with a Content-Security-Policy: only this
+server's own scripts run (the dev client), images, fonts, and styles load only
+from this server, frames are off, and forms do not submit. So viewing a copy
+never contacts the live site, even for a file the copy could not save. Copies
+are not watched for live reload; they do not change once written.
+
+### Limits
+
+- **Frozen.** Menus, drawers, carousels, variant pickers, and the cart do not
+  work, because the scripts are gone. The markup is what the scripts built at
+  the copy's width; a site that builds different markup for phones needs a
+  `--viewport phone` copy.
+- **One page at a time.** There is no crawling, and pages behind a login, the
+  cart, and checkout cannot be copied. Neither can password-protected
+  storefronts, for now.
+- **Bot protection** (challenge pages) can block the headless browser; the
+  command reports the HTTP status and copies nothing.
+- **Not kept:** embedded iframes, closed shadow roots, `<canvas>` drawings,
+  URLs inside open shadow roots and inside SVG files, and CSS `image-set()`
+  strings written without `url()`.
 
 ## Design panel for any site (bookmarklet)
 

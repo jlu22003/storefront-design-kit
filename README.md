@@ -105,6 +105,11 @@ Saved CSS is swapped in without a reload, so you keep your scroll position.
   panel on any live site. Drag spacing, type, corners, and colors, and copy
   out the values. It changes only the open tab, saves nothing, and sends
   nothing.
+- **Local copies of a site.** `npm run lab:copy -- <url>` saves a frozen copy
+  of one page (scripts removed, every stylesheet, image, and font kept) to the
+  gitignored `lab/copies/`, and the playground serves it with the same design
+  panel. Viewing a copy never contacts the live site. Copy only sites you own
+  or have permission to test.
 
 More detail is in [playground/README.md](playground/README.md).
 
@@ -147,9 +152,10 @@ MIT. See [LICENSE](LICENSE). Third-party material and its licenses are listed in
 - **Secrets and Shopify CLI state:** `.env` files, `shopify.theme.toml` (it can
   hold a Theme Access password), `.shopify/`, and keys. Copy
   `.env.example` and `shopify.theme.example.toml` to get started.
-- **Client and merchant material:** `clients/`, `client-*` folders, and theme
-  `settings_data.json` files. Client work belongs in private repos; only the
-  demo theme's sanitized settings are committed.
+- **Client and merchant material:** `clients/`, `client-*` folders, theme
+  `settings_data.json` files, and local copies of sites in `lab/`. Client work
+  belongs in private repos; only the demo theme's sanitized settings are
+  committed.
 - **Restrictively licensed assets:** font files (except OFL fonts under
   `assets/fonts/ofl/`), installers, Apple design resources, SF Symbols
   exports, and Sketch files.
