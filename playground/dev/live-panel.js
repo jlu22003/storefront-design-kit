@@ -38,9 +38,9 @@ export const CONTAINER_SELECTOR = [
 const BOX_PROPS = ['padding-block-start', 'padding-block-end', 'padding-inline-start', 'padding-inline-end', 'row-gap', 'column-gap'];
 
 const TEXT_ELEMENTS = 'p, li, dd, dt, blockquote, figcaption, td, th, label';
-const RADIUS_ELEMENTS =
-  'button, input, select, textarea, img, video, [class*="button"], [class*="btn"], [class*="card"], [class*="badge"]';
-const ACCENT_ELEMENTS = 'button, [type="submit"], [type="button"], [class*="button"], [class*="btn"]';
+const BUTTON_CLASSES = ':is([class~="button"], [class~="btn"], [class^="btn-"]):not(:has(button, a, input))';
+const RADIUS_ELEMENTS = `button, input, select, textarea, img, video, ${BUTTON_CLASSES}, [class~="card"], [class~="badge"]`;
+const ACCENT_ELEMENTS = `button, [type="submit"], [type="button"], ${BUTTON_CLASSES}`;
 
 // --------------------------------------------------------------- pure helpers
 
@@ -138,21 +138,27 @@ export function overrideRules(overrides, { important = false } = {}) {
 
 /**
  * Rules that scale measured containers. Each box is { selector, values } with
- * px values from getComputedStyle; boxes sharing a selector keep the first.
+ * px values from getComputedStyle. Returns { rules, skipped }: a selector whose
+ * boxes would get different values gets no rule and is listed in skipped.
  */
 export function boxRules(boxes, factor, { important = false } = {}) {
-  if (factor === 1) return [];
-  const seen = new Set();
-  const rules = [];
-  for (const box of boxes) {
-    if (seen.has(box.selector)) continue;
-    seen.add(box.selector);
-    const declarations = Object.entries(box.values)
-      .filter(([, value]) => Number.parseFloat(value) > 0)
-      .map(([prop, value]) => `${prop}: ${scaleValue(value, factor)}${bang(important)};`);
-    if (declarations.length) rules.push(`${box.selector} { ${declarations.join(' ')} }`);
+  const groups = new Map();
+  if (factor !== 1) {
+    for (const box of boxes) {
+      const declarations = Object.entries(box.values)
+        .filter(([, value]) => Number.parseFloat(value) > 0)
+        .map(([prop, value]) => `${prop}: ${scaleValue(value, factor)}${bang(important)};`)
+        .join(' ');
+      if (declarations) groups.set(box.selector, [...(groups.get(box.selector) ?? []), declarations]);
+    }
   }
-  return rules;
+  const rules = [];
+  const skipped = [];
+  for (const [selector, list] of groups) {
+    if (list.every((declarations) => declarations === list[0])) rules.push(`${selector} { ${list[0]} }`);
+    else skipped.push(selector);
+  }
+  return { rules, skipped };
 }
 
 /** A :root block for changed variables, or '' when there are none. */
@@ -162,16 +168,21 @@ export function variableBlock(vars, { important = false } = {}) {
   return [':root {', ...names.map((name) => `  ${name}: ${vars[name]}${bang(important)};`), '}'].join('\n');
 }
 
-/** The text "Copy CSS" copies: changed variables, overrides, and scaled containers. */
-export function liveCss({ vars = {}, overrides = {}, boxes = [], factor = 1, site = 'this site' }) {
+/** The text "Copy CSS" copies: changed variables, overrides, and containers scaled as measured at a viewport width in px. */
+export function liveCss({ vars = {}, overrides = {}, boxes = [], factor = 1, viewport = 0, site = 'this site' }) {
   const parts = [];
   const block = variableBlock(vars);
   if (block) parts.push(`/* CSS variables, as set on :root. */\n${block}`);
   const rules = overrideRules(overrides);
   if (rules.length) parts.push(`/* Page overrides. Add !important to any rule the theme's own CSS outranks. */\n${rules.join('\n')}`);
-  const scaled = boxRules(boxes, factor);
-  if (scaled.length) {
-    parts.push(`/* Container spacing at ${Math.round(factor * 100)}%, measured on this page. */\n${scaled.join('\n')}`);
+  const { rules: scaled, skipped } = boxRules(boxes, factor);
+  if (scaled.length || skipped.length) {
+    const notes = [
+      `Container spacing at ${Math.round(factor * 100)}%: fixed px measured at a ${viewport}px-wide viewport, so they apply at every width.`,
+      'Each rule also applies to any element it matches that was not measured.',
+      ...(skipped.length ? [`Left out because matching containers differ: ${skipped.join(', ')}.`] : []),
+    ];
+    parts.push([`/* ${notes.join(' ')} */`, ...scaled].join('\n'));
   }
   if (!parts.length) return '/* No changes yet: move a slider or pick a color. */';
   return [`/* Design panel values for ${site}. Paste at the end of the site's stylesheet. */`, ...parts].join('\n\n');
@@ -334,6 +345,7 @@ function createLivePanel(panelCss) {
   const base = pageBase(doc);
   const state = { scales: { space: 1, type: 1, radius: 1 }, colors: {}, overrides: {}, factor: 1 };
   let boxes = null;
+  let measuredWidth = 0;
   const pageSheet = addSheet(doc);
 
   const host = el('div', { 'data-sdk-live-panel': true });
@@ -378,11 +390,15 @@ function createLivePanel(panelCss) {
 
   function apply() {
     const vars = changedVars();
-    if (state.factor !== 1 && !boxes) boxes = measureBoxes(doc);
+    if (state.factor !== 1 && !boxes) {
+      pageSheet.set('');
+      boxes = measureBoxes(doc);
+      measuredWidth = window.innerWidth;
+    }
     const scaledBoxes = (boxes ?? []).map((box) => ({ selector: box.attr, values: box.values }));
-    const css = [variableBlock(vars, { important: true }), ...overrideRules(state.overrides, { important: true }), ...boxRules(scaledBoxes, state.factor, { important: true })];
+    const css = [variableBlock(vars, { important: true }), ...overrideRules(state.overrides, { important: true }), ...boxRules(scaledBoxes, state.factor, { important: true }).rules];
     pageSheet.set(css.filter(Boolean).join('\n'));
-    output.textContent = liveCss({ vars, overrides: state.overrides, boxes: boxes ?? [], factor: state.factor, site: location.hostname || 'this page' });
+    output.textContent = liveCss({ vars, overrides: state.overrides, boxes: boxes ?? [], factor: state.factor, viewport: measuredWidth, site: location.hostname || 'this page' });
     updateContrast();
   }
 

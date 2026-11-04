@@ -4,10 +4,11 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { describe, test } from 'node:test';
-import { Script } from 'node:vm';
+import { Script, createContext } from 'node:vm';
 import { buildBookmarklet, compactJs, hostTokenCss, remToPx, stripModule, toBookmarkletUrl } from '../../playground/dev/bookmarklet.js';
 import { BOARD_WIDTHS, FORMATS, fitScale, framedPath, printMediaText, rowFitHeight } from '../../playground/dev/formats.js';
 import {
+  CONTAINER_SELECTOR,
   boxRules,
   classifyVariable,
   colorFormat,
@@ -143,14 +144,19 @@ describe('live-site panel helpers', () => {
     assert.match(overrideRules({ lineHeight: 1.6 }, { important: true })[0], /line-height: 1\.6 !important;/);
   });
 
-  test('boxRules scales measured padding and gaps, once per selector', () => {
+  test('boxRules scales measured padding and gaps, and leaves out selectors whose boxes differ', () => {
     const boxes = [
       { selector: 'section.hero', values: { 'padding-block-start': '40px', 'row-gap': '0px' } },
-      { selector: 'section.hero', values: { 'padding-block-start': '99px' } },
+      { selector: 'section.hero', values: { 'padding-block-start': '40px' } },
+      { selector: 'div.container', values: { 'padding-inline-start': '16px' } },
+      { selector: 'div.container', values: { 'padding-inline-start': '48px' } },
       { selector: '#footer', values: { 'column-gap': '16px' } },
     ];
-    assert.deepEqual(boxRules(boxes, 1), []);
-    assert.deepEqual(boxRules(boxes, 1.5), ['section.hero { padding-block-start: 60px; }', '#footer { column-gap: 24px; }']);
+    assert.deepEqual(boxRules(boxes, 1), { rules: [], skipped: [] });
+    assert.deepEqual(boxRules(boxes, 1.5), {
+      rules: ['section.hero { padding-block-start: 60px; }', '#footer { column-gap: 24px; }'],
+      skipped: ['div.container'],
+    });
   });
 
   test('liveCss copies variables, overrides, and containers with notes', () => {
@@ -159,14 +165,20 @@ describe('live-site panel helpers', () => {
     const css = liveCss({
       vars: { '--color-foreground': '18, 18, 18', '--buttons-radius': '12px' },
       overrides: { text: '#111111' },
-      boxes: [{ selector: 'main', values: { 'padding-inline-start': '20px' } }],
+      boxes: [
+        { selector: 'main', values: { 'padding-inline-start': '20px' } },
+        { selector: 'div.container', values: { 'padding-inline-start': '16px' } },
+        { selector: 'div.container', values: { 'padding-inline-start': '48px' } },
+      ],
       factor: 2,
+      viewport: 1280,
       site: 'shop.example',
     });
     assert.match(css, /^\/\* Design panel values for shop\.example\./);
     assert.match(css, /:root \{\n {2}--buttons-radius: 12px;\n {2}--color-foreground: 18, 18, 18;\n\}/);
     assert.match(css, /color: #111111;/);
-    assert.match(css, /Container spacing at 200%[^\n]*\nmain \{ padding-inline-start: 40px; \}/);
+    assert.match(css, /Container spacing at 200%: fixed px measured at a 1280px-wide viewport[^\n]*div\.container\.[^\n]*\nmain \{ padding-inline-start: 40px; \}/);
+    assert.doesNotMatch(css, /^div\.container \{/m);
     assert.doesNotMatch(css, / !important;|data-sdk-live/);
   });
 });
@@ -204,16 +216,179 @@ describe('bookmarklet build', () => {
     assert.equal(decodeURIComponent(url.slice('javascript:'.length)), code);
   });
 
-  test('the built bookmarklet is valid, self-contained, and offline', async () => {
+  test('the built bookmarklet is valid and self-contained', async () => {
     const { code, url } = await buildBookmarklet(read);
     new Script(code);
     assert.equal(decodeURIComponent(url.slice('javascript:'.length)), code);
     assert.ok(url.length < 60_000, `bookmarklet is ${url.length} characters; keep it under 60k for browser bookmark limits`);
-    assert.match(code, /toggleLivePanel\("/);
-    assert.doesNotMatch(code, /^\s*(import|export)\b/m);
-    // It must not send data anywhere or leave anything behind on the site.
-    for (const api of [/\bfetch\(/, /XMLHttpRequest/, /sendBeacon/, /WebSocket/, /EventSource/, /localStorage/, /sessionStorage/, /indexedDB/, /document\.cookie/, /\bimport\(/, /new Image\b/, /url\(/]) {
-      assert.doesNotMatch(code, api, String(api));
-    }
+  });
+
+  test('running the bookmarklet opens the panel, measures the unmodified page, and makes no network or storage calls', async () => {
+    const { code } = await buildBookmarklet(read);
+    const page = fakePage();
+    new Script(code).runInContext(page.context);
+    assert.ok(page.find('sdk-live-panel'), 'the panel opened');
+
+    page.input('sdk-live-scale-space', 2);
+    page.input('sdk-live-containers', 1.05);
+    page.input('sdk-live-accent', '#ff0000');
+    page.click('Copy CSS');
+    await new Promise((done) => setImmediate(done));
+
+    assert.match(page.pageCss(), /--space-section: 80px !important;/);
+    // The section's padding is var(--space-section): 40px as loaded, so 105% is 42px, not 105% of the doubled 80px.
+    assert.match(page.pageCss(), /\[data-sdk-live-box="0"\] \{ padding-block-start: 42px !important; \}/);
+    const copied = page.copied.join('');
+    assert.match(copied, /measured at a 1280px-wide viewport/);
+    assert.match(copied, /^section \{ padding-block-start: 42px; \}$/m);
+    assert.deepEqual(page.calls, []);
+    for (const css of page.sheets()) assert.doesNotMatch(css, /url\(/);
   });
 });
+
+// A page just big enough for the live panel to run in node:vm. Every way to
+// reach the network, storage, or cookies is a trap that records its use.
+function fakePage() {
+  const calls = [];
+  const copied = [];
+  const created = [];
+  const trap = (name) =>
+    function trapped() {
+      calls.push(name);
+    };
+  class Sheet {
+    text = '';
+    replaceSync(css) {
+      this.text = css;
+    }
+  }
+  class Node {
+    constructor(tag) {
+      this.localName = tag;
+      this.id = '';
+      this.classList = [];
+      this.children = [];
+      this.listeners = {};
+      this.attributes = new Map();
+      this.text = '';
+      created.push(this);
+      if (['script', 'img', 'iframe', 'link', 'object', 'embed'].includes(tag)) calls.push(`createElement(${tag})`);
+    }
+    setAttribute(name, value) {
+      this.attributes.set(name, String(value));
+      if (name === 'id' || name === 'value') this[name] = String(value);
+    }
+    removeAttribute(name) {
+      this.attributes.delete(name);
+    }
+    append(...nodes) {
+      this.children.push(...nodes);
+    }
+    replaceChildren(...nodes) {
+      this.children = nodes;
+    }
+    remove() {}
+    focus() {}
+    addEventListener(type, listener) {
+      (this.listeners[type] ??= []).push(listener);
+    }
+    attachShadow() {
+      this.shadowRoot = new Node('#shadow-root');
+      this.shadowRoot.adoptedStyleSheets = [];
+      return this.shadowRoot;
+    }
+    querySelector(selector) {
+      for (const child of this.children) {
+        if (child.localName === selector) return child;
+        const found = child.querySelector?.(selector);
+        if (found) return found;
+      }
+      return null;
+    }
+    get textContent() {
+      return this.text;
+    }
+    set textContent(value) {
+      this.text = String(value);
+    }
+  }
+  const root = new Node('html');
+  const body = new Node('body');
+  const section = new Node('section');
+  const document = {
+    documentElement: root,
+    body,
+    styleSheets: [],
+    adoptedStyleSheets: [],
+    createElement: (tag) => new Node(tag),
+    querySelectorAll: (selector) => (selector === CONTAINER_SELECTOR ? [section] : []),
+    querySelector: () => null,
+  };
+  for (const name of ['cookie', 'domain']) {
+    Object.defineProperty(document, name, { get: trap(`document.${name}`), set: trap(`document.${name}=`) });
+  }
+  const pageCss = () => document.adoptedStyleSheets.map((sheet) => sheet.text).join('\n');
+  // --space-section is 40px unless the page sheet sets it; the section's padding is var(--space-section).
+  const space = () => /--space-section: (\S+) !important/.exec(pageCss())?.[1] ?? '40px';
+  const computed = (node) => {
+    const props = node === root ? ['--space-section'] : [];
+    const style = {
+      fontSize: '16px',
+      lineHeight: '24px',
+      color: 'rgb(18, 18, 18)',
+      backgroundColor: node === body ? 'rgb(255, 255, 255)' : 'rgba(0, 0, 0, 0)',
+      borderStartStartRadius: '0px',
+      length: props.length,
+      getPropertyValue: (prop) => {
+        if (prop === '--space-section' && node === root) return space();
+        if (prop === 'padding-block-start' && node === section) return space();
+        return '';
+      },
+    };
+    props.forEach((prop, i) => (style[i] = prop));
+    return style;
+  };
+  const context = createContext({
+    document,
+    getComputedStyle: computed,
+    CSSStyleSheet: Sheet,
+    CSS: { escape: (s) => s, supports: () => false },
+    location: { hostname: 'shop.example' },
+    innerWidth: 1280,
+    navigator: { sendBeacon: trap('sendBeacon'), clipboard: { writeText: async (text) => copied.push(text) } },
+    getSelection: () => ({ removeAllRanges() {}, addRange() {} }),
+    fetch: trap('fetch'),
+    XMLHttpRequest: trap('XMLHttpRequest'),
+    WebSocket: trap('WebSocket'),
+    EventSource: trap('EventSource'),
+    Image: trap('Image'),
+    open: trap('open'),
+  });
+  for (const name of ['localStorage', 'sessionStorage', 'indexedDB', 'caches']) {
+    Object.defineProperty(context, name, { get: trap(name) });
+  }
+  context.window = context;
+  const find = (id) => created.find((node) => node.id === id);
+  const fire = (node, type) => {
+    for (const listener of node.listeners[type] ?? []) listener({ stopPropagation() {} });
+  };
+  return {
+    context,
+    calls,
+    copied,
+    find,
+    pageCss,
+    sheets: () => [document, ...created.filter((node) => node.adoptedStyleSheets)].flatMap((target) => target.adoptedStyleSheets.map((sheet) => sheet.text)),
+    input(id, value) {
+      const node = find(id);
+      assert.ok(node, `no control #${id}`);
+      node.value = String(value);
+      fire(node, 'input');
+    },
+    click(text) {
+      const node = created.find((n) => n.localName === 'button' && n.text === text);
+      assert.ok(node, `no button "${text}"`);
+      fire(node, 'click');
+    },
+  };
+}
