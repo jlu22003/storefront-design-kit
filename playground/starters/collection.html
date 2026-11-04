@@ -24,7 +24,8 @@
   </nav>
 </header>
 
-<main id="top" class="sdk-center sdk-stack" data-gutter style="--measure: 80rem; --padding-block-start: var(--sdk-space-40); --padding-block-end: var(--sdk-space-80); --child-gap: var(--sdk-space-32)">
+<main id="top">
+<div class="sdk-center sdk-stack" data-gutter style="--measure: 80rem; --padding-block-start: var(--sdk-space-40); --padding-block-end: var(--sdk-space-80); --child-gap: var(--sdk-space-32)">
   <div class="sdk-stack" style="--child-gap: var(--sdk-space-8)">
     <h1 class="sdk-text-large-title">Home goods</h1>
     <p class="sdk-text-secondary sdk-prose">Placeholder collection description: one sentence about what is in here.</p>
@@ -32,7 +33,7 @@
 
   <!-- Filters beside the grid; the switcher stacks them above it on narrow screens. -->
   <div class="sdk-switcher" style="--switch-at: 50rem; --child-gap: var(--sdk-space-40)">
-    <aside class="sdk-stack" aria-label="Filters" style="--child-gap: var(--sdk-space-24); flex-grow: 0; min-inline-size: 14rem">
+    <aside class="sdk-stack" aria-label="Filters" style="--child-gap: var(--sdk-space-24); flex-grow: 0; min-inline-size: min(14rem, 100%)">
       <fieldset class="sdk-stack" style="--child-gap: var(--sdk-space-4); border: 0; padding: 0">
         <legend class="sdk-text-headline">Availability</legend>
         <label class="sdk-row" data-align-y="center" style="--child-gap: var(--sdk-space-8); min-block-size: var(--sdk-size-target-min)"><input type="checkbox" checked> In stock</label>
@@ -51,7 +52,7 @@
     <section class="sdk-stack" aria-labelledby="results" style="--child-gap: var(--sdk-space-20); flex-grow: 999">
       <div class="sdk-cluster" data-align-x="between">
         <h2 id="results" class="sdk-text-subhead sdk-text-secondary">8 products</h2>
-        <label class="sdk-row" data-align-y="center" style="--child-gap: var(--sdk-space-8)">
+        <label class="sdk-cluster" style="--child-gap: var(--sdk-space-8)">
           <span class="sdk-text-subhead">Sort</span>
           <select class="pg-field">
             <option>Featured</option>
@@ -126,6 +127,7 @@
       </ul>
     </section>
   </div>
+</div>
 </main>
 </body>
 </html>

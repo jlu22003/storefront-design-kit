@@ -18,9 +18,13 @@
     "lint:css": "stylelint \"**/*.css\"",
     "dev": "node playground/server.mjs",
     "sketch": "node playground/new-sketch.mjs",
-    "bookmarklet": "node scripts/build-bookmarklet.mjs"
+    "bookmarklet": "node scripts/build-bookmarklet.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:docker": "node scripts/playwright-docker.mjs"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.64.1",
     "postcss": "8.5.32",
     "stylelint": "17.16.0",
     "stylelint-config-standard": "40.0.0"

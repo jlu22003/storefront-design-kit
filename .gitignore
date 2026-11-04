@@ -39,6 +39,7 @@ dist/
 # --- Test artifacts ---------------------------------------------------
 test-results/
 playwright-report/
+reports/
 blob-report/
 playwright/.cache/
 .lighthouseci/

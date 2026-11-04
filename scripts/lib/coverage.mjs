@@ -1,221 +1,254 @@
-// Catalog coverage gate: finds which automated standards have tests.
+// Catalog coverage gate: which standards have tests that actually run
+// (research report §5.4).
 //
-// Tests reference catalog IDs in two ways (research report §5.4):
-//   - Playwright tags, e.g. test('reflow 320', { tag: ['@LAY-06'] }, ...)
-//   - the ID in a test title, e.g. test('COL-01 label on bg >= 4.5', ...)
-// The scan is static: it reads test sources as text and does not run them.
-// Comments and skipped, fixme or todo calls are dropped first: they test nothing.
-// Lint rules map to IDs in catalog/lint-map.json ({ "COL-06": ["stylelint: color-no-hex"] }).
+// Coverage comes from what the test runners report, never from reading test
+// source, so comments, string literals, hook titles, and skipped tests cannot
+// count:
+//   - Playwright: the JSON report of a run (or of `playwright test --list`).
+//     Catalog IDs are tags, e.g. test('reflow 320', { tag: ['@LAY-06'] }, ...).
+//     A test counts when at least one project ran it. In a listing only static
+//     skips are visible, so --enforce needs a run report, where an in-body
+//     test.skip() or test.fixme() shows up as skipped.
+//   - node:test: the events of a run, written by node-test-reporter.mjs. The ID
+//     is in the test's own name, e.g. test('COL-01 label on bg >= 4.5', ...).
+//     Skipped and todo tests do not count; suites and hooks are not tests.
+//   - Lint rules map to IDs in catalog/lint-map.json.
+// A Playwright test tagged @visual is a screenshot test: it covers the visual
+// side of the IDs it is tagged with.
 
-import { readdir, readFile } from 'node:fs/promises';
-import { join, relative, resolve, sep } from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { isAbsolute, join, relative, sep } from 'node:path';
+import { standardLinks } from './catalog-links.mjs';
 import { hasLabel } from './catalog.mjs';
 
-const TEST_FILE = /\.(?:spec|test)\.[cm]?[jt]sx?$/;
-const SKIP_DIRS = new Set(['node_modules', '__screenshots__']);
-const TAG = /@([A-Z]{3}-\d{2})\b/g;
-const TITLE_CALL = /\b(?:test|it|describe)(?:\.\w+)*\s*\(\s*(['"`])((?:\\.|(?!\1)[^\\])*)\1/g;
-const ID_IN_TITLE = /(?<![\w-])([A-Z]{3}-\d{2})\b/g;
-const SKIPPED_CALL = /\b(?:(?:test|it|describe)(?:\.\w+)*\.(?:skip|fixme|todo)|x(?:test|it|describe))\s*\(/g;
+export const CATALOG_ID = /^[A-Z]{3}-\d{2}$/;
+export const VISUAL_TAG = 'visual';
+const ID_IN_NAME = /(?<![\w-])([A-Z]{3}-\d{2})\b/g;
 
-const REGEX_PREFIX = /(?:[(,=:[!&|?{};+\-*%<>~^]|\b(?:return|typeof|case|do|else|in|of|new|delete|void|throw|yield|await))$/;
+// Liberties are not standards, so a tag such as @LIB-04 is not a test reference.
+const isReference = (id) => CATALOG_ID.test(id) && !id.startsWith('LIB-');
 
-function scan(source) {
-  let code = '';
-  const literal = [];
-  const keep = (text, isLiteral) => {
-    code += text;
-    while (literal.length < code.length) literal.push(isLiteral);
+/** True when no test in a Playwright JSON report has results: it came from --list. */
+export function isListing(report) {
+  let results = false;
+  const walk = (suite) => {
+    for (const spec of suite.specs ?? []) for (const test of spec.tests ?? []) if (test.results?.length) results = true;
+    for (const child of suite.suites ?? []) walk(child);
   };
-  const templateDepths = [];
-  let depth = 0;
-  let i = 0;
-  while (i < source.length) {
-    const ch = source[i];
-    let end = i + 1;
-    if (ch === '`' || (ch === '}' && templateDepths.at(-1) === depth)) {
-      if (ch === '}') templateDepths.pop();
-      while (end < source.length && source[end] !== '`' && !source.startsWith('${', end)) end += source[end] === '\\' ? 2 : 1;
-      if (source.startsWith('${', end)) {
-        end += 2;
-        templateDepths.push(depth);
-      } else {
-        end += 1;
-      }
-      keep(source.slice(i, end), true);
-    } else if (ch === '"' || ch === "'") {
-      while (end < source.length && source[end] !== ch && source[end] !== '\n') end += source[end] === '\\' ? 2 : 1;
-      if (source[end] === ch) end += 1;
-      keep(source.slice(i, end), true);
-    } else if (source.startsWith('//', i)) {
-      end = source.indexOf('\n', i);
-      if (end === -1) end = source.length;
-    } else if (source.startsWith('/*', i)) {
-      end = source.indexOf('*/', i + 2);
-      end = end === -1 ? source.length : end + 2;
-      keep(' ', false);
-    } else if (ch === '/' && (code.trim() === '' || REGEX_PREFIX.test(code.slice(-64).trimEnd()))) {
-      let inClass = false;
-      while (end < source.length && source[end] !== '\n' && (inClass || source[end] !== '/')) {
-        if (source[end] === '\\') end += 1;
-        else if (source[end] === '[') inClass = true;
-        else if (source[end] === ']') inClass = false;
-        end += 1;
-      }
-      end += 1;
-      while (end < source.length && /\w/.test(source[end])) end += 1;
-      keep(source.slice(i, end), true);
-    } else {
-      if (ch === '{') depth += 1;
-      else if (ch === '}') depth -= 1;
-      keep(ch, false);
-    }
-    i = end;
-  }
-  return { code, literal };
-}
-
-function callEnd(code, literal, open) {
-  let depth = 0;
-  for (let i = open; i < code.length; i++) {
-    if (literal[i]) continue;
-    if (code[i] === '(') depth++;
-    else if (code[i] === ')' && --depth === 0) return i + 1;
-  }
-  return code.length;
-}
-
-function activeCode(source) {
-  const { code, literal } = scan(source);
-  let out = '';
-  let last = 0;
-  for (const match of code.matchAll(SKIPPED_CALL)) {
-    if (match.index < last || literal[match.index]) continue;
-    out += `${code.slice(last, match.index)} `;
-    last = callEnd(code, literal, match.index + match[0].length - 1);
-  }
-  return out + code.slice(last);
-}
-
-/** Lists test files under `dir`, sorted, as paths relative to `root`. */
-export async function findTestFiles(dir, root = dir) {
-  let entries;
-  try {
-    entries = await readdir(dir, { withFileTypes: true });
-  } catch (error) {
-    if (error.code === 'ENOENT') return [];
-    throw error;
-  }
-  const files = [];
-  for (const entry of entries.sort((a, b) => a.name.localeCompare(b.name))) {
-    const path = join(dir, entry.name);
-    if (entry.isDirectory()) {
-      if (!SKIP_DIRS.has(entry.name) && !entry.name.startsWith('.')) files.push(...await findTestFiles(path, root));
-    } else if (entry.isFile() && TEST_FILE.test(entry.name)) {
-      files.push(relative(root, path).split(sep).join('/'));
-    }
-  }
-  return files;
+  for (const suite of report.suites ?? []) walk(suite);
+  return !results;
 }
 
 /**
- * Returns the catalog-style IDs a test source references: every `@ID` tag,
- * and every ID inside a test()/it()/describe() title. Each ID appears once.
- * IDs inside comments or skipped, fixme or todo calls are not references.
- * `families` limits untagged title matches to real family prefixes, so
- * unrelated tokens such as "ISO-99" are not mistaken for references.
+ * Test records from a Playwright JSON report, one per test, merged across projects:
+ * { source, name, ids, visual, ran }. `root` makes file paths relative.
  */
-export function extractIds(source, families) {
-  const code = activeCode(source);
-  const ids = new Set();
-  for (const [, id] of code.matchAll(TAG)) ids.add(id);
-  for (const [, , title] of code.matchAll(TITLE_CALL)) {
-    for (const [, id] of title.matchAll(ID_IN_TITLE)) {
-      if (families.has(id.slice(0, 3))) ids.add(id);
-    }
+export function playwrightTests(report, { root } = {}) {
+  if (report.errors?.length) {
+    throw new Error(`the Playwright report has errors:\n${report.errors.map((error) => `  ${error.message ?? error}`).join('\n')}`);
   }
-  // Liberties are not standards, so a tag such as @LIB-04 is not a test reference.
-  return [...ids].filter((id) => !id.startsWith('LIB-'));
+  const listing = isListing(report);
+  const records = new Map();
+  // Spec files are relative to the config's rootDir (its testDir).
+  const rootDir = report.config?.rootDir ?? '';
+  const walk = (suite, titles) => {
+    for (const spec of suite.specs ?? []) {
+      const absolute = isAbsolute(spec.file) ? spec.file : join(rootDir, spec.file);
+      const file = root ? relative(root, absolute).split(sep).join('/') : spec.file;
+      const name = [file, ...titles, spec.title].join(' › ');
+      const key = `${name}:${spec.line}:${spec.column}`;
+      const tags = (spec.tags ?? []).map((tag) => tag.replace(/^@/, ''));
+      const record = records.get(key) ?? {
+        source: 'playwright',
+        name,
+        ids: [...new Set(tags.filter(isReference))],
+        visual: tags.includes(VISUAL_TAG),
+        ran: false,
+      };
+      for (const test of spec.tests ?? []) {
+        const ran = test.results?.length
+          ? test.results.some((result) => result.status !== 'skipped')
+          : listing && test.expectedStatus !== 'skipped';
+        record.ran ||= ran;
+      }
+      records.set(key, record);
+    }
+    for (const child of suite.suites ?? []) walk(child, [...titles, child.title]);
+  };
+  for (const suite of report.suites ?? []) walk(suite, []);
+  return [...records.values()];
 }
 
 /**
- * Computes coverage. `testSources` maps a file name to its source text;
- * `lintMap` maps IDs to lint rules (or is null when there is no lint map).
+ * Test records from node-test-reporter.mjs output (JSON lines). `families` limits
+ * IDs in names to real family prefixes, so tokens such as "ISO-99" are not references.
  */
-export function computeCoverage(standardsDoc, testSources, lintMap = null) {
-  const families = new Set(standardsDoc.families.map((family) => family.id));
+export function nodeTests(jsonLines, families, { root } = {}) {
+  const records = [];
+  for (const line of jsonLines.split('\n')) {
+    if (!line.trim()) continue;
+    const event = JSON.parse(line);
+    const file = event.file && root ? relative(root, event.file).split(sep).join('/') : event.file;
+    const ids = [...event.name.matchAll(ID_IN_NAME)].map(([, id]) => id).filter((id) => families.has(id.slice(0, 3)) && isReference(id));
+    records.push({
+      source: 'node',
+      name: file ? `${file} › ${event.name}` : event.name,
+      ids: [...new Set(ids)],
+      visual: false,
+      ran: !event.skip && !event.todo,
+    });
+  }
+  return records;
+}
+
+/** Problems with the enforcement policy (catalog/enforced.json); empty means valid. */
+export function validatePolicy(standardsDoc, policy) {
+  if (!Array.isArray(policy?.enforced)) return ['enforced.json: expected an "enforced" array of catalog IDs'];
   const known = new Map(standardsDoc.standards.map((standard) => [standard.id, standard]));
-  const referencedBy = new Map();
+  const errors = [];
+  const seen = new Set();
+  for (const id of policy.enforced) {
+    if (seen.has(id)) errors.push(`enforced.json: ${id} is listed twice`);
+    seen.add(id);
+    const standard = known.get(id);
+    if (!standard) errors.push(`enforced.json: ${id} is not in the catalog`);
+    else if (!hasLabel(standard, 'automated') && !hasLabel(standard, 'visual')) {
+      errors.push(`enforced.json: ${id} is a principle; only automated or visual standards can be enforced`);
+    }
+  }
+  return errors;
+}
+
+/**
+ * Computes coverage from test records (playwrightTests, nodeTests), the lint map
+ * ({ "COL-06": ["stylelint: color-no-hex"] } or null), and the enforced IDs.
+ */
+export function computeCoverage(standardsDoc, { tests = [], lintMap = null, enforced = [] } = {}) {
+  const known = new Map(standardsDoc.standards.map((standard) => [standard.id, standard]));
+  const tested = new Map();
+  const screenshots = new Map();
+  const notRun = new Map();
   const unknown = new Map();
-  const note = (id, where) => {
-    const target = known.has(id) ? referencedBy : unknown;
-    if (!target.has(id)) target.set(id, []);
-    target.get(id).push(where);
+  const note = (map, id, where) => {
+    if (!map.has(id)) map.set(id, []);
+    map.get(id).push(where);
   };
 
-  for (const [file, source] of Object.entries(testSources)) {
-    for (const id of extractIds(source, families)) note(id, file);
+  for (const test of tests) {
+    for (const id of test.ids) {
+      if (!known.has(id)) note(unknown, id, test.name);
+      else if (!test.ran) note(notRun, id, test.name);
+      else {
+        note(tested, id, test.name);
+        if (test.visual) note(screenshots, id, test.name);
+      }
+    }
   }
   for (const [id, rules] of Object.entries(lintMap ?? {})) {
-    if (Array.isArray(rules) && rules.length) note(id, 'catalog/lint-map.json');
+    if (!Array.isArray(rules) || !rules.length) continue;
+    note(known.has(id) ? tested : unknown, id, 'catalog/lint-map.json');
   }
 
-  const automated = standardsDoc.standards.filter((standard) => hasLabel(standard, 'automated'));
-  const covered = automated.filter((standard) => referencedBy.has(standard.id)).map((standard) => standard.id);
-  const missing = automated.filter((standard) => !referencedBy.has(standard.id)).map((standard) => standard.id);
+  const split = (label, covering) => {
+    const ids = standardsDoc.standards.filter((standard) => hasLabel(standard, label)).map((standard) => standard.id);
+    return { total: ids.length, covered: ids.filter((id) => covering.has(id)), missing: ids.filter((id) => !covering.has(id)) };
+  };
+
+  const failing = [];
+  for (const id of enforced) {
+    const standard = known.get(id);
+    if (!standard) continue;
+    const needs = [];
+    if (hasLabel(standard, 'automated') && !tested.has(id)) needs.push('a test that runs');
+    if (hasLabel(standard, 'visual') && !screenshots.has(id)) needs.push('a @visual screenshot test that runs');
+    if (needs.length) failing.push({ id, needs, links: standardLinks(standard) });
+  }
+
+  const sorted = (map) => Object.fromEntries([...map].sort(([a], [b]) => a.localeCompare(b)));
   return {
-    automated: automated.length,
-    covered,
-    missing,
-    unknown: Object.fromEntries([...unknown].sort(([a], [b]) => a.localeCompare(b))),
-    references: Object.fromEntries([...referencedBy].sort(([a], [b]) => a.localeCompare(b))),
+    automated: split('automated', tested),
+    visual: split('visual', screenshots),
+    enforced: { ids: [...enforced], failing },
+    unknown: sorted(unknown),
+    notRun: sorted(new Map([...notRun].filter(([id]) => !tested.has(id)))),
+    references: sorted(tested),
+    tests: { total: tests.length, ran: tests.filter((test) => test.ran).length },
   };
 }
 
-/** Reads the test files under each of `testDirs` (resolved against `root`) and the optional lint map. */
-export async function readCoverageInputs({ root, testDirs, lintMapPath }) {
-  const testSources = {};
-  for (const dir of testDirs) {
-    const base = resolve(root, dir);
-    for (const file of await findTestFiles(base)) {
-      const name = relative(root, join(base, file)).split(sep).join('/');
-      testSources[name] = await readFile(join(base, file), 'utf8');
-    }
+function byFamily(ids) {
+  const families = new Map();
+  for (const id of ids) {
+    const family = id.slice(0, 3);
+    if (!families.has(family)) families.set(family, []);
+    families.get(family).push(id);
   }
-  let lintMap = null;
-  try {
-    lintMap = JSON.parse(await readFile(lintMapPath, 'utf8'));
-  } catch (error) {
-    if (error.code !== 'ENOENT') throw new Error(`cannot read ${lintMapPath}: ${error.message}`, { cause: error });
-  }
-  return { testSources, lintMap };
+  return [...families].map(([family, list]) => `  ${family}: ${list.join(', ')}`);
 }
 
 /** Formats a coverage result as the plain-text summary the CLI prints. */
-export function formatCoverage(result, { enforce, testFiles }) {
+export function formatCoverage(result, { enforce, sources = [] }) {
+  const { automated, visual, enforced } = result;
   const lines = [
-    `catalog:check (${enforce ? 'enforcing' : 'report-only'}): ${result.covered.length}/${result.automated} automated standards have tests (${testFiles} test files scanned).`,
+    `catalog:check (${enforce ? 'enforcing' : 'report-only'}): ${automated.covered.length}/${automated.total} automated standards have tests; ` +
+      `${visual.covered.length}/${visual.total} visual standards have screenshot tests.`,
+    `Tests: ${result.tests.ran} of ${result.tests.total} ran (skipped, fixme, and todo tests do not count).`,
+    ...sources.map((source) => `  ${source}`),
   ];
-  if (result.missing.length) {
-    lines.push('', `Automated standards without tests (${result.missing.length}):`);
-    const byFamily = new Map();
-    for (const id of result.missing) {
-      const family = id.slice(0, 3);
-      if (!byFamily.has(family)) byFamily.set(family, []);
-      byFamily.get(family).push(id);
+  lines.push('');
+  if (enforced.failing.length) {
+    lines.push(`Enforced standards without coverage (${enforced.failing.length} of ${enforced.ids.length} in catalog/enforced.json):`);
+    for (const { id, needs, links } of enforced.failing) {
+      lines.push(`  ${id}: needs ${needs.join(' and ')}`, ...links.map((link) => `    ${link}`));
     }
-    for (const [family, ids] of byFamily) lines.push(`  ${family}: ${ids.join(', ')}`);
+  } else {
+    lines.push(`Enforced standards: all ${enforced.ids.length} in catalog/enforced.json are covered.`);
   }
   const unknown = Object.entries(result.unknown);
   if (unknown.length) {
     lines.push('', `Unknown catalog IDs referenced (${unknown.length}):`);
     for (const [id, where] of unknown) lines.push(`  ${id}: ${[...new Set(where)].join(', ')}`);
   }
+  const notRun = Object.entries(result.notRun);
+  if (notRun.length) {
+    lines.push('', `Referenced only by tests that did not run (${notRun.length}):`);
+    for (const [id, where] of notRun) lines.push(`  ${id}: ${[...new Set(where)].slice(0, 3).join(', ')}`);
+  }
+  if (automated.missing.length) {
+    lines.push('', `Automated standards without tests (${automated.missing.length}; reported, not enforced until listed in catalog/enforced.json):`);
+    lines.push(...byFamily(automated.missing));
+  }
+  if (visual.missing.length) {
+    lines.push('', `Visual standards without screenshot tests (${visual.missing.length}; reported, not enforced until listed):`);
+    lines.push(...byFamily(visual.missing));
+  }
   if (!enforce) {
-    lines.push('', 'Report-only mode: exit 0. Pass --enforce to fail on missing tests or unknown IDs.');
+    lines.push('', 'Report-only mode: exit 0. Pass --enforce (with --playwright-report) to fail on the problems above.');
   }
   return lines.join('\n');
 }
 
-/** True when an enforcing run should fail. */
-export const coverageFails = (result) => result.missing.length > 0 || Object.keys(result.unknown).length > 0;
+/** True when an enforcing run should fail: an enforced ID lost its coverage, or a test names an unknown ID. */
+export const coverageFails = (result) => result.enforced.failing.length > 0 || Object.keys(result.unknown).length > 0;
+
+/** The machine-readable summary CI keeps as catalog-coverage.json: tests per ID and the gaps. */
+export function coverageJson(result, { enforce }) {
+  return {
+    mode: enforce ? 'enforcing' : 'report-only',
+    automated: { total: result.automated.total, covered: result.automated.covered.length, missing: result.automated.missing },
+    visual: { total: result.visual.total, covered: result.visual.covered.length, missing: result.visual.missing },
+    enforced: result.enforced,
+    unknown: result.unknown,
+    testsPerId: Object.fromEntries(Object.entries(result.references).map(([id, where]) => [id, where.length])),
+  };
+}
+
+/** Reads a JSON file with a clear error. Returns null for a missing optional file. */
+export async function readJson(path, { optional = false } = {}) {
+  try {
+    return JSON.parse(await readFile(path, 'utf8'));
+  } catch (error) {
+    if (optional && error.code === 'ENOENT') return null;
+    throw new Error(`cannot read ${path}: ${error.message}`, { cause: error });
+  }
+}
