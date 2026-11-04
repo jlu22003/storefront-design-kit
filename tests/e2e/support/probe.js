@@ -169,13 +169,14 @@
 
   /**
    * TYP-01, TYP-04, TYP-06: rendered text below 11px or lighter than regular (400),
-   * and the font-family stacks text renders in (monospace in code, kbd, samp, pre,
-   * and .sdk-font-mono for SKUs and numbers does not count).
+   * the non-monospace font-family stacks text renders in, and monospace text outside
+   * code, kbd, samp, pre, and .sdk-font-mono (SKUs and numbers).
    */
   function renderedText() {
     const tooSmall = new Set();
     const tooLight = new Set();
     const families = new Map();
+    const strayMono = new Set();
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     for (let node = walker.nextNode(); node; node = walker.nextNode()) {
       const el = node.parentElement;
@@ -187,13 +188,15 @@
       if (size < 11) tooSmall.add(`${describe(el)} at ${size}px`);
       if (weight < 400) tooLight.add(`${describe(el)} at weight ${weight}`);
       const family = style.fontFamily;
-      const monoAllowed = /\bmonospace\b/.test(family) && el.closest('code, kbd, samp, pre, .sdk-font-mono');
-      if (!monoAllowed && !families.has(family)) families.set(family, describe(el));
+      if (/\bmonospace\b/.test(family)) {
+        if (!el.closest('code, kbd, samp, pre, .sdk-font-mono')) strayMono.add(describe(el));
+      } else if (!families.has(family)) families.set(family, describe(el));
     }
     return {
       tooSmall: [...tooSmall],
       tooLight: [...tooLight],
       families: [...families].map(([family, first]) => `${family} (first on ${first})`),
+      strayMono: [...strayMono],
     };
   }
 

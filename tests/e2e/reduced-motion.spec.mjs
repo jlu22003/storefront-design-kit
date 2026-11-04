@@ -7,7 +7,9 @@ import { PAGES } from './support/pages.mjs';
 
 const PROBE_CSS = `
   @keyframes sdk-test-spin { to { transform: rotate(1turn); } }
+  @keyframes sdk-test-fade { to { opacity: 0.5; } }
   #sdk-motion-probe { animation: sdk-test-spin 1s linear infinite; inline-size: 1rem; block-size: 1rem; }
+  #sdk-fade-probe { animation: sdk-test-fade 1s linear infinite; inline-size: 1rem; block-size: 1rem; }
 `;
 
 const moving = (list) =>
@@ -24,9 +26,11 @@ for (const { name, path } of PAGES) {
 
         await page.addStyleTag({ content: PROBE_CSS });
         await page.evaluate(() => {
-          const probe = document.createElement('div');
-          probe.id = 'sdk-motion-probe';
-          document.body.append(probe);
+          for (const id of ['sdk-motion-probe', 'sdk-fade-probe']) {
+            const probe = document.createElement('div');
+            probe.id = id;
+            document.body.append(probe);
+          }
           return new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
         });
         const running = moving(await page.evaluate(() => sdkProbe.animations()));
@@ -39,11 +43,16 @@ for (const { name, path } of PAGES) {
         // Control: without the preference the same probe moves, so the check above can fail.
         await page.emulateMedia({ reducedMotion: 'no-preference' });
         await page.evaluate(() => {
-          const probe = document.getElementById('sdk-motion-probe');
-          probe.replaceWith(probe.cloneNode());
+          for (const id of ['sdk-motion-probe', 'sdk-fade-probe']) {
+            const probe = document.getElementById(id);
+            probe.replaceWith(probe.cloneNode());
+          }
           return new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
         });
-        expect(moving(await page.evaluate(() => sdkProbe.animations())), 'the probe animates without reduced motion').not.toEqual([]);
+        const animations = await page.evaluate(() => sdkProbe.animations());
+        const runs = (id) => animations.some((animation) => animation.playState === 'running' && animation.target?.includes(id));
+        expect(runs('sdk-fade-probe'), 'the fade probe runs without reduced motion').toBe(true);
+        expect(moving(animations), 'without reduced motion only the spin probe counts as moving').toEqual([expect.stringContaining('sdk-motion-probe')]);
       },
     );
   });

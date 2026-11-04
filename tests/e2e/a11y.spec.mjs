@@ -11,8 +11,8 @@ for (const { name, path } of PAGES) {
       'axe finds no WCAG 2.2 AA or best-practice violations',
       {
         tag: [
-          '@ACC-01', '@ACC-03', '@ACC-04', '@ACC-05', '@ACC-16', '@COL-01', '@DRK-03', '@FRM-02', '@MOT-07',
-          '@WCAG-1.1.1', '@WCAG-1.3.1', '@WCAG-1.4.3', '@WCAG-2.5.8', '@WCAG-3.1.1', '@WCAG-4.1.2',
+          '@ACC-01', '@ACC-03', '@ACC-04', '@ACC-05', '@ACC-16', '@COL-01', '@DRK-03', '@FRM-01', '@FRM-02', '@MOT-07', '@NAV-13',
+          '@WCAG-1.1.1', '@WCAG-1.3.1', '@WCAG-1.4.3', '@WCAG-2.4.1', '@WCAG-2.5.8', '@WCAG-3.1.1', '@WCAG-3.3.2', '@WCAG-4.1.2',
         ],
       },
       async ({ open, axe }) => {

@@ -116,6 +116,8 @@ gate fails when an enforced automated standard has no test that ran, an
 enforced visual standard has no `@visual` screenshot test that ran, or any test
 names an ID that is not in the catalog. Automated and visual standards that are
 not listed yet are reported but do not fail; the change that ships their tests
-adds them to the list. CI runs the enforcing gate after the Playwright run and
+adds them to the list. axe also runs its table (LST-05) and dialog (MOD-05)
+rules, but no page has a table or dialog yet, so those two stay untagged and
+unenforced until the table and dialog components ship. CI runs the enforcing gate after the Playwright run and
 keeps `reports/catalog-coverage.json` (tests per ID) in the
 `playwright-report` artifact.

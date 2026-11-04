@@ -44,9 +44,10 @@ for (const { name, path } of PAGES) {
 
     test('rendered text is at least 11px, never lighter than regular, in at most 2 families', { tag: ['@TYP-01', '@TYP-04', '@TYP-06'] }, async ({ open, page }) => {
       await open(path);
-      const { tooSmall, tooLight, families } = await page.evaluate(() => sdkProbe.renderedText());
+      const { tooSmall, tooLight, families, strayMono } = await page.evaluate(() => sdkProbe.renderedText());
       expect.soft(tooSmall, problems(['TYP-01'], 'text under 11px:', tooSmall)).toEqual([]);
       expect.soft(tooLight, problems(['TYP-04'], 'text lighter than 400:', tooLight)).toEqual([]);
+      expect.soft(strayMono, problems(['TYP-06'], 'monospace outside code, SKUs, and numbers:', strayMono)).toEqual([]);
       expect(families.length, problems(['TYP-06'], 'more than 2 font families:', families)).toBeLessThanOrEqual(2);
     });
   });
