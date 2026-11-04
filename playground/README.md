@@ -75,9 +75,9 @@ labeled frames side by side: phone (390 × 844), tablet (820 × 1180), desktop
 email width (600 px), and a US Letter print page (816 × 1056). Each frame is
 an iframe at the format's real size, scaled down to fit. **Fit** sizes the
 frames so they all sit in one row; the **Frame height** slider makes them
-bigger. Pick the page in the **Page** field: any page under `/playground/` or
-`/sketches/` on the dev server (the list suggests the starters and your
-sketches).
+bigger. Pick the page in the **Page** field: any page under `/playground/`,
+`/sketches/`, or `/lab/` on the dev server (the list suggests the starters,
+your sketches, and [local copies of sites](#local-copies-of-a-site)).
 
 - The page's **Design** button restyles every frame at once: frames follow
   its saved settings.
@@ -110,8 +110,9 @@ This makes a frozen copy of one page in `lab/copies/<host>-<date>-<time>/`
 and prints its URL. With `npm run dev` running, open it at
 `/lab/copies/<host>-<date>-<time>/`, or list every copy at `/lab/copies/`.
 Copies show up in the **Page** field of the format frames too. Variant boards
-for copies come later, with a version board built on the live panel. Press **Design** on a copy for the same panel the bookmarklet opens: its
-site variables, page overrides, and Copy CSS. On a copy that panel can read every
+for copies come later, with a version board built on the live panel. Press
+**Design** on a copy for the same panel the bookmarklet opens: its site
+variables, page overrides, and Copy CSS. On a copy that panel can read every
 stylesheet, since they are all served from this server.
 
 `lab/` is gitignored. A copy holds another site's pages, images, and fonts, so
