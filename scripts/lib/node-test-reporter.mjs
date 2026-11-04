@@ -9,7 +9,8 @@ export default async function* nodeTestReporter(source) {
   for await (const event of source) {
     if (event.type !== 'test:pass' && event.type !== 'test:fail') continue;
     const { name, file, nesting, details, skip, todo } = event.data;
-    if (details?.type !== 'test') continue;
+    // Node 22.12 sets details.type only on suites; later versions also mark tests 'test'.
+    if (details?.type === 'suite') continue;
     yield `${JSON.stringify({
       name,
       file: file ?? null,
