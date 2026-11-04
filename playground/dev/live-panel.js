@@ -220,7 +220,7 @@ function pageBase(doc) {
   const lineHeight = Number.parseFloat(bodyStyle.lineHeight);
   const background =
     [body, doc.documentElement].map((node) => getComputedStyle(node).backgroundColor).find(painted) ?? 'rgb(255, 255, 255)';
-  const button = [...doc.querySelectorAll(ACCENT_ELEMENTS)].find((node) => painted(getComputedStyle(node).backgroundColor));
+  const button = [...doc.querySelectorAll(`:where(${ACCENT_ELEMENTS})`)].find((node) => painted(getComputedStyle(node).backgroundColor));
   const link = doc.querySelector('a[href]');
   const buttonStyle = button ? getComputedStyle(button) : null;
   return {
