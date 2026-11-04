@@ -33,11 +33,11 @@ RTL) and Lighthouse come later.
 
 | Spec | Check | Catalog IDs |
 |---|---|---|
-| `a11y` | axe-core: WCAG 2.0 to 2.2 A and AA plus best practices. Each axe rule maps to its IDs in `support/fixtures.mjs`. Email, phone, and URL fields carry `autocomplete`. | ACC-01 (24px floor), ACC-03, ACC-04, ACC-05, ACC-16, COL-01, DRK-03, FRM-02, MOT-07 |
+| `a11y` | axe-core: WCAG 2.0 to 2.2 A and AA plus best practices. Each axe rule maps to its IDs in `support/fixtures.mjs`. Email, phone, and URL fields carry `autocomplete`. | ACC-01 (24px floor), ACC-03, ACC-04, ACC-05, ACC-16, COL-01, DRK-03, FRM-01, FRM-02, MOT-07, NAV-13 |
 | `layout` | No horizontal scroll at the project viewport, or at 320×568 | LAY-05, LAY-06 |
 | `layout` | Controls have a hit region of at least 44×44px, labels included. Text links (`display: inline`) get axe's 24px floor and its inline exception instead. | ACC-01, BTN-01 |
 | `layout` | WCAG 1.4.12 text spacing clips no text and adds no horizontal scroll | TYP-08 |
-| `layout` | Rendered text is at least 11px and weight 400 or more | TYP-01, TYP-04 |
+| `layout` | Rendered text is at least 11px and weight 400 or more, in at most 2 font families, with monospace only in code, SKUs, and numbers | TYP-01, TYP-04, TYP-06 |
 | `focus` | Tab reaches every control in DOM order; no `tabindex` above 0, no `autofocus`, no CSS `order` or `*-reverse` around controls | ACC-07, ACC-10, LAY-01 |
 | `focus` | Each focused control matches `:focus-visible` with a 2px outline at 3:1 against what is behind it, and is not hidden by sticky chrome | ACC-09, ACC-11, LAY-11 |
 | `appearance` | Follows the OS appearance and the `data-theme` override | DRK-01 |
@@ -120,6 +120,6 @@ adds them to the list. axe also runs its table (LST-05) and dialog (MOD-05)
 rules, but no page has a table or dialog yet, so those two stay untagged and
 unenforced until the table and dialog components ship. FRM-01 is enforced by
 axe's `label` rule now; its other half, "a placeholder is never the only
-label", is deferred to the form components step. CI runs the enforcing gate after the Playwright run and
-keeps `reports/catalog-coverage.json` (tests per ID) in the
-`playwright-report` artifact.
+label", is deferred to the form components step. CI runs the enforcing gate
+after the Playwright run and keeps `reports/catalog-coverage.json` (tests per
+ID) in the `playwright-report` artifact.
