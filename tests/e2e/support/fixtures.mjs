@@ -11,6 +11,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { test as base, expect } from '@playwright/test';
+import { standardLinks } from '../../../scripts/lib/catalog-links.mjs';
 
 const ROOT = join(import.meta.dirname, '..', '..', '..');
 const PROBE = join(import.meta.dirname, 'probe.js');
@@ -22,10 +23,7 @@ const STANDARDS = new Map(
 export function catalogRef(id) {
   const standard = STANDARDS.get(id);
   if (!standard) return id;
-  const sources = [
-    ...standard.hig.map((link) => `HIG ${link.url}`),
-    ...standard.wcag.map((ref) => `WCAG ${ref.sc} https://www.w3.org/TR/WCAG22/`),
-  ];
+  const sources = standardLinks(standard);
   return sources.length ? `${id} (${sources.join('; ')})` : id;
 }
 

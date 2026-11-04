@@ -42,11 +42,12 @@ for (const { name, path } of PAGES) {
       expect(found, problems(['TYP-08'], 'with WCAG text spacing:', found)).toEqual([]);
     });
 
-    test('rendered text is at least 11px and never lighter than regular', { tag: ['@TYP-01', '@TYP-04'] }, async ({ open, page }) => {
+    test('rendered text is at least 11px, never lighter than regular, in at most 2 families', { tag: ['@TYP-01', '@TYP-04', '@TYP-06'] }, async ({ open, page }) => {
       await open(path);
-      const { tooSmall, tooLight } = await page.evaluate(() => sdkProbe.renderedText());
-      expect(tooSmall, problems(['TYP-01'], 'text under 11px:', tooSmall)).toEqual([]);
-      expect(tooLight, problems(['TYP-04'], 'text lighter than 400:', tooLight)).toEqual([]);
+      const { tooSmall, tooLight, families } = await page.evaluate(() => sdkProbe.renderedText());
+      expect.soft(tooSmall, problems(['TYP-01'], 'text under 11px:', tooSmall)).toEqual([]);
+      expect.soft(tooLight, problems(['TYP-04'], 'text lighter than 400:', tooLight)).toEqual([]);
+      expect(families.length, problems(['TYP-06'], 'more than 2 font families:', families)).toBeLessThanOrEqual(2);
     });
   });
 }

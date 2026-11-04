@@ -68,8 +68,9 @@ official Playwright image whose tag matches `@playwright/test` in
 runs in that image, and `npm run test:e2e:docker` runs the same image locally.
 Both set `SDK_PINNED_RENDERER=1`; without it the screenshot tests skip with a
 reason, so `npm run test:e2e` on a Mac or Windows machine stays green.
-`scripts/test/pinning.test.mjs` fails if the workflow image and the installed
-Playwright drift apart; upgrade both together, then refresh the baselines.
+`scripts/test/pinning.test.mjs` fails unless `package.json` pins
+`@playwright/test` exactly; when you upgrade it, update the workflow image tag
+to match, then refresh the baselines.
 
 **Fonts.** Tests block every request that leaves the playground server, so
 pages never download Inter, Source Serif 4, or IBM Plex Mono from Google Fonts

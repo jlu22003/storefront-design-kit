@@ -163,7 +163,6 @@
   border-radius: var(--sdk-radius-8);
   background: color-mix(in srgb, var(--sdk-color-accent) 14%, var(--sdk-color-bg-elevated));
   color: var(--sdk-color-label);
-  font-family: var(--sdk-font-family-mono);
   font-size: var(--sdk-font-size-footnote);
 }
 

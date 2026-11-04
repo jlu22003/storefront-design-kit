@@ -150,13 +150,21 @@ describe('computeCoverage', () => {
     const result = computeCoverage(standards, { tests: [record(['LAY-01'], { ran: false })], enforced: ['LAY-01'] });
     assert.deepEqual(result.automated.covered, []);
     assert.deepEqual(result.notRun, { 'LAY-01': ['t LAY-01'] });
-    assert.deepEqual(result.enforced.failing, [{ id: 'LAY-01', needs: ['a test that runs'] }]);
+    assert.deepEqual(result.enforced.failing, [
+      {
+        id: 'LAY-01',
+        needs: ['a test that runs'],
+        links: ['HIG https://developer.apple.com/design/human-interface-guidelines/layout', 'WCAG 1.3.2 https://www.w3.org/TR/WCAG22/#meaningful-sequence'],
+      },
+    ]);
     assert.ok(coverageFails(result));
   });
 
   test('a visual standard needs a @visual test; a plain test does not cover it', () => {
     const result = computeCoverage(standards, { tests: [record(['LAY-02'])], enforced: ['LAY-02'] });
-    assert.deepEqual(result.enforced.failing, [{ id: 'LAY-02', needs: ['a @visual screenshot test that runs'] }]);
+    assert.deepEqual(result.enforced.failing, [
+      { id: 'LAY-02', needs: ['a @visual screenshot test that runs'], links: ['HIG https://developer.apple.com/design/human-interface-guidelines/layout'] },
+    ]);
   });
 
   test('counts lint-map entries with at least one rule', () => {
@@ -188,7 +196,10 @@ describe('formatCoverage and coverageJson', () => {
     const text = formatCoverage(result, { enforce: false, sources: ['node:test: x'] });
     assert.match(text, /^catalog:check \(report-only\): 1\/2 automated standards have tests; 0\/1 visual standards have screenshot tests\./);
     assert.match(text, /\n  node:test: x\n/);
-    assert.match(text, /Enforced standards without coverage \(1 of 1 in catalog\/enforced\.json\):\n  COL-01: needs a test that runs/);
+    assert.match(
+      text,
+      /Enforced standards without coverage \(1 of 1 in catalog\/enforced\.json\):\n  COL-01: needs a test that runs\n    WCAG 1\.4\.3 https:\/\/www\.w3\.org\/TR\/WCAG22\/#contrast-minimum\n/,
+    );
     assert.match(text, /Unknown catalog IDs referenced \(1\):\n  LAY-55: a/);
     assert.match(text, /Automated standards without tests \(1; reported, not enforced/);
     assert.match(text, /Report-only mode: exit 0/);

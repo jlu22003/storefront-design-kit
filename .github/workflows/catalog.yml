@@ -44,8 +44,7 @@ jobs:
     name: Playwright PR smoke and coverage gate
     runs-on: ubuntu-latest
     # The pinned image is the renderer for the visual baselines: same browsers, fonts, and OS
-    # as `npm run test:e2e:docker`. Its tag must match @playwright/test in package.json
-    # (scripts/test/pinning.test.mjs checks it).
+    # as `npm run test:e2e:docker`. Its tag must match @playwright/test in package.json.
     container:
       image: mcr.microsoft.com/playwright:v1.64.1-noble
       options: --ipc=host

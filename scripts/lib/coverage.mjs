@@ -18,6 +18,7 @@
 
 import { readFile } from 'node:fs/promises';
 import { isAbsolute, join, relative, sep } from 'node:path';
+import { standardLinks } from './catalog-links.mjs';
 import { hasLabel } from './catalog.mjs';
 
 export const CATALOG_ID = /^[A-Z]{3}-\d{2}$/;
@@ -160,7 +161,7 @@ export function computeCoverage(standardsDoc, { tests = [], lintMap = null, enfo
     const needs = [];
     if (hasLabel(standard, 'automated') && !tested.has(id)) needs.push('a test that runs');
     if (hasLabel(standard, 'visual') && !screenshots.has(id)) needs.push('a @visual screenshot test that runs');
-    if (needs.length) failing.push({ id, needs });
+    if (needs.length) failing.push({ id, needs, links: standardLinks(standard) });
   }
 
   const sorted = (map) => Object.fromEntries([...map].sort(([a], [b]) => a.localeCompare(b)));
@@ -197,7 +198,9 @@ export function formatCoverage(result, { enforce, sources = [] }) {
   lines.push('');
   if (enforced.failing.length) {
     lines.push(`Enforced standards without coverage (${enforced.failing.length} of ${enforced.ids.length} in catalog/enforced.json):`);
-    for (const { id, needs } of enforced.failing) lines.push(`  ${id}: needs ${needs.join(' and ')}`);
+    for (const { id, needs, links } of enforced.failing) {
+      lines.push(`  ${id}: needs ${needs.join(' and ')}`, ...links.map((link) => `    ${link}`));
+    }
   } else {
     lines.push(`Enforced standards: all ${enforced.ids.length} in catalog/enforced.json are covered.`);
   }

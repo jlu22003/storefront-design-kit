@@ -57,7 +57,11 @@ for (const { name, path } of PAGES) {
 
         const states = await walk(page, order.length);
         const reached = states.map((state) => (state.key === null ? `(unexpected) ${state.desc}` : order[Number(state.key)]));
-        expect(reached, problems(['ACC-07', 'ACC-10'], 'Tab order differs from the DOM order of the controls:', [])).toEqual(order);
+        const stops = Math.max(reached.length, order.length);
+        const differences = Array.from({ length: stops }, (_, i) =>
+          reached[i] === order[i] ? null : `stop ${i + 1}: reached ${reached[i] ?? '(nothing)'}, expected ${order[i] ?? '(nothing)'}`,
+        ).filter(Boolean);
+        expect(differences, problems(['ACC-07', 'ACC-10'], 'Tab order differs from the DOM order of the controls:', differences)).toEqual([]);
       },
     );
 
