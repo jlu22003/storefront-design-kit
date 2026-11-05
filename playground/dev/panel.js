@@ -5,7 +5,9 @@
 // browser's localStorage) until you press Reset. Color picks are kept per
 // appearance (light or dark) and apply only in that appearance. "Copy CSS"
 // copies only the tokens you changed, ready to paste into a sketch stylesheet
-// or to carry back into tokens/*.tokens.json.
+// or to carry back into tokens/*.tokens.json. Presets (presets.js) layer onto
+// the sliders and colors; your own presets are saved in this browser, shared
+// with the live-site panel on local copies.
 //
 // Three ways to use it:
 // - mountDesignPanel() adds the floating Design button to the page (dev client).
@@ -16,6 +18,7 @@
 //   changes made in other windows (format frames).
 
 import { contrastRatio, el, normalizeHex, scaleValue } from './util.js';
+import { kitAsPreset, kitLayer, presetControls, presetSettings, storagePresets } from './presets.js';
 
 export { contrastRatio, normalizeHex, scaleValue } from './util.js';
 
@@ -288,9 +291,17 @@ export function followDesign({ root = document.documentElement, storageKey = STO
 
 // ------------------------------------------------------------------ panel
 
+// Converts a token length ("1.0625rem", "8px") to px.
+const tokenPx = (value = '') => {
+  const n = Number.parseFloat(value);
+  if (!Number.isFinite(n)) return 0;
+  return /rem$/.test(value.trim()) ? n * 16 : n;
+};
+
 /**
  * Mounts the panel UI. With no options it is the floating Design button for
- * this page. Returns { design, host, css(), setRoot(root) }, or undefined when
+ * this page. `presets` is the store for your own presets (storagePresets()
+ * by default). Returns { design, host, css(), setRoot(root) }, or undefined when
  * a floating panel is already on the page.
  */
 export function mountDesignPanel({
@@ -300,6 +311,7 @@ export function mountDesignPanel({
   inline = false,
   title = 'Design panel',
   idPrefix = 'sdk-dp',
+  presets = storagePresets(),
 } = {}) {
   if (!inline && document.querySelector('[data-sdk-design-panel]:not([data-inline])')) return undefined;
   const design = createDesign({ root, storageKey, onSchemeChange: () => sync() });
@@ -395,6 +407,41 @@ export function mountDesignPanel({
     return { color, input, node: el('div', { class: 'swatch' }, [input, el('label', { for: id, text: color.label })]) };
   });
 
+  // Presets: the kit's scales and color roles stand in for the live panel's settings (presets.js kitLayer).
+  function kitContext() {
+    const bodyPx = tokenPx(design.base('--sdk-font-size-body'));
+    const radiusPx = tokenPx(design.base('--sdk-radius-8'));
+    const color = (name, fallback) => design.currentColor(name) ?? fallback;
+    return {
+      scheme: design.scheme(),
+      bodyPx,
+      radiusPx,
+      ranges: Object.fromEntries(SCALES.map((scale) => [scale.key, scale])),
+      colorNames: COLORS.map((c) => c.name),
+      base: (name) => design.base(name),
+      now: {
+        fontSize: bodyPx * (state.scales.type ?? 1),
+        lineHeight: 1.5,
+        radius: radiusPx * (state.scales.radius ?? 1),
+        text: color('--sdk-color-label', '#000000'),
+        background: color('--sdk-color-bg', '#ffffff'),
+        accent: color('--sdk-color-accent', '#0a5fd1'),
+        onAccent: color('--sdk-color-on-accent', '#ffffff'),
+      },
+    };
+  }
+  const presetUi = presetControls({
+    idPrefix: `${idPrefix}-presets`,
+    store: presets,
+    apply(preset) {
+      const kit = kitContext();
+      Object.assign(state, kitLayer(state, presetSettings(preset, kit.now), kit));
+      syncControls();
+      sync();
+    },
+    current: () => kitAsPreset(state, design.scheme()),
+  });
+
   const contrastList = el('ul', { class: 'contrast', role: 'list' });
   function updateContrast() {
     contrastList.replaceChildren(
@@ -420,6 +467,7 @@ export function mountDesignPanel({
   panel.append(
     header,
     appearanceRow,
+    presetUi.node,
     el('fieldset', {}, [el('legend', { text: 'Scale' }), ...scaleFields.map((f) => f.node)]),
     el('fieldset', {}, [el('legend', { text: 'Colors' }), el('div', { class: 'swatches' }, colorFields.map((f) => f.node))]),
     el('fieldset', {}, [el('legend', { text: 'Contrast (WCAG)' }), contrastList]),

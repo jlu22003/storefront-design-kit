@@ -100,9 +100,10 @@
 
   // The live panel's code, its stylesheet, and the copied site's host name (for the copied CSS).
   async function loadLivePanel(name) {
-    const [{ mountLivePanel }, { livePanelCss }, tokensCss, panelCss, site] = await Promise.all([
+    const [{ mountLivePanel }, { livePanelCss }, { storagePresets }, tokensCss, panelCss, site] = await Promise.all([
       import('/playground/dev/live-panel.js'),
       import('/playground/dev/bookmarklet.js'),
+      import('/playground/dev/presets.js'),
       fetch('/theme/assets/sdk-tokens.css').then((res) => res.text()),
       fetch('/playground/dev/panel.css').then((res) => res.text()),
       fetch(`/lab/copies/${encodeURIComponent(name)}/manifest.json`)
@@ -110,7 +111,7 @@
         .then((manifest) => new URL(manifest.url).hostname)
         .catch(() => name),
     ]);
-    return { mountLivePanel, css: livePanelCss(tokensCss, panelCss), site };
+    return { mountLivePanel, css: livePanelCss(tokensCss, panelCss), site, presets: storagePresets() };
   }
 
   let winner = 0;
@@ -164,7 +165,7 @@
           if (!root) return;
           if (livePanel) {
             // The live panel measures the page it styles, so it is rebuilt for each new document.
-            const { mountLivePanel, css, site } = await livePanel;
+            const { mountLivePanel, css, site, presets } = await livePanel;
             if (frame.contentDocument?.documentElement !== root) return;
             variant.panel?.remove();
             variant.panel = mountLivePanel(css, {
@@ -172,6 +173,7 @@
               container: slot,
               inline: true,
               store: storageFor(`sdk-playground-live:${copyName}:variant-${letter.toLowerCase()}`),
+              presets,
               title: `Variant ${letter} settings`,
               idPrefix: `sdk-lv${letter.toLowerCase()}`,
               site: `${site}, variant ${letter}`,

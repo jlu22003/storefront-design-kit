@@ -3,7 +3,8 @@
 // site) from two origins, a page and a "CDN", then opens the copy on the
 // playground server. The copy must keep what the scripts rendered, lose the
 // scripts themselves, load every file from the copy, and never contact the
-// site it came from. The last test opens the copy on a variant board.
+// site it came from. The last tests open the copy on a variant board, the
+// second of them with presets.
 
 import { createHash } from 'node:crypto';
 import { readFile, readdir, rm } from 'node:fs/promises';
@@ -308,5 +309,71 @@ test('a variant board shows the copy with its own live panel per variant and cop
   await expect(frameBody(1)).toHaveCSS('font-size', fontSize);
   await expect(page.locator('#sdk-lvb-font-size')).toHaveValue(String(Number.parseFloat(fontSize)));
   await expect(panels.nth(1).locator('button', { hasText: 'Remove' })).toHaveCount(0);
+  expect(reachedElsewhere.filter((url) => !url.startsWith('https://fonts.'))).toEqual([]);
+});
+
+test('presets on a variant board layer onto each variant, and your presets are shared, exported, and imported', async ({ page, baseURL }) => {
+  const reachedElsewhere = [];
+  page.on('requestfinished', (request) => {
+    if (new URL(request.url()).origin !== new URL(baseURL).origin) reachedElsewhere.push(request.url());
+  });
+  await page.goto(`/playground/variants.html?src=${encodeURIComponent(`/lab/copies/${NAME}/`)}&n=2`);
+  await page.evaluate(() => localStorage.removeItem('sdk-playground-presets'));
+  await page.reload();
+  const panels = page.locator('#variants [data-sdk-live-panel][data-inline]');
+  await expect(panels).toHaveCount(2);
+  const [a, b] = [panels.nth(0), panels.nth(1)];
+  const frames = page.locator('#variants iframe');
+  const main = (index) => frames.nth(index).contentFrame().locator('main');
+  for (const panel of [a, b]) await panel.getByRole('button', { name: 'Reset' }).click();
+
+  // Airy layers onto variant B only, and its sliders show the result.
+  await b.getByRole('button', { name: 'Airy', exact: true }).click();
+  await expect(page.locator('#sdk-lvb-containers')).toHaveValue('1.25');
+  await expect(page.locator('#sdk-lvb-line-height')).toHaveValue('1.7');
+  await expect(main(1)).toHaveCSS('padding-top', '30px');
+  await expect(main(0)).toHaveCSS('padding-top', '24px');
+  await expect(b.getByRole('status').filter({ hasText: 'Applied Airy.' })).toHaveCount(1);
+  // Applying it again multiplies the scales: 1.25 × 1.25 lands on the slider's step, 1.55, so 24px × 155%.
+  await b.getByRole('button', { name: 'Airy', exact: true }).click();
+  await expect(page.locator('#sdk-lvb-containers')).toHaveValue('1.55');
+  await expect(main(1)).toHaveCSS('padding-top', '37.2px');
+
+  // Higher contrast moves the text to 7:1 on its background.
+  await b.getByRole('button', { name: 'Higher contrast' }).click();
+  const textContrast = b.locator('.contrast li').first();
+  await expect(textContrast).toHaveAttribute('data-pass', 'true');
+  const ratio = await textContrast.locator('.ratio').textContent();
+  expect(Number.parseFloat(ratio)).toBeGreaterThanOrEqual(7);
+
+  // Save mine in B; the preset shows in A's panel too, and applies there.
+  await page.locator('#sdk-lvb-presets-preset-name').fill('Brand look');
+  await b.getByRole('button', { name: 'Save mine' }).click();
+  await expect(a.getByRole('list', { name: 'Your presets' }).getByRole('button', { name: 'Brand look', exact: true })).toBeVisible();
+  await a.getByRole('button', { name: 'Brand look', exact: true }).click();
+  await expect(page.locator('#sdk-lva-containers')).toHaveValue('1.55');
+  await expect(main(0)).toHaveCSS('padding-top', '37.2px');
+
+  // Export saves a JSON file; Import reads one back.
+  const [download] = await Promise.all([page.waitForEvent('download'), a.getByRole('button', { name: 'Export' }).click()]);
+  expect(download.suggestedFilename()).toBe('design-presets.json');
+  const exported = JSON.parse(await readFile(await download.path(), 'utf8'));
+  expect(exported.format).toBe('sdk-design-presets');
+  expect(exported.presets.map((preset) => preset.name)).toEqual(['Brand look']);
+  expect(exported.presets[0].settings.factor).toBe(1.55);
+
+  const file = { name: 'presets.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({ ...exported, presets: [{ name: 'Imported', settings: { overrides: { fontSize: 21 } } }] })) };
+  await a.locator('input[type="file"]').setInputFiles(file);
+  await expect(a.getByRole('status').filter({ hasText: 'Imported 1 preset.' })).toHaveCount(1);
+  await b.getByRole('button', { name: 'Imported', exact: true }).click();
+  await expect(page.locator('#sdk-lvb-font-size')).toHaveValue('21');
+  await expect(frames.nth(1).contentFrame().locator('body')).toHaveCSS('font-size', '21px');
+
+  // Your presets survive a reload; deleting one removes it from every panel.
+  await page.reload();
+  await expect(panels).toHaveCount(2);
+  await expect(a.getByRole('list', { name: 'Your presets' }).getByRole('button')).toHaveText(['Brand look', '×', 'Imported', '×']);
+  await a.getByRole('button', { name: 'Delete Brand look' }).click();
+  await expect(b.getByRole('button', { name: 'Brand look', exact: true })).toHaveCount(0);
   expect(reachedElsewhere.filter((url) => !url.startsWith('https://fonts.'))).toEqual([]);
 });
