@@ -231,6 +231,7 @@ describe('copies stay out of git', () => {
     };
     assert.ok(ignored('lab/copies/shop.example-20261104-090507/index.html'));
     assert.ok(ignored('lab/copies/shop.example-20261104-090507/assets/a1.woff2'));
+    assert.ok(ignored('lab/audits/shop.example-20261104-090507/report.md'), 'npm run audit writes under lab/audits/');
     assert.ok(!ignored('scripts/lib/lab/capture.mjs'), 'scripts/lib/lab/ must stay tracked');
     assert.ok(!ignored('tests/lab/assets.test.mjs'), 'tests/lab/ must stay tracked');
   });

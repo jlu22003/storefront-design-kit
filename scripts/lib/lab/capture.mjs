@@ -281,7 +281,7 @@ async function fetchMissing(context, store, wanted) {
 }
 
 /** Launches Chromium, explaining how to install it when Playwright's browsers are missing. */
-async function launch() {
+export async function launch() {
   try {
     return await chromium.launch();
   } catch (error) {

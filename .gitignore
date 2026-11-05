@@ -70,6 +70,7 @@ npm-debug.log*
 sketches/
 
 # --- Site lab copies (never in the public kit) ----------------------------
-# `npm run lab:copy` writes local copies of other sites here: their pages,
-# images, and fonts are not ours to publish. See playground/README.md.
+# `npm run lab:copy` and `npm run audit` write local copies of other sites
+# (and audit reports of them) here: their pages, images, and fonts are not
+# ours to publish. See playground/README.md.
 /lab/

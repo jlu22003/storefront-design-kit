@@ -5,6 +5,13 @@ pages. Each test is tagged with the catalog IDs it checks
 ([catalog/STANDARDS.md](../../catalog/STANDARDS.md)), and a failure names the
 standard with its HIG and WCAG links.
 
+The check logic lives in [`scripts/lib/lab/checks.mjs`](../../scripts/lib/lab/checks.mjs),
+with the in-page probes in `scripts/lib/lab/probe.js`. Each check returns what
+it found (`{ check, ids, items: [{ selector, detail, rect }] }`) and the specs
+assert that `items` is empty, so the site audit (`npm run audit`) runs the same
+checks on a copy of another site. Only the specs' tags count for coverage; what
+an audit finds is never a test.
+
 ```sh
 npm run test:e2e:docker    # everything, in the pinned image CI uses (needs Docker)
 npm run test:e2e           # everything except screenshots, with your own browsers
@@ -25,7 +32,7 @@ Playwright starts the playground server (`playground/server.mjs`) on port 4410
 | `desktop-chrome-light`, `desktop-chrome-dark` | Desktop Chrome, Chromium, 1280×720 | the same |
 | `iphone-17-pro-text-200` | iPhone 17 Pro, 200% text | axe, 200% text and page zoom, 200% screenshots |
 | `iphone-17-pro-reduced-motion` | iPhone 17 Pro, `reducedMotion: 'reduce'` | axe, reduced motion |
-| `lab` | Desktop Chrome, Chromium | `lab-copy`: copies a fixture site served on localhost (`npm run lab:copy`) and opens the copy on the playground server |
+| `lab` | Desktop Chrome, Chromium | `lab-copy`: copies a fixture site served on localhost (`npm run lab:copy`) and opens the copy on the playground server. `lab-audit`: audits localhost fixture pages (`npm run audit`) and checks the report, tiers, and exit codes |
 
 The nightly full matrix (every viewport, increased contrast, forced colors,
 RTL) and Lighthouse come later.
@@ -34,7 +41,7 @@ RTL) and Lighthouse come later.
 
 | Spec | Check | Catalog IDs |
 |---|---|---|
-| `a11y` | axe-core: WCAG 2.0 to 2.2 A and AA plus best practices. Each axe rule maps to its IDs in `support/fixtures.mjs`. Email, phone, and URL fields carry `autocomplete`. | ACC-01 (24px floor), ACC-03, ACC-04, ACC-05, ACC-16, COL-01, DRK-03, FRM-01, FRM-02, MOT-07, NAV-13 |
+| `a11y` | axe-core: WCAG 2.0 to 2.2 A and AA plus best practices. Each axe rule maps to its IDs in `AXE_RULE_IDS` (`scripts/lib/lab/checks.mjs`). Email, phone, and URL fields carry `autocomplete`. | ACC-01 (24px floor), ACC-03, ACC-04, ACC-05, ACC-16, COL-01, DRK-03, FRM-01, FRM-02, MOT-07, NAV-13 |
 | `layout` | No horizontal scroll at the project viewport, or at 320×568 | LAY-05, LAY-06 |
 | `layout` | Controls have a hit region of at least 44×44px, labels included. Text links (`display: inline`) get axe's 24px floor and its inline exception instead. | ACC-01, BTN-01 |
 | `layout` | WCAG 1.4.12 text spacing clips no text and adds no horizontal scroll | TYP-08 |

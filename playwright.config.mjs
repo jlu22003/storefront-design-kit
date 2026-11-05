@@ -72,9 +72,10 @@ export default defineConfig({
       use: { ...devices['iPhone 17 Pro'], colorScheme: 'light', reducedMotion: 'reduce' },
     },
     {
-      // Site lab: copies a localhost fixture site (`npm run lab:copy`) and opens the copy on the playground server.
+      // Site lab: copies a localhost fixture site (`npm run lab:copy`) and opens the copy on the playground
+      // server, and audits fixture pages (`npm run audit`).
       name: 'lab',
-      testMatch: /lab-copy\.spec\.mjs$/,
+      testMatch: /lab-[\w-]+\.spec\.mjs$/,
       use: { ...devices['Desktop Chrome'] },
     },
   ],
