@@ -17,7 +17,10 @@
   Variant board: two to four copies of one page side by side. Each copy has
   its own design panel under it, saved separately, so you can try different
   spacing, type, corners, and colors, mark a winner, and copy its CSS.
-  The page's own floating Design button is off (data-sdk-panel="off").
+  Playground pages and sketches get the kit's design panel (panel.js); local
+  copies of sites (/lab/) get the live-site panel (live-panel.js), the one
+  the bookmarklet opens, since they use their own CSS rather than the kit's
+  tokens. The page's own floating Design button is off (data-sdk-panel="off").
 -->
 <body>
 <header class="pg-toolbar">
@@ -63,14 +66,17 @@
 
 <script type="module">
   import { BOARD_WIDTHS } from '/playground/dev/formats.js';
-  import { mountDesignPanel } from '/playground/dev/panel.js';
+  import { mountDesignPanel, storageFor } from '/playground/dev/panel.js';
   import { bindSourceForm, copyText } from '/playground/dev/tools.js';
   import { el } from '/playground/dev/util.js';
 
   const LETTERS = ['A', 'B', 'C', 'D'];
   const WINNER_KEY = 'sdk-playground-board-winner';
   const params = new URLSearchParams(location.search);
-  const src = bindSourceForm(document.querySelector('#source'), { copies: false });
+  const src = bindSourceForm(document.querySelector('#source'));
+  // A local copy: /lab/copies/<name>/…, styled with the live-site panel.
+  const copyName = /^\/lab\/copies\/([^/]+)\//.exec(src ?? '')?.[1] ?? null;
+  const livePanel = copyName ? loadLivePanel(copyName) : null;
   const board = document.querySelector('#variants');
   const countSelect = document.querySelector('#count');
   const widthSelect = document.querySelector('#width');
@@ -90,6 +96,21 @@
       url.searchParams.set(name, select.value);
       location.assign(url);
     });
+  }
+
+  // The live panel's code, its stylesheet, and the copied site's host name (for the copied CSS).
+  async function loadLivePanel(name) {
+    const [{ mountLivePanel }, { livePanelCss }, tokensCss, panelCss, site] = await Promise.all([
+      import('/playground/dev/live-panel.js'),
+      import('/playground/dev/bookmarklet.js'),
+      fetch('/theme/assets/sdk-tokens.css').then((res) => res.text()),
+      fetch('/playground/dev/panel.css').then((res) => res.text()),
+      fetch(`/lab/copies/${encodeURIComponent(name)}/manifest.json`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((manifest) => new URL(manifest.url).hostname)
+        .catch(() => name),
+    ]);
+    return { mountLivePanel, css: livePanelCss(tokensCss, panelCss), site };
   }
 
   let winner = 0;
@@ -133,7 +154,7 @@
         const variant = { letter, frame, viewport, panel: null };
         // Each copy gets its own panel and saved settings. When the frame
         // reloads or navigates, the panel follows it to the new document.
-        frame.addEventListener('load', () => {
+        frame.addEventListener('load', async () => {
           let root;
           try {
             root = frame.contentDocument?.documentElement;
@@ -141,6 +162,22 @@
             root = null;
           }
           if (!root) return;
+          if (livePanel) {
+            // The live panel measures the page it styles, so it is rebuilt for each new document.
+            const { mountLivePanel, css, site } = await livePanel;
+            if (frame.contentDocument?.documentElement !== root) return;
+            variant.panel?.remove();
+            variant.panel = mountLivePanel(css, {
+              doc: root.ownerDocument,
+              container: slot,
+              inline: true,
+              store: storageFor(`sdk-playground-live:${copyName}:variant-${letter.toLowerCase()}`),
+              title: `Variant ${letter} settings`,
+              idPrefix: `sdk-lv${letter.toLowerCase()}`,
+              site: `${site}, variant ${letter}`,
+            });
+            return;
+          }
           if (variant.panel) {
             variant.panel.setRoot(root);
             return;
@@ -179,6 +216,7 @@
       status.textContent = 'That variant is still loading.';
       return;
     }
+    // The live panel already names the site and variant; the kit panel's header gets the variant added.
     const css = variant.panel.css().replace('Design panel values.', `Design panel values, variant ${variant.letter}.`);
     copyText(css, { status, fallback: winnerCss });
   });

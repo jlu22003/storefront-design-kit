@@ -3,7 +3,7 @@
 // site) from two origins, a page and a "CDN", then opens the copy on the
 // playground server. The copy must keep what the scripts rendered, lose the
 // scripts themselves, load every file from the copy, and never contact the
-// site it came from.
+// site it came from. The last test opens the copy on a variant board.
 
 import { createHash } from 'node:crypto';
 import { readFile, readdir, rm } from 'node:fs/promises';
@@ -43,7 +43,7 @@ const SITE_FILES = {
 <link rel="icon" href="favicon.svg">
 <link rel="stylesheet" href="styles.css" integrity="${STYLES_SRI}">
 <link rel="stylesheet" href="{{CDN}}/cdn.css">
-<style>.inline-style { color: rgb(7, 8, 9); background-image: url("pattern.svg"); }</style>
+<style>.inline-style { color: rgb(7, 8, 9); background-image: url("pattern.svg"); } main { padding-block-start: 24px; }</style>
 <style id="css-in-js"></style>
 <script src="app.js"></script>
 </head>
@@ -248,4 +248,65 @@ test('the playground serves the copy with the live panel, and it never contacts 
   expect(site.hits.length + cdn.hits.length).toBe(siteHits);
   // The one reference left pointing at the site (a 404 image) is blocked by the lab CSP, not fetched.
   expect(await page.evaluate(() => window.sdkBlocked)).toContain(`${siteOrigin}/missing.png`);
+});
+
+test('a variant board shows the copy with its own live panel per variant and copies the winner', async ({ page, context, baseURL }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: baseURL });
+  const reachedElsewhere = [];
+  page.on('requestfinished', (request) => {
+    if (new URL(request.url()).origin !== new URL(baseURL).origin) reachedElsewhere.push(request.url());
+  });
+  const src = `/lab/copies/${NAME}/`;
+  await page.goto(`/playground/variants.html?src=${encodeURIComponent(src)}&n=3`);
+  await expect(page.locator('#src-error')).toBeEmpty();
+  await expect(page.locator(`#pages option[value="${src}"]`)).toHaveCount(1);
+
+  const panels = page.locator('#variants [data-sdk-live-panel][data-inline]');
+  await expect(panels).toHaveCount(3);
+  const frames = page.locator('#variants iframe');
+  const frameBody = (index) => frames.nth(index).contentFrame().locator('body');
+  // The board styles each frame; the copy's own floating panel stays off inside it.
+  for (const index of [0, 1, 2]) {
+    await expect(frames.nth(index).contentFrame().locator('[data-sdk-live-panel]')).toHaveCount(0);
+  }
+  const fontSize = await frameBody(0).evaluate((body) => getComputedStyle(body).fontSize);
+
+  const setRange = (id, value) =>
+    page.locator(`#${id}`).evaluate((input, next) => {
+      input.value = String(next);
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }, value);
+  await setRange('sdk-lvb-font-size', 20);
+  await setRange('sdk-lvb-containers', 1.5);
+  await expect(frameBody(1)).toHaveCSS('font-size', '20px');
+  await expect(frameBody(0)).toHaveCSS('font-size', fontSize);
+  await expect(frameBody(2)).toHaveCSS('font-size', fontSize);
+  // Container spacing measures the frame's own page at the frame's width: 24px × 150%.
+  await expect(frames.nth(1).contentFrame().locator('main')).toHaveCSS('padding-top', '36px');
+  await expect(frames.nth(0).contentFrame().locator('main')).toHaveCSS('padding-top', '24px');
+
+  await page.locator('label[for="winner-B"]').click();
+  await page.locator('#copy-winner').click();
+  await expect(page.locator('#winner-status')).toHaveText('Copied.');
+  const copied = await page.evaluate(() => navigator.clipboard.readText());
+  expect(copied).toMatch(/^\/\* Design panel values for 127\.0\.0\.1, variant B\./);
+  expect(copied).toContain('font-size: 20px;');
+  expect(copied).toContain('Container spacing at 150%: fixed px measured at a 1280px-wide viewport');
+  expect(copied).toMatch(/^main \{ padding-block-start: 36px; \}$/m);
+  expect(copied).not.toMatch(/ !important;|data-sdk-live/);
+
+  // Each variant's settings and the winner survive a reload.
+  await page.reload();
+  await expect(panels).toHaveCount(3);
+  await expect(page.locator('#sdk-lvb-font-size')).toHaveValue('20');
+  await expect(page.locator('#sdk-lva-font-size')).toHaveValue(String(Number.parseFloat(fontSize)));
+  await expect(frameBody(1)).toHaveCSS('font-size', '20px');
+  await expect(page.locator('#winner-B')).toBeChecked();
+
+  // Reset returns that variant, and only that one, to the page as copied.
+  await panels.nth(1).locator('button', { hasText: 'Reset' }).click();
+  await expect(frameBody(1)).toHaveCSS('font-size', fontSize);
+  await expect(page.locator('#sdk-lvb-font-size')).toHaveValue(String(Number.parseFloat(fontSize)));
+  await expect(panels.nth(1).locator('button', { hasText: 'Remove' })).toHaveCount(0);
+  expect(reachedElsewhere.filter((url) => !url.startsWith('https://fonts.'))).toEqual([]);
 });

@@ -28,11 +28,10 @@ const HOSTS = new Set(['/playground/frames.html', '/playground/variants.html']);
 
 /**
  * Returns the path to frame for a user-entered page, or null when it is not a
- * playground page, sketch, or local copy (/lab/) on this origin. With
- * `copies: false`, local copies are refused too. Accepts "/sketches/x/",
- * "sketches/x", or a full localhost URL from the address bar.
+ * playground page, sketch, or local copy (/lab/) on this origin. Accepts
+ * "/sketches/x/", "sketches/x", or a full localhost URL from the address bar.
  */
-export function framedPath(input, origin, { copies = true } = {}) {
+export function framedPath(input, origin) {
   const text = String(input ?? '').trim();
   if (!text) return null;
   let url;
@@ -43,8 +42,7 @@ export function framedPath(input, origin, { copies = true } = {}) {
   }
   if (url.origin !== new URL(origin).origin) return null;
   const path = url.pathname;
-  const roots = copies ? /^\/(playground|sketches|lab)\// : /^\/(playground|sketches)\//;
-  if (!roots.test(path) || path.split('/').some((part) => part === '..')) return null;
+  if (!/^\/(playground|sketches|lab)\//.test(path) || path.split('/').some((part) => part === '..')) return null;
   if (HOSTS.has(path) || path.startsWith('/playground/dev/')) return null;
   return `${path}${url.search}${url.hash}`;
 }

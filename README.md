@@ -100,6 +100,7 @@ Saved CSS is swapped in without a reload, so you keep your scroll position.
   width, and a print page, each scaled to fit.
 - **Variant boards.** `/playground/variants.html` shows two to four copies
   of a page, each with its own design panel. Mark a winner and copy its CSS.
+  It works on local copies of sites too, with the live-site panel per variant.
 - **Design panel for any site.** `npm run bookmarklet` builds a bookmarklet
   (or install it from `/playground/bookmarklet.html`) that opens a design
   panel on any live site. Drag spacing, type, corners, and colors, and copy
