@@ -33,7 +33,7 @@ const PROBLEMS_PAGE = `<!doctype html>
   #tiny-button { inline-size: 20px; block-size: 20px; padding: 0; border: 0; }
   #small-button { inline-size: 30px; block-size: 30px; padding: 0; border: 0; }
   @keyframes spin { to { transform: rotate(1turn); } }
-  #spinner { animation: spin 2s linear infinite; inline-size: 16px; block-size: 16px; background: #333; }
+  #spinner { animation: spin 2s linear infinite; inline-size: 16px; block-size: 16px; margin-inline-start: 8px; background: #333; }
 </style>
 </head>
 <body>
