@@ -25,6 +25,7 @@ const PRESET_MAX_MINE = 50;
 const PRESET_MAX_NAME = 60;
 const PRESET_SCALES = ['space', 'type', 'radius'];
 const PRESET_NUMBERS = ['fontSize', 'lineHeight', 'radius'];
+const PRESET_SLIDER_FOR = { fontSize: 'fontSize', lineHeight: 'lineHeight', radius: 'cornerRadius' };
 const PRESET_COLORS = ['text', 'background', 'accent', 'onAccent'];
 
 // ------------------------------------------------------------------ colors
@@ -185,8 +186,8 @@ export function snapToSlider(value, { min, max, step }) {
 
 /**
  * Layers partial settings onto full live-panel settings: scales and factor
- * multiply, colors and overrides replace. Scales and factor land on their
- * slider's step within `ranges` (LIVE_RANGES), so the sliders show the result.
+ * multiply, colors and overrides replace. Scales, factor, and sizes land on
+ * their slider's step within `ranges` (LIVE_RANGES), so the sliders show the result.
  */
 export function layerPreset(state, partial, ranges) {
   const scales = { ...state.scales };
@@ -195,7 +196,9 @@ export function layerPreset(state, partial, ranges) {
     scales,
     factor: snapToSlider((state.factor ?? 1) * (partial.factor ?? 1), ranges.factor),
     colors: { ...state.colors, ...partial.colors },
-    overrides: { ...state.overrides, ...partial.overrides },
+    overrides: Object.fromEntries(
+      Object.entries({ ...state.overrides, ...partial.overrides }).map(([key, value]) => [key, PRESET_SLIDER_FOR[key] ? snapToSlider(value, ranges[PRESET_SLIDER_FOR[key]]) : value]),
+    ),
   };
 }
 

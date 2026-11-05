@@ -87,6 +87,10 @@ describe('built-in presets', () => {
     // Stacked scales land on the slider's 0.05 step: 1.25 × 1.25 = 1.5625 shows as 1.55.
     const twice = apply(apply(freshLiveState(), 'airy'), 'airy');
     assert.deepEqual([twice.scales.space, twice.factor], [1.55, 1.55]);
+    // Sizes land on their slider's step too: font size 0.5px, line height 0.05, corner radius 1px.
+    assert.equal(apply(freshLiveState(), 'editorial', { ...NOW, fontSize: 18.75 }).overrides.fontSize, 19);
+    const imported = normalizeLiveState(layerPreset(freshLiveState(), { overrides: { lineHeight: 1.62, radius: 6.4, text: '#111111' } }, LIVE_RANGES));
+    assert.deepEqual(imported.overrides, { lineHeight: 1.6, radius: 6, text: '#111111' });
     const compact = apply(freshLiveState(), 'compact');
     assert.deepEqual([compact.scales.space, compact.factor, compact.overrides.lineHeight], [0.8, 0.8, 1.35]);
   });

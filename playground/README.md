@@ -78,7 +78,8 @@ named set of partial settings. Pressing one adds it to the current settings
 and moves the sliders to show the result, so the sliders stay in charge and
 you fine-tune from there:
 
-- **scales multiply**: Airy twice is 125% × 125% spacing;
+- **scales multiply**, landing on the slider's step: Airy twice is
+  125% × 125% spacing, shown on the 5% step as 155%;
 - **sizes and colors replace**: Larger text sets the body text size to 15%
   more than it is now, and Sharp corners sets the corner radius to 0.
 
