@@ -74,7 +74,7 @@ export default defineConfig({
     {
       // Site lab: copies a localhost fixture site (`npm run lab:copy`) and opens the copy on the playground server.
       name: 'lab',
-      testMatch: /lab-copy\.spec\.mjs$/,
+      testMatch: /(lab-copy|presets)\.spec\.mjs$/,
       use: { ...devices['Desktop Chrome'] },
     },
   ],

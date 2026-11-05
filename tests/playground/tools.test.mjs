@@ -213,8 +213,9 @@ describe('live-panel settings', () => {
   test('an inline panel with a store restores its settings, saves each change, and resets', async () => {
     const page = fakePage();
     const util = await readFile(join(ROOT, 'playground/dev/util.js'), 'utf8');
+    const presets = await readFile(join(ROOT, 'playground/dev/presets.js'), 'utf8');
     const live = await readFile(join(ROOT, 'playground/dev/live-panel.js'), 'utf8');
-    new Script(`${stripModule(util)}\n${stripModule(live)}`).runInContext(page.context);
+    new Script(`${stripModule(util)}\n${stripModule(presets)}\n${stripModule(live)}`).runInContext(page.context);
     const saves = [];
     const store = {
       load: () => ({ scales: { space: 9 }, overrides: { fontSize: 18 }, colors: { '--not-on-this-page': '#ff0000' } }),
@@ -238,6 +239,16 @@ describe('live-panel settings', () => {
     assert.deepEqual(saves.at(-1), freshLiveState());
     assert.equal(String(page.find('sdk-lva-scale-space').value), '1');
     assert.doesNotMatch(page.pageCss(), /important/);
+
+    // A preset layers onto the settings, moves the sliders, and is saved like any change.
+    page.click('Airy');
+    assert.equal(String(page.find('sdk-lva-scale-space').value), '1.25');
+    assert.equal(String(page.find('sdk-lva-containers').value), '1.25');
+    assert.equal(String(page.find('sdk-lva-line-height').value), '1.7');
+    assert.deepEqual(saves.at(-1).overrides, { lineHeight: 1.7 });
+    page.click('Airy');
+    assert.equal(String(page.find('sdk-lva-scale-space').value), '1.5625', 'scales multiply');
+    assert.match(page.pageCss(), /line-height: 1\.7 !important;/);
     assert.deepEqual(page.calls, []);
   });
 });
@@ -293,6 +304,16 @@ describe('bookmarklet build', () => {
     page.input('sdk-live-accent', '#ff0000');
     page.click('Copy CSS');
     await new Promise((done) => setImmediate(done));
+    // Presets and Save mine work without storage: your presets stay in the tab.
+    page.click('Larger text');
+    assert.equal(String(page.find('sdk-live-font-size').value), '18.5');
+    page.click('Save mine');
+    page.click('Higher contrast');
+    page.click('Reset');
+    page.click('My preset');
+    assert.equal(String(page.find('sdk-live-font-size').value), '18.5', 'your preset brings the settings back');
+    page.input('sdk-live-scale-space', 2);
+    page.input('sdk-live-containers', 1.05);
 
     assert.match(page.pageCss(), /--space-section: 80px !important;/);
     // The section's padding is var(--space-section): 40px as loaded, so 105% is 42px, not 105% of the doubled 80px.

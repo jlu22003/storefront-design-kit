@@ -25,7 +25,7 @@ Playwright starts the playground server (`playground/server.mjs`) on port 4410
 | `desktop-chrome-light`, `desktop-chrome-dark` | Desktop Chrome, Chromium, 1280×720 | the same |
 | `iphone-17-pro-text-200` | iPhone 17 Pro, 200% text | axe, 200% text and page zoom, 200% screenshots |
 | `iphone-17-pro-reduced-motion` | iPhone 17 Pro, `reducedMotion: 'reduce'` | axe, reduced motion |
-| `lab` | Desktop Chrome, Chromium | `lab-copy`: copies a fixture site served on localhost (`npm run lab:copy`) and opens the copy on the playground server |
+| `lab` | Desktop Chrome, Chromium | `lab-copy`: copies a fixture site served on localhost (`npm run lab:copy`) and opens the copy on the playground server, including presets on a variant board; `presets`: presets on the kit's design panel |
 
 The nightly full matrix (every viewport, increased contrast, forced colors,
 RTL) and Lighthouse come later.
