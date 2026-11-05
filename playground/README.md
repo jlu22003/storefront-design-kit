@@ -54,6 +54,8 @@ The **Design** button (bottom corner of every served page) opens a panel:
   `--sdk-space-*`, `--sdk-font-size-*`, and `--sdk-radius-*` token.
 - **Color pickers** for the main color roles, with live WCAG contrast ratios
   for text, links, accent, and control borders.
+- **Presets**: see [Presets](#presets). On this panel a preset's scales move
+  the three sliders, and its colors are picked for the appearance shown.
 - **Copy CSS** copies only the tokens you changed: a `:root { … }` block, plus
   one block per appearance for the colors picked in it.
   **Reset** returns to the token values.
@@ -66,6 +68,51 @@ The panel is keyboard accessible: Tab to the button, and press Escape inside
 the panel to close it and return focus to the button.
 
 A page can turn the floating panel off with `<html data-sdk-panel="off">`.
+
+## Presets
+
+Both design panels (this one, and the [live-site
+panel](#design-panel-for-any-site-bookmarklet) on local copies, variant
+boards, and the bookmarklet) start with a **Presets** row. A preset is a
+named set of partial settings. Pressing one adds it to the current settings
+and moves the sliders to show the result, so the sliders stay in charge and
+you fine-tune from there:
+
+- **scales multiply**: Airy twice is 125% × 125% spacing;
+- **sizes and colors replace**: Larger text sets the body text size to 15%
+  more than it is now, and Sharp corners sets the corner radius to 0.
+
+| Preset | What it does |
+|---|---|
+| Airy | Spacing and container spacing × 1.25, line height 1.7 |
+| Compact | Spacing and container spacing × 0.8, line height 1.35 |
+| Editorial | Type and spacing × 1.1, body text at least 18 px, line height 1.65 |
+| Soft corners | Radius variables × 1.5, corner radius 1.5 × the current one (at least 12 px) |
+| Sharp corners | Radius variables and corner radius 0 |
+| Larger text | Type × 1.15, body text 15% larger |
+| Higher contrast | Text moved to 7:1 on the background, accent moved to 7:1 with its text (WCAG AAA). A color already at 7:1 stays. |
+
+The kit panel has one slider per kind, so there a preset's spacing, type, and
+radius scales multiply those sliders. A preset without a scale uses its sizes
+instead (body text size against `--sdk-font-size-body`, corner radius against
+`--sdk-radius-8`, container spacing for spacing). Line height has no kit
+token and is skipped.
+
+**Save mine** saves the current settings as your own preset, under the name
+you type (the same name replaces it). Applied to a reset panel, it gives those
+settings back; applied on top of other settings, it layers like any preset.
+**×** deletes one. Your presets are kept in this browser's localStorage and
+shared by every panel on the playground: the kit panel, local copies, and each
+variant of a board. **Export** saves them as `design-presets.json`, and
+**Import** adds the presets from such a file. The bookmarklet never touches a
+site's storage, so there your presets last for the tab: export them to keep
+them.
+
+The built-in presets are in `dev/presets.js`. Each is
+`{ id, name, hint, settings }`, where `settings` is a partial live-panel
+settings object (`{ scales, factor, colors, overrides }`), or a function that
+gets the page's current values (`fontSize`, `lineHeight`, `radius`, `text`,
+`background`, `accent`, `onAccent`) and returns one.
 
 ## Format frames
 
@@ -259,10 +306,12 @@ again to hide or show the panel.
 - **Copy CSS** copies only what changed: a `:root` block for variables, then
   plain rules for the overrides and scaled containers.
 
+- **Presets** layer onto these settings: see [Presets](#presets).
+
 It changes only the open tab. All changes live in one stylesheet it adds to
 the page and a `data-sdk-live-box` attribute on each container it scales;
 **Remove** takes both away, and so does reloading. It saves nothing (no
-storage, no cookies) and sends nothing: the code and styles are inside the
+storage, no cookies; your presets last for the tab) and sends nothing: the code and styles are inside the
 bookmark, and it makes no network requests. The tests check the built
 bookmarklet for network and storage APIs.
 
@@ -273,7 +322,7 @@ cannot be scanned, so only variables the browser lists in the computed style
 are found there.
 
 The source is `dev/live-panel.js`; `dev/bookmarklet.js` bundles it with
-`dev/util.js`, `dev/panel.css`, and the token values the panel needs. Like
+`dev/util.js`, `dev/presets.js`, `dev/panel.css`, and the token values the panel needs. Like
 the kit's panel, it has two parts: `createLiveDesign()` holds the settings
 (`{ scales, colors, overrides, factor }`) and applies them to one document,
 and `mountLivePanel()` adds the UI, either the floating Design button or an

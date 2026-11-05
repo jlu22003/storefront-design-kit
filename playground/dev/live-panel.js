@@ -8,7 +8,8 @@
 // containers it measured. "Remove" takes all of it away; reloading the page
 // does too. Nothing is sent anywhere: the panel makes no network requests and
 // never touches storage or cookies itself (an inline panel saves only through
-// the `store` it is given; see below).
+// the `store` it is given, and presets only through the `presets` store it is
+// given; see below).
 //
 // Two parts, like panel.js:
 // - createLiveDesign({ doc }) holds the settings ({ scales, colors, overrides,
@@ -21,11 +22,16 @@
 //   an inline panel given a `store` saves its settings; the bookmarklet never
 //   gets one.
 //
+// Presets (presets.js) layer onto the settings and move the sliders to show
+// the result. Without a `presets` store (the bookmarklet), your own presets
+// last for the tab only; Export and Import keep them as a file.
+//
 // Built into a bookmarklet by bookmarklet.js. The bundler inlines util.js and
-// strips import/export lines, so keep every import relative and single-line,
+// presets.js and strips import/export lines, so keep every import relative and single-line,
 // and avoid multi-line template literals.
 
 import { contrastRatio, el, normalizeHex, round, scaleValue } from './util.js';
+import { layerPreset, liveAsPreset, memoryPresets, presetControls, presetSettings } from './presets.js';
 
 const GLOBAL = '__sdkLivePanel';
 const BOX_ATTR = 'data-sdk-live-box';
@@ -390,7 +396,8 @@ function measureBoxes(doc) {
 /**
  * The live panel's settings and how they apply to `doc`, with no UI. `site`
  * names the page in the copied CSS. Returns { doc, found, base, state, apply,
- * css, contrast, set, reset, destroy }.
+ * css, contrast, current, set, reset, destroy }; current() reads the page's
+ * values as they are now, changes included (what presets build on).
  */
 export function createLiveDesign({ doc = document, site } = {}) {
   const view = viewOf(doc);
@@ -461,7 +468,7 @@ export function createLiveDesign({ doc = document, site } = {}) {
     }
   }
 
-  return { doc, found, base, state, apply, css, contrast, set, reset: () => set({}), destroy };
+  return { doc, found, base, state, apply, css, contrast, current: () => pageBase(doc), set, reset: () => set({}), destroy };
 }
 
 // ------------------------------------------------------------------- panel
@@ -502,12 +509,13 @@ function swatch(id, label, value, onInput) {
  *   `container`, which may be in another document (a variant board styling
  *   a same-origin iframe).
  * `store` ({ load(), save(state) }) keeps the settings; without one nothing
- * is saved. `onRemove` runs after remove(). Returns { design, host, css(),
+ * is saved. `presets` (presets.js storagePresets()) keeps your own presets;
+ * without one they last for this tab. `onRemove` runs after remove(). Returns { design, host, css(),
  * getState(), setState(next), toggle(), remove() }.
  */
 export function mountLivePanel(
   panelCss,
-  { doc = document, container, inline = false, open = true, store = null, title = 'Design panel', idPrefix = 'sdk-live', site, onRemove } = {},
+  { doc = document, container, inline = false, open = true, store = null, presets = null, title = 'Design panel', idPrefix = 'sdk-live', site, onRemove } = {},
 ) {
   const design = createLiveDesign({ doc, site });
   const { found, base, state } = design;
@@ -637,6 +645,15 @@ export function mountLivePanel(
   const copy = el('button', { type: 'button', class: 'primary', text: 'Copy CSS' });
   const reset = el('button', { type: 'button', text: 'Reset' });
   const remove = el('button', { type: 'button', text: 'Remove' });
+  // Presets layer onto the current settings; setState moves the sliders to the result.
+  const presetUi = presetControls({
+    idPrefix: id('presets'),
+    store: presets ?? memoryPresets(),
+    apply: (preset) => setState(layerPreset(normalizeLiveState(state), presetSettings(preset, design.current()))),
+    current: () => liveAsPreset(normalizeLiveState(state)),
+    note: presets ? '' : 'Your presets last for this tab only: Export saves them to a file, Import brings them back.',
+  });
+
   const note = store
     ? 'Saved in this browser. Reset returns to the page as copied.'
     : 'Changes stay in this tab: nothing is saved or sent. Remove or reload the page to undo them.';
@@ -644,6 +661,7 @@ export function mountLivePanel(
   panel.append(
     el('div', { class: 'header' }, [el('h2', { id: id('title'), text: title }), ...(inline ? [] : [close])]),
     el('p', { class: 'hint', text: note }),
+    presetUi.node,
     variablesSet,
     el('fieldset', {}, [
       el('legend', { text: 'Page overrides' }),
@@ -698,6 +716,7 @@ export function mountLivePanel(
 
   function destroy() {
     design.destroy();
+    presetUi.destroy();
     host.remove();
     onRemove?.();
   }

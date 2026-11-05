@@ -4,6 +4,7 @@
 // - Local copies of other sites (/lab/, from `npm run lab:copy`) get the
 //   live-site panel (live-panel.js, the bookmarklet's panel) instead, closed
 //   until you press Design: those pages use their own CSS, not the kit's tokens.
+//   Your presets are saved in this browser (presets.js), shared with every panel.
 // - Framed pages: inside an <iframe data-sdk-embed="…"> on a playground page
 //   (format frames, variant boards) the client opens no connection of its own;
 //   the host page swaps the frame's CSS and reloads it. "frame" and "print"
@@ -111,13 +112,14 @@ function emulatePrint(doc) {
 
 /** Adds the live-site design panel to a local copy, closed. */
 async function mountCopyPanel() {
-  const [{ toggleLivePanel }, { livePanelCss }, tokensCss, panelCss] = await Promise.all([
+  const [{ toggleLivePanel }, { livePanelCss }, { storagePresets }, tokensCss, panelCss] = await Promise.all([
     import('./live-panel.js'),
     import('./bookmarklet.js'),
+    import('./presets.js'),
     fetch('/theme/assets/sdk-tokens.css').then((res) => res.text()),
     fetch('/playground/dev/panel.css').then((res) => res.text()),
   ]);
-  toggleLivePanel(livePanelCss(tokensCss, panelCss), { open: false });
+  toggleLivePanel(livePanelCss(tokensCss, panelCss), { open: false, presets: storagePresets() });
 }
 
 const embed = embedMode();
