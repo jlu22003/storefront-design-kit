@@ -68,3 +68,8 @@ npm-debug.log*
 # --- Private playground sketches (never in the public kit) -----------------
 # `npm run sketch` writes here; see playground/README.md.
 sketches/
+
+# --- Site lab copies (never in the public kit) ----------------------------
+# `npm run lab:copy` writes local copies of other sites here: their pages,
+# images, and fonts are not ours to publish. See playground/README.md.
+/lab/

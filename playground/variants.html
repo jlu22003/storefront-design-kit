@@ -70,7 +70,7 @@
   const LETTERS = ['A', 'B', 'C', 'D'];
   const WINNER_KEY = 'sdk-playground-board-winner';
   const params = new URLSearchParams(location.search);
-  const src = bindSourceForm(document.querySelector('#source'));
+  const src = bindSourceForm(document.querySelector('#source'), { copies: false });
   const board = document.querySelector('#variants');
   const countSelect = document.querySelector('#count');
   const widthSelect = document.querySelector('#width');

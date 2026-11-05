@@ -50,14 +50,17 @@ describe('format frames', () => {
     assert.ok(total <= 1600, `row is ${total}px wide`);
   });
 
-  test('framedPath accepts playground and sketch pages on this origin only', () => {
+  test('framedPath accepts playground pages, sketches, and local copies on this origin only', () => {
     assert.equal(framedPath('/sketches/idea/', ORIGIN), '/sketches/idea/');
+    assert.equal(framedPath('/lab/copies/shop.example-20261104-090507/', ORIGIN), '/lab/copies/shop.example-20261104-090507/');
     assert.equal(framedPath('sketches/idea/index.html?x=1#top', ORIGIN), '/sketches/idea/index.html?x=1#top');
     assert.equal(framedPath(`${ORIGIN}/playground/starters/product.html`, ORIGIN), '/playground/starters/product.html');
     for (const bad of [
       '',
       'https://example.com/playground/x.html',
       '//example.com/sketches/x/',
+      'https://example.com/lab/copies/x/',
+      '/lab/copies/../../package.json',
       'javascript:alert(1)',
       '/theme/assets/sdk-base.css',
       '/playground/frames.html',
@@ -65,6 +68,16 @@ describe('format frames', () => {
       '/playground/dev/client.js',
     ]) {
       assert.equal(framedPath(bad, ORIGIN), null, bad);
+    }
+  });
+
+  test('framedPath with copies: false (variant boards) refuses local copies only', () => {
+    const options = { copies: false };
+    assert.equal(framedPath('/sketches/idea/', ORIGIN, options), '/sketches/idea/');
+    assert.equal(framedPath('/playground/starters/product.html', ORIGIN, options), '/playground/starters/product.html');
+    for (const copy of ['/lab/copies/shop.example-20261104-090507/', 'lab/copies/x/index.html', `${ORIGIN}/lab/copies/x/`]) {
+      assert.equal(framedPath(copy, ORIGIN, options), null, copy);
+      assert.notEqual(framedPath(copy, ORIGIN), null, copy);
     }
   });
 

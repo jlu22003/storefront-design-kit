@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, before, describe, test } from 'node:test';
 import { changedCss, contrastRatio, normalizeHex, scaleValue } from '../../playground/dev/panel.js';
-import { createDevServer, injectClient, resolveRequestPath } from '../../playground/server.mjs';
+import { LAB_CSP, createDevServer, injectClient, resolveRequestPath } from '../../playground/server.mjs';
 
 let root;
 let dev;
@@ -39,6 +39,10 @@ before(async () => {
   await writeFile(join(root, 'playground/index.html'), '<!doctype html><html><body><p>hi</p></body></html>');
   await writeFile(join(root, 'theme/assets/sdk-base.css'), 'body {}');
   await writeFile(join(root, 'sketches/idea/notes.txt'), 'private');
+  await mkdir(join(root, 'lab/copies/shop/assets'), { recursive: true });
+  await mkdir(join(root, 'lab/copies/empty'), { recursive: true });
+  await writeFile(join(root, 'lab/copies/shop/index.html'), '<!doctype html><html><body><p>copy</p></body></html>');
+  await writeFile(join(root, 'lab/copies/shop/assets/a.woff2'), 'font');
   await writeFile(join(root, 'secret.txt'), 'outside the served dirs');
   dev = createDevServer({ root });
   await new Promise((done) => dev.server.listen(0, '127.0.0.1', done));
@@ -89,6 +93,34 @@ describe('dev server', () => {
     assert.equal((await get('/playground/', { host: `127.0.0.1:${port}` })).status, 200);
   });
 
+  test('serves local copies under /lab/ with the lab Content-Security-Policy', async () => {
+    const page = await get('/lab/copies/shop/');
+    assert.equal(page.status, 200);
+    assert.equal(page.headers['content-security-policy'], LAB_CSP);
+    assert.match(page.body, /<p>copy<\/p><script type="module" src="\/playground\/dev\/client\.js"><\/script>/);
+    const font = await get('/lab/copies/shop/assets/a.woff2');
+    assert.equal(font.headers['content-type'], 'font/woff2');
+    assert.equal(font.headers['content-security-policy'], LAB_CSP);
+    assert.equal((await get('/playground/')).headers['content-security-policy'], undefined);
+  });
+
+  test('the lab CSP lets only same-origin scripts run and keeps requests on this origin', () => {
+    const policy = Object.fromEntries(LAB_CSP.split('; ').map((part) => [part.split(' ')[0], part.split(' ').slice(1)]));
+    assert.deepEqual(policy['script-src'], ["'self'"]);
+    assert.deepEqual(policy['default-src'], ["'self'"]);
+    assert.deepEqual(policy['frame-src'], ["'none'"]);
+    assert.deepEqual(policy['form-action'], ["'none'"]);
+    for (const sources of Object.values(policy)) {
+      for (const source of sources) assert.match(source, /^('self'|'none'|'unsafe-inline'|data:|blob:)$/, `unexpected source ${source}`);
+    }
+    assert.ok(!policy['script-src'].includes("'unsafe-inline'"));
+  });
+
+  test('lists copies, and says how to make one when a lab folder is empty', async () => {
+    assert.match((await get('/lab/copies/')).body, /href="\/lab\/copies\/shop\/"/);
+    assert.match((await get('/lab/copies/empty/')).body, /npm run lab:copy -- &lt;url&gt;/);
+  });
+
   test('opens a live-reload event stream', async () => {
     const res = await get('/__dev/events');
     assert.equal(res.status, 200);
@@ -100,6 +132,8 @@ describe('dev server helpers', () => {
   test('resolveRequestPath keeps requests inside the served directories', () => {
     assert.equal(resolveRequestPath('/repo', '/playground/a.html'), '/repo/playground/a.html');
     assert.equal(resolveRequestPath('/repo', '/sketches/x/index.html'), '/repo/sketches/x/index.html');
+    assert.equal(resolveRequestPath('/repo', '/lab/copies/x/index.html'), '/repo/lab/copies/x/index.html');
+    assert.equal(resolveRequestPath('/repo', '/lab/copies/.partial-x/index.html'), null);
     assert.equal(resolveRequestPath('/repo', '/sketches/.git/config'), null);
     assert.equal(resolveRequestPath('/repo', '/../etc/passwd'), null);
     assert.equal(resolveRequestPath('/repo', '/%E0%A4%A'), null);

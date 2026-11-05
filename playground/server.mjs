@@ -11,6 +11,8 @@
 // Served:  /theme/assets/*  the kit stylesheets
 //          /playground/*    the playground pages, starters, and dev scripts
 //          /sketches/*      your private, gitignored sketches
+//          /lab/*           local copies of other sites (`npm run lab:copy`),
+//                           gitignored, with a Content-Security-Policy (LAB_CSP)
 // Every HTML page gets the dev client injected (live reload and design panel),
 // so pages stay plain HTML you can copy anywhere.
 
@@ -22,12 +24,36 @@ import { extname, join, normalize, relative, resolve, sep } from 'node:path';
 import { parseArgs } from 'node:util';
 
 export const ROOT = resolve(import.meta.dirname, '..');
-export const SERVED_DIRS = ['theme/assets', 'playground', 'sketches'];
+export const SERVED_DIRS = ['theme/assets', 'playground', 'sketches', 'lab'];
+// lab/ holds frozen copies that never change once written, so it is not watched for live reload.
+const WATCHED_DIRS = SERVED_DIRS.filter((dir) => dir !== 'lab');
+const LAB_PREFIX = '/lab/';
+
+/**
+ * Sent with everything under /lab/. Copies are other sites' pages: only
+ * same-origin scripts may run (the dev client; the copy's own scripts were
+ * removed), inline handlers and javascript: URLs are blocked, frames are off,
+ * and nothing loads from or submits to another origin, so viewing a copy never
+ * contacts the live site.
+ */
+export const LAB_CSP = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "media-src 'self' data: blob:",
+  "connect-src 'self'",
+  "frame-src 'none'",
+  "object-src 'none'",
+  "base-uri 'none'",
+  "form-action 'none'",
+].join('; ');
 const EVENTS_PATH = '/__dev/events';
 const CLIENT_TAG = '<script type="module" src="/playground/dev/client.js"></script>';
 const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
 
-const TYPES = {
+export const TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -44,6 +70,10 @@ const TYPES = {
   '.mp4': 'video/mp4',
   '.webm': 'video/webm',
   '.woff2': 'font/woff2',
+  '.woff': 'font/woff',
+  '.ttf': 'font/ttf',
+  '.otf': 'font/otf',
+  '.mp3': 'audio/mpeg',
   '.txt': 'text/plain; charset=utf-8',
   '.md': 'text/plain; charset=utf-8',
 };
@@ -86,7 +116,9 @@ async function directoryListing(dir, urlPath) {
       return `<li><a href="${escapeHtml(base + encodeURIComponent(entry.name))}${entry.isDirectory() ? '/' : ''}">${escapeHtml(name)}</a></li>`;
     })
     .join('\n');
-  const empty = '<p class="sdk-text-secondary">Nothing here yet. Run <code>npm run sketch -- my-idea</code> to start one.</p>';
+  const empty = urlPath.startsWith(LAB_PREFIX)
+    ? '<p class="sdk-text-secondary">No copies yet. Run <code>npm run lab:copy -- &lt;url&gt;</code> to copy a page.</p>'
+    : '<p class="sdk-text-secondary">Nothing here yet. Run <code>npm run sketch -- my-idea</code> to start one.</p>';
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -152,6 +184,7 @@ export function createDevServer({ root = ROOT } = {}) {
       return;
     }
 
+    const extraHeaders = url.pathname.startsWith(LAB_PREFIX) ? { 'content-security-policy': LAB_CSP } : {};
     const file = resolveRequestPath(root, url.pathname);
     if (!file) return notFound(res);
     let info;
@@ -172,7 +205,7 @@ export function createDevServer({ root = ROOT } = {}) {
         await stat(target);
       } catch {
         const listing = injectClient(await directoryListing(file, url.pathname));
-        return send(res, req, 200, TYPES['.html'], listing);
+        return send(res, req, 200, TYPES['.html'], listing, extraHeaders);
       }
     }
 
@@ -184,7 +217,7 @@ export function createDevServer({ root = ROOT } = {}) {
       return notFound(res);
     }
     if (type.startsWith('text/html')) body = injectClient(body.toString('utf8'));
-    return send(res, req, 200, type, body);
+    return send(res, req, 200, type, body, extraHeaders);
   });
 
   const close = () =>
@@ -197,11 +230,12 @@ export function createDevServer({ root = ROOT } = {}) {
   return { server, notify, close };
 }
 
-function send(res, req, status, type, body) {
+function send(res, req, status, type, body, headers = {}) {
   res.writeHead(status, {
     'content-type': type,
     'cache-control': 'no-store',
     'x-content-type-options': 'nosniff',
+    ...headers,
   });
   res.end(req.method === 'HEAD' ? undefined : body);
 }
@@ -210,11 +244,11 @@ function notFound(res) {
   res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' }).end('Not found\n');
 }
 
-/** Watches the served directories and calls onChange(relativePath), debounced per file. */
+/** Watches the served directories (all but lab/) and calls onChange(relativePath), debounced per file. */
 export function watchServedDirs(root, onChange) {
   const timers = new Map();
   const watchers = [];
-  for (const dir of SERVED_DIRS) {
+  for (const dir of WATCHED_DIRS) {
     const watcher = watch(join(root, dir), { recursive: true }, (_event, filename) => {
       if (!filename) return;
       const name = filename.toString();
@@ -280,8 +314,9 @@ async function main() {
   let port = Number(explicitPort ?? 4400);
   if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error(`invalid port: ${explicitPort}`);
 
-  // sketches/ is gitignored; make sure it exists so it can be served and watched.
+  // sketches/ and lab/ are gitignored; make sure they exist so they can be served and listed.
   await mkdir(join(ROOT, 'sketches'), { recursive: true });
+  await mkdir(join(ROOT, 'lab', 'copies'), { recursive: true });
 
   const { server, notify } = createDevServer();
   for (let attempt = 0; ; attempt += 1) {
@@ -302,6 +337,7 @@ async function main() {
   const url = `http://127.0.0.1:${port}/playground/`;
   console.log(`Playground running at ${url}`);
   console.log('Save any file in theme/assets/, playground/, or sketches/ and the page updates. Ctrl+C stops.');
+  console.log(`Local copies of other sites (npm run lab:copy) are at ${url.replace(/\/playground\/$/, '/lab/copies/')}`);
   if (!values['no-open'] && !process.env.CI) openBrowser(url);
 }
 

@@ -71,6 +71,12 @@ export default defineConfig({
       testMatch: REDUCED_MOTION_SPECS,
       use: { ...devices['iPhone 17 Pro'], colorScheme: 'light', reducedMotion: 'reduce' },
     },
+    {
+      // Site lab: copies a localhost fixture site (`npm run lab:copy`) and opens the copy on the playground server.
+      name: 'lab',
+      testMatch: /lab-copy\.spec\.mjs$/,
+      use: { ...devices['Desktop Chrome'] },
+    },
   ],
   webServer: {
     // The playground's own dev server serves the kit CSS and the pages under test.
