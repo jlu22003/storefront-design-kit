@@ -157,8 +157,11 @@
     const outermost = [];
     for (const el of document.body.querySelectorAll('*')) {
       if (inPanel(el) || !visible(el) || outermost.some((offender) => offender.contains(el))) continue;
+      // Document coordinates: a phone viewport on an RTL page that overflows starts scrolled to the inline start (scrollX < 0).
       const rect = el.getBoundingClientRect();
-      if (rtl ? rect.left >= -1 : rect.right <= width + 1) continue;
+      const left = rect.left + scrollX;
+      const right = rect.right + scrollX;
+      if (rtl ? left >= -1 : right <= width + 1) continue;
       // Content inside a scroll or clip container is that container's business.
       let contained = false;
       for (let parent = el.parentElement; parent && parent !== document.body; parent = parent.parentElement) {
@@ -169,7 +172,7 @@
       }
       if (contained) continue;
       outermost.push(el);
-      offenders.push(item(el, `spans ${Math.round(rect.left)}..${Math.round(rect.right)}px`));
+      offenders.push(item(el, `spans ${Math.round(left)}..${Math.round(right)}px`));
     }
     return { scrollWidth: root.scrollWidth, clientWidth: width, innerWidth, offenders };
   }

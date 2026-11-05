@@ -10,7 +10,7 @@ import { mkdtemp, readdir, readFile, rm, stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { expect, test } from '@playwright/test';
+import { devices, expect, test } from '@playwright/test';
 import { checkCopy } from '../../scripts/lib/lab/audit.mjs';
 import { checkReflow, PROBE_PATH } from '../../scripts/lib/lab/checks.mjs';
 
@@ -236,20 +236,25 @@ test('bad input exits 2 with a message and leaves no audit folder', async () => 
   expect((await readdir(out)).length).toBe(before);
 });
 
-test('only overflow past the scrollable edge counts as scrolling sideways', async ({ page }) => {
+test('only overflow past the scrollable edge counts as scrolling sideways', async ({ browser }) => {
   // CSS Overflow 3: a box scrolls toward its inline end, so content past the start edge is unreachable.
-  await page.addInitScript({ path: PROBE_PATH });
-  await page.setViewportSize({ width: 400, height: 300 });
   const strips = '<div id="past-left" style="margin-inline-start:-50px;inline-size:100px;block-size:10px"></div>'
     + '<div id="past-right" style="margin-inline-start:350px;inline-size:100px;block-size:10px"></div>';
-  const offenders = async (dir) => {
-    const html = `<!doctype html><html dir="${dir}"><body style="margin:0"><div style="direction:ltr">${strips}</div></body></html>`;
+  // A phone context (isMobile, as the audit's phone copy uses) opens an overflowing RTL page scrolled to its inline start.
+  const offenders = async (dir, contextOptions) => {
+    const context = await browser.newContext(contextOptions);
+    const page = await context.newPage();
+    await page.addInitScript({ path: PROBE_PATH });
+    const html = `<!doctype html><html dir="${dir}"><meta name="viewport" content="width=device-width, initial-scale=1"><body style="margin:0"><div style="direction:ltr">${strips}</div></body></html>`;
     await page.route('http://fixture.test/', (route) => route.fulfill({ contentType: 'text/html', body: html }));
     await page.goto('http://fixture.test/');
     await page.unrouteAll();
     const [{ items }] = await checkReflow(page);
+    await context.close();
     return items.map((item) => item.selector);
   };
-  expect(await offenders('ltr')).toEqual(['#past-right']);
-  expect(await offenders('rtl')).toEqual(['#past-left']);
+  for (const contextOptions of [{ viewport: { width: 400, height: 300 } }, devices['Pixel 7']]) {
+    expect(await offenders('ltr', contextOptions), `ltr, isMobile ${Boolean(contextOptions.isMobile)}`).toEqual(['#past-right']);
+    expect(await offenders('rtl', contextOptions), `rtl, isMobile ${Boolean(contextOptions.isMobile)}`).toEqual(['#past-left']);
+  }
 });
