@@ -1,0 +1,224 @@
+{
+  "$comment": "Plain-language wording for site lab and `npm run audit` insights (scripts/lib/lab/insights.mjs), keyed by catalog ID. title names the problem, why says who it affects, fix says what to change. findings has one sentence per check whose first catalog ID is this one ({n} is the count; one/other are the singular and plural forms). tests/lab/insights.test.mjs checks that every ID the check engine can report has an entry. `other` words the axe findings that map to no catalog ID.",
+  "version": 1,
+  "other": {
+    "title": "Other accessibility issues axe found",
+    "why": "axe-core flagged these against WCAG 2.2 or its best practices, but no kit standard covers them yet.",
+    "fix": "Each finding links to axe's explanation of the rule and how to fix it."
+  },
+  "standards": {
+    "ACC-01": {
+      "title": "Controls are too small to tap",
+      "why": "Small buttons and links are hard to hit with a finger, a tremor, or a stylus, so people tap the wrong thing or give up.",
+      "fix": "Give each control a hit region of at least 44×44px: add padding, set a min-block-size and min-inline-size, or wrap a small icon in a larger button. WCAG's absolute floor is 24×24px.",
+      "findings": {
+        "target-size-minimum": { "one": "{n} control is smaller than 24×24px, the WCAG minimum", "other": "{n} controls are smaller than 24×24px, the WCAG minimum" },
+        "target-size": { "one": "{n} control is smaller than the kit's 44×44px", "other": "{n} controls are smaller than the kit's 44×44px" }
+      }
+    },
+    "BTN-01": {
+      "title": "Buttons are too small to tap",
+      "why": "A button whose hit region is smaller than a fingertip is easy to miss, even when it looks fine.",
+      "fix": "Keep the visible shape if you like, but grow the hit region to 44×44px with padding or a larger clickable wrapper."
+    },
+    "ACC-03": {
+      "title": "Controls have no accessible name",
+      "why": "Screen readers announce a button or link without a name as just \"button\" or \"link\", so people cannot tell what it does.",
+      "fix": "Give icon-only buttons an aria-label or visually hidden text, make link text say where it goes, and keep the visible label inside the accessible name."
+    },
+    "ACC-04": {
+      "title": "Images are missing alt text",
+      "why": "Screen reader users hear nothing, or a file name, for an image without alt text, and miss what it shows.",
+      "fix": "Describe meaningful images in alt; give decorative images alt=\"\" or aria-hidden=\"true\" so they are skipped."
+    },
+    "ACC-05": {
+      "title": "Headings and landmarks don't describe the page",
+      "why": "Screen reader and keyboard users jump around a page by headings and landmarks; without them the page is one long wall.",
+      "fix": "Use one h1, don't skip heading levels, and put content in header, nav, main, and footer landmarks."
+    },
+    "ACC-07": {
+      "title": "Tab doesn't reach every control in order",
+      "why": "Keyboard users move with Tab; a control Tab skips can't be used, and a jumping order is disorienting.",
+      "fix": "Use real buttons and links, keep tabindex at 0 or -1, and make the DOM order match the visual order.",
+      "findings": {
+        "tab-order": { "one": "{n} Tab stop lands somewhere other than the next control", "other": "{n} Tab stops land somewhere other than the next control" }
+      }
+    },
+    "ACC-09": {
+      "title": "Focus is hard to see",
+      "why": "Keyboard users need to see where focus is; without a clear ring they lose their place on the page.",
+      "fix": "Style :focus-visible with an outline at least 2px wide that has 3:1 contrast against what is behind it, and never remove it without a replacement.",
+      "findings": {
+        "focus-visible": { "one": "{n} control shows no focus outline; check it has another visible focus style", "other": "{n} controls show no focus outline; check they have another visible focus style" },
+        "focus-ring": { "one": "{n} control has a focus ring thinner than 2px or under 3:1 contrast", "other": "{n} controls have a focus ring thinner than 2px or under 3:1 contrast" }
+      }
+    },
+    "ACC-10": {
+      "title": "Focus moves on its own or out of order",
+      "why": "A tabindex above 0 or autofocus moves keyboard focus somewhere unexpected, so people miss content or lose their place.",
+      "fix": "Remove tabindex values above 0 and reorder the markup instead; keep autofocus for a dedicated search page only.",
+      "findings": {
+        "positive-tabindex": { "one": "{n} element has a tabindex above 0", "other": "{n} elements have a tabindex above 0" },
+        "autofocus": { "one": "{n} element takes focus on load (autofocus)", "other": "{n} elements take focus on load (autofocus)" }
+      }
+    },
+    "ACC-11": {
+      "title": "Sticky chrome hides the focused control",
+      "why": "When a sticky header or bar covers the focused control, keyboard users can't see what they are on.",
+      "fix": "Set scroll-padding-block-start (and -end for bottom bars) to at least the sticky element's height.",
+      "findings": {
+        "focus-obscured": { "one": "{n} control is covered or off screen when it has focus", "other": "{n} controls are covered or off screen when they have focus" }
+      }
+    },
+    "ACC-16": {
+      "title": "The page language is missing or wrong",
+      "why": "Screen readers pick their voice and pronunciation from the page language; a missing or wrong lang reads the page in the wrong accent.",
+      "fix": "Set lang on the html element (for example lang=\"en\") and on passages in another language."
+    },
+    "ACC-18": {
+      "title": "Contrast with increased contrast on",
+      "why": "People who turn on increased contrast in their OS rely on the site to respond to it; this reading shows how the page holds up.",
+      "fix": "Add a @media (prefers-contrast: more) block that darkens text and borders, as the kit's increased-contrast tokens do.",
+      "findings": {
+        "contrast-more": { "one": "{n} element fails text contrast with increased contrast on", "other": "{n} elements fail text contrast with increased contrast on" }
+      }
+    },
+    "COL-01": {
+      "title": "Text contrast is too low",
+      "why": "Low-contrast text is hard or impossible to read for people with low vision, on a phone in sunlight, or on a dim screen.",
+      "fix": "Darken the text or lighten its background until body text reaches 4.5:1 and large text 3:1. Check light and dark mode."
+    },
+    "DRK-03": {
+      "title": "Contrast fails in an appearance mode",
+      "why": "A color pair that passes in light mode can fail in dark or increased-contrast mode.",
+      "fix": "Check text and control contrast in light, dark, and both increased-contrast modes."
+    },
+    "FRM-01": {
+      "title": "Form fields have no visible label",
+      "why": "Without a label, people don't know what to type, and placeholder text disappears as soon as they start.",
+      "fix": "Give every field a visible label element tied to it with for/id; keep placeholders for examples only."
+    },
+    "FRM-02": {
+      "title": "Fields don't tell the browser what they hold",
+      "why": "Without the right autocomplete token, browsers and password managers can't fill in email, phone, or address, so typing on a phone takes much longer.",
+      "fix": "Add autocomplete tokens such as email, tel, postal-code, and cc-number, and the matching type or inputmode.",
+      "findings": {
+        "autocomplete": { "one": "{n} email, phone, or URL field has no autocomplete token", "other": "{n} email, phone, or URL fields have no autocomplete token" }
+      }
+    },
+    "LAY-01": {
+      "title": "The visual order doesn't match the reading order",
+      "why": "CSS order and *-reverse move controls on screen but not for Tab or screen readers, so the two orders disagree.",
+      "fix": "Reorder the markup rather than using order or row-reverse around interactive elements.",
+      "findings": {
+        "reordered": { "one": "{n} control is moved by CSS order or a *-reverse container", "other": "{n} controls are moved by CSS order or a *-reverse container" }
+      }
+    },
+    "LAY-05": {
+      "title": "The page scrolls sideways",
+      "why": "Content wider than the screen forces people to scroll in two directions and hides part of every line.",
+      "fix": "Find the element that sticks out (often a fixed width, a wide image, or a long word) and give it max-inline-size: 100%, flexible widths, or overflow-wrap.",
+      "findings": {
+        "reflow": { "one": "{n} element makes the page scroll sideways", "other": "{n} elements make the page scroll sideways" }
+      }
+    },
+    "LAY-06": {
+      "title": "The page doesn't fit a 320px screen",
+      "why": "At 320 CSS px (a small phone, or a desktop browser zoomed to 400%) content must reflow into one column without sideways scrolling.",
+      "fix": "Test at 320px wide and remove fixed widths, minimum widths, and non-wrapping rows that are wider than that.",
+      "findings": {
+        "reflow-320": { "one": "{n} element makes the page scroll sideways at 320px", "other": "{n} elements make the page scroll sideways at 320px" }
+      }
+    },
+    "LAY-07": {
+      "title": "Large text breaks the layout",
+      "why": "Many people set a larger default text size; at 200% the layout must grow with it rather than clip or overflow.",
+      "fix": "Size text and containers in rem, let rows wrap, and avoid fixed heights on anything that holds text.",
+      "findings": {
+        "text-zoom": { "one": "{n} element clips text or scrolls sideways at 200% text", "other": "{n} elements clip text or scroll sideways at 200% text" }
+      }
+    },
+    "LAY-11": {
+      "title": "Fixed bars cover the focused control",
+      "why": "A fixed header or bottom cart bar can sit on top of the control keyboard users have just moved to.",
+      "fix": "Add scroll-padding for every fixed or sticky bar so focused controls scroll clear of it."
+    },
+    "LST-05": {
+      "title": "Tables have no headers",
+      "why": "Screen readers read table cells with their headers; without th and scope a table is a list of unrelated values.",
+      "fix": "Mark header cells with th and scope=\"col\" or scope=\"row\"."
+    },
+    "LST-06": {
+      "title": "List animations ignore reduced motion",
+      "why": "Items that slide in, out, or around can cause discomfort for people who asked their OS for less motion.",
+      "fix": "Under prefers-reduced-motion: reduce, swap movement for a short fade or no animation."
+    },
+    "MOD-05": {
+      "title": "Dialogs have no title",
+      "why": "When a dialog opens, screen readers announce its name; without one people don't know what it is for.",
+      "fix": "Give each dialog an accessible name with aria-labelledby pointing at its heading."
+    },
+    "MOT-02": {
+      "title": "Motion ignores reduced motion",
+      "why": "Sliding, zooming, and smooth scrolling can cause dizziness and nausea for people who asked their OS for less motion.",
+      "fix": "Wrap movement in @media (prefers-reduced-motion: no-preference), or replace it with a fade under reduce, and turn off smooth scrolling there.",
+      "findings": {
+        "reduced-motion": { "one": "{n} animation or smooth scroll keeps moving under reduced motion", "other": "{n} animations or smooth scrolls keep moving under reduced motion" }
+      }
+    },
+    "MOT-07": {
+      "title": "Something animates for too long",
+      "why": "Animation that loops or runs longer than 5 seconds pulls attention away from reading and can't be stopped by people it distracts.",
+      "fix": "Stop animations after 5 seconds or give them a pause button; start carousels paused.",
+      "findings": {
+        "long-animation": { "one": "{n} animation loops forever or runs longer than 5 seconds", "other": "{n} animations loop forever or run longer than 5 seconds" }
+      }
+    },
+    "NAV-13": {
+      "title": "There is no way to skip to the content",
+      "why": "Keyboard users have to Tab through the whole header and menu on every page before they reach the content.",
+      "fix": "Add a \"Skip to content\" link as the first focusable element, pointing at main."
+    },
+    "TYP-01": {
+      "title": "Some text is too small",
+      "why": "Text under 11px is hard to read for most people and impossible for many, especially on a phone.",
+      "fix": "Raise the smallest text to at least 11px (12px for legal and meta text); use the type scale rather than one-off sizes.",
+      "findings": {
+        "text-size": { "one": "{n} piece of text is under 11px", "other": "{n} pieces of text are under 11px" }
+      }
+    },
+    "TYP-03": {
+      "title": "Text doesn't survive zooming",
+      "why": "People zoom to 200% to read; at that size no text may be cut off or need sideways scrolling.",
+      "fix": "Avoid fixed heights and overflow: hidden on text containers, and let the layout reflow at 320px.",
+      "findings": {
+        "page-zoom": { "one": "{n} element clips text or scrolls sideways at 200% page zoom", "other": "{n} elements clip text or scroll sideways at 200% page zoom" }
+      }
+    },
+    "TYP-04": {
+      "title": "Some text is too light",
+      "why": "Thin and light weights lose strokes on lower-resolution screens and are hard to read at small sizes.",
+      "fix": "Use regular (400) or heavier for text; keep thin display faces for very large headings, if at all.",
+      "findings": {
+        "text-weight": { "one": "{n} piece of text is lighter than regular (400)", "other": "{n} pieces of text are lighter than regular (400)" }
+      }
+    },
+    "TYP-06": {
+      "title": "Too many typefaces",
+      "why": "Each extra typeface adds download weight and visual noise; two families (a sans and an optional serif or display face) read as one system.",
+      "fix": "Cut down to two font families, and keep monospace for code, SKUs, and numbers.",
+      "findings": {
+        "font-families": { "one": "{n} font family is in use", "other": "{n} font families are in use; the kit allows 2" },
+        "stray-mono": { "one": "{n} piece of text is set in monospace outside code, SKUs, and numbers", "other": "{n} pieces of text are set in monospace outside code, SKUs, and numbers" }
+      }
+    },
+    "TYP-08": {
+      "title": "Wider text spacing breaks the layout",
+      "why": "Some readers, including many with dyslexia, add line, letter, and word spacing with a user stylesheet; the page must not clip or overlap when they do.",
+      "fix": "Avoid fixed heights and overflow: hidden on boxes that hold text, so they grow with the spacing.",
+      "findings": {
+        "text-spacing": { "one": "{n} element clips text or scrolls sideways with WCAG text spacing", "other": "{n} elements clip text or scroll sideways with WCAG text spacing" }
+      }
+    }
+  }
+}
