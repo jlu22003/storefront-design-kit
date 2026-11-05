@@ -334,10 +334,10 @@ test('presets on a variant board layer onto each variant, and your presets are s
   await expect(main(1)).toHaveCSS('padding-top', '30px');
   await expect(main(0)).toHaveCSS('padding-top', '24px');
   await expect(b.getByRole('status').filter({ hasText: 'Applied Airy.' })).toHaveCount(1);
-  // Applying it again multiplies the scales: 24px × 125% × 125%.
+  // Applying it again multiplies the scales: 1.25 × 1.25 lands on the slider's step, 1.55, so 24px × 155%.
   await b.getByRole('button', { name: 'Airy', exact: true }).click();
   await expect(page.locator('#sdk-lvb-containers')).toHaveValue('1.55');
-  await expect(main(1)).toHaveCSS('padding-top', '37.5px');
+  await expect(main(1)).toHaveCSS('padding-top', '37.2px');
 
   // Higher contrast moves the text to 7:1 on its background.
   await b.getByRole('button', { name: 'Higher contrast' }).click();
@@ -352,7 +352,7 @@ test('presets on a variant board layer onto each variant, and your presets are s
   await expect(a.getByRole('list', { name: 'Your presets' }).getByRole('button', { name: 'Brand look', exact: true })).toBeVisible();
   await a.getByRole('button', { name: 'Brand look', exact: true }).click();
   await expect(page.locator('#sdk-lva-containers')).toHaveValue('1.55');
-  await expect(main(0)).toHaveCSS('padding-top', '37.5px');
+  await expect(main(0)).toHaveCSS('padding-top', '37.2px');
 
   // Export saves a JSON file; Import reads one back.
   const [download] = await Promise.all([page.waitForEvent('download'), a.getByRole('button', { name: 'Export' }).click()]);
@@ -360,7 +360,7 @@ test('presets on a variant board layer onto each variant, and your presets are s
   const exported = JSON.parse(await readFile(await download.path(), 'utf8'));
   expect(exported.format).toBe('sdk-design-presets');
   expect(exported.presets.map((preset) => preset.name)).toEqual(['Brand look']);
-  expect(exported.presets[0].settings.factor).toBe(1.5625);
+  expect(exported.presets[0].settings.factor).toBe(1.55);
 
   const file = { name: 'presets.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({ ...exported, presets: [{ name: 'Imported', settings: { overrides: { fontSize: 21 } } }] })) };
   await a.locator('input[type="file"]').setInputFiles(file);

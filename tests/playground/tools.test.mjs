@@ -247,7 +247,7 @@ describe('live-panel settings', () => {
     assert.equal(String(page.find('sdk-lva-line-height').value), '1.7');
     assert.deepEqual(saves.at(-1).overrides, { lineHeight: 1.7 });
     page.click('Airy');
-    assert.equal(String(page.find('sdk-lva-scale-space').value), '1.5625', 'scales multiply');
+    assert.equal(String(page.find('sdk-lva-scale-space').value), '1.55', 'scales multiply, on the slider step');
     assert.match(page.pageCss(), /line-height: 1\.7 !important;/);
     assert.deepEqual(page.calls, []);
   });

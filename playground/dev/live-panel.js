@@ -649,7 +649,7 @@ export function mountLivePanel(
   const presetUi = presetControls({
     idPrefix: id('presets'),
     store: presets ?? memoryPresets(),
-    apply: (preset) => setState(layerPreset(normalizeLiveState(state), presetSettings(preset, design.current()))),
+    apply: (preset) => setState(layerPreset(normalizeLiveState(state), presetSettings(preset, design.current()), LIVE_RANGES)),
     current: () => liveAsPreset(normalizeLiveState(state)),
     note: presets ? '' : 'Your presets last for this tab only: Export saves them to a file, Import brings them back.',
   });

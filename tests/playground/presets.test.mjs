@@ -29,7 +29,7 @@ import { contrastRatio } from '../../playground/dev/util.js';
 
 const NOW = { fontSize: 16, lineHeight: 1.5, radius: 4, text: '#666666', background: '#ffffff', accent: '#3b82f6', onAccent: '#ffffff' };
 const builtIn = (id) => BUILT_IN_PRESETS.find((preset) => preset.id === id);
-const apply = (state, id, now = NOW) => normalizeLiveState(layerPreset(normalizeLiveState(state), presetSettings(builtIn(id), now)));
+const apply = (state, id, now = NOW) => normalizeLiveState(layerPreset(normalizeLiveState(state), presetSettings(builtIn(id), now), LIVE_RANGES));
 
 describe('contrast helpers', () => {
   test('mixHex blends in sRGB', () => {
@@ -84,6 +84,9 @@ describe('built-in presets', () => {
     assert.deepEqual(airy.colors, { '--brand': '#123456' });
     // Stacking keeps multiplying, and the panel clamps to its slider range.
     assert.equal(apply(apply(apply(airy, 'airy'), 'airy'), 'airy').scales.space, LIVE_RANGES.space.max);
+    // Stacked scales land on the slider's 0.05 step: 1.25 × 1.25 = 1.5625 shows as 1.55.
+    const twice = apply(apply(freshLiveState(), 'airy'), 'airy');
+    assert.deepEqual([twice.scales.space, twice.factor], [1.55, 1.55]);
     const compact = apply(freshLiveState(), 'compact');
     assert.deepEqual([compact.scales.space, compact.factor, compact.overrides.lineHeight], [0.8, 0.8, 1.35]);
   });
@@ -135,7 +138,7 @@ describe('preset settings', () => {
     const state = normalizeLiveState({ scales: { space: 1.5 }, factor: 1.1, overrides: { fontSize: 18 }, colors: { '--brand': '#ff0000' } });
     assert.deepEqual(liveAsPreset(state), { scales: { space: 1.5 }, factor: 1.1, colors: { '--brand': '#ff0000' }, overrides: { fontSize: 18 } });
     // Applied to a reset panel, a saved preset gives the saved settings back.
-    assert.deepEqual(normalizeLiveState(layerPreset(freshLiveState(), liveAsPreset(state))), state);
+    assert.deepEqual(normalizeLiveState(layerPreset(freshLiveState(), liveAsPreset(state), LIVE_RANGES)), state);
   });
 });
 
@@ -144,8 +147,9 @@ describe('kit panel presets', () => {
     scheme: 'light',
     bodyPx: 17,
     radiusPx: 8,
-    ranges: { space: { min: 0.5, max: 2 }, type: { min: 0.75, max: 1.5 }, radius: { min: 0, max: 2.5 } },
+    ranges: { space: { min: 0.5, max: 2, step: 0.05 }, type: { min: 0.75, max: 1.5, step: 0.025 }, radius: { min: 0, max: 2.5, step: 0.05 } },
     colorNames: ['--sdk-color-bg', '--sdk-color-label', '--sdk-color-accent', '--sdk-color-on-accent', '--sdk-color-link'],
+    base: (name) => ({ '--sdk-color-label': '#141416', '--sdk-color-on-accent': '#FFFFFF', '--sdk-color-bg': '#ffffff' })[name],
   };
 
   test('scales multiply the kit scales; factor stands in for a missing spacing scale', () => {
@@ -153,6 +157,8 @@ describe('kit panel presets', () => {
     assert.deepEqual(kitLayer({ scales: {}, colors: {} }, { factor: 0.8 }, KIT).scales, { space: 0.8 });
     assert.deepEqual(kitLayer({ scales: { radius: 1 }, colors: {} }, { scales: { radius: 0 }, overrides: { radius: 30 } }, KIT).scales, { radius: 0 });
     assert.deepEqual(kitLayer({ scales: { space: 1.9 }, colors: {} }, { scales: { space: 2 } }, KIT).scales, { space: 2 }, 'clamped');
+    assert.deepEqual(kitLayer({ scales: { space: 1.25 }, colors: {} }, { scales: { space: 1.25 } }, KIT).scales, { space: 1.55 }, '1.5625 lands on the 0.05 step');
+    assert.deepEqual(kitLayer({ scales: {}, colors: {} }, { overrides: { fontSize: 20 } }, KIT).scales, { type: 1.175 }, '20 / 17 lands on the 0.025 step');
   });
 
   test('px sizes set the matching kit scale when the preset has no scale for it', () => {
@@ -165,6 +171,12 @@ describe('kit panel presets', () => {
     assert.deepEqual(next.colors.light, { '--sdk-color-link': '#333333', [KIT_COLOR_FOR.text]: '#111111', [KIT_COLOR_FOR.accent]: '#222222' });
     assert.deepEqual(next.colors.dark, { '--sdk-color-bg': '#000000' }, 'the other appearance is untouched');
     assert.deepEqual(state.colors.light, { '--sdk-color-link': '#0000ff' }, 'the input is not changed');
+  });
+
+  test('a color equal to the kit value is not picked, and clears an earlier pick', () => {
+    const state = { scales: {}, colors: { light: { '--sdk-color-label': '#333333' } } };
+    const next = kitLayer(state, { overrides: { text: '#141416', onAccent: '#ffffff', accent: '#003399' } }, KIT);
+    assert.deepEqual(next.colors.light, { [KIT_COLOR_FOR.accent]: '#003399' });
   });
 
   test('kitAsPreset saves the scales and the shown appearance colors, roles as overrides', () => {
@@ -206,7 +218,7 @@ describe('your presets', () => {
       parsePresetFile(text).map(({ name, settings }) => ({ name, settings })),
       [{ name: 'Brand', settings: { scales: { space: 1.5 }, overrides: { accent: '#ff0000' } } }],
     );
-    assert.equal(parsePresetFile(JSON.stringify([{ name: 'Bare', settings: { factor: 2 } }]))[0].name, 'Bare');
+    assert.throws(() => parsePresetFile(JSON.stringify([{ name: 'Bare', settings: { factor: 2 } }])), /no design presets/, 'only the exported file format');
     assert.throws(() => parsePresetFile('{nope'), /not JSON/);
     assert.throws(() => parsePresetFile('{"format":"other","presets":[]}'), /no design presets/);
     assert.throws(() => parsePresetFile(JSON.stringify({ format: PRESET_FILE_FORMAT, presets: [{ settings: {} }] })), /no design presets/);

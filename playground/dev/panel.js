@@ -418,6 +418,7 @@ export function mountDesignPanel({
       radiusPx,
       ranges: Object.fromEntries(SCALES.map((scale) => [scale.key, scale])),
       colorNames: COLORS.map((c) => c.name),
+      base: (name) => design.base(name),
       now: {
         fontSize: bodyPx * (state.scales.type ?? 1),
         lineHeight: 1.5,

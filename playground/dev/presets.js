@@ -177,17 +177,23 @@ export function presetSettings(preset, now) {
   return normalizePresetSettings(settings);
 }
 
+/** `value` clamped to a slider's { min, max } and rounded to its step, the way the slider shows it. */
+export function snapToSlider(value, { min, max, step }) {
+  const clamped = Math.min(max, Math.max(min, value));
+  return round(Math.min(max, min + Math.round((clamped - min) / step) * step));
+}
+
 /**
  * Layers partial settings onto full live-panel settings: scales and factor
- * multiply, colors and overrides replace. Returns new settings; the panel
- * clamps them to its slider ranges.
+ * multiply, colors and overrides replace. Scales and factor land on their
+ * slider's step within `ranges` (LIVE_RANGES), so the sliders show the result.
  */
-export function layerPreset(state, partial) {
+export function layerPreset(state, partial, ranges) {
   const scales = { ...state.scales };
-  for (const [kind, factor] of Object.entries(partial.scales ?? {})) scales[kind] = round((scales[kind] ?? 1) * factor);
+  for (const [kind, factor] of Object.entries(partial.scales ?? {})) scales[kind] = snapToSlider((scales[kind] ?? 1) * factor, ranges[kind]);
   return {
     scales,
-    factor: round((state.factor ?? 1) * (partial.factor ?? 1)),
+    factor: snapToSlider((state.factor ?? 1) * (partial.factor ?? 1), ranges.factor),
     colors: { ...state.colors, ...partial.colors },
     overrides: { ...state.overrides, ...partial.overrides },
   };
@@ -201,8 +207,6 @@ export const KIT_COLOR_FOR = {
   onAccent: '--sdk-color-on-accent',
 };
 
-const presetClamp = (value, range) => round(Math.min(range.max, Math.max(range.min, value)));
-
 /**
  * Layers partial settings onto the kit panel's settings ({ scales, colors:
  * { light, dark } }, see panel.js). The kit has one scale per kind, so a
@@ -210,14 +214,15 @@ const presetClamp = (value, range) => round(Math.min(range.max, Math.max(range.m
  * (fontSize against the body size, radius against --sdk-radius-8), and factor
  * stands in for a missing spacing scale. Colors go to the appearance shown:
  * text, background, accent, and onAccent to their kit roles, and --sdk-color-*
- * names as they are. Line height has no kit token and is skipped.
- * `kit` is { scheme, bodyPx, radiusPx, ranges: { space, type, radius }, colorNames }.
+ * names as they are; a color equal to the kit's own value is dropped, not
+ * picked. Line height has no kit token and is skipped.
+ * `kit` is { scheme, bodyPx, radiusPx, ranges: { space, type, radius }, colorNames, base(name) }.
  */
 export function kitLayer(state, partial, kit) {
   const scales = { ...state.scales };
   const scale = (key) => scales[key] ?? 1;
   const set = (key, value) => {
-    scales[key] = presetClamp(value, kit.ranges[key]);
+    scales[key] = snapToSlider(value, kit.ranges[key]);
   };
   const { scales: given = {}, overrides = {} } = partial;
   if (given.space !== undefined) set('space', scale('space') * given.space);
@@ -227,8 +232,12 @@ export function kitLayer(state, partial, kit) {
   if (given.radius !== undefined) set('radius', scale('radius') * given.radius);
   else if (overrides.radius !== undefined && kit.radiusPx) set('radius', overrides.radius / kit.radiusPx);
   const picks = { ...state.colors?.[kit.scheme] };
-  for (const [name, hex] of Object.entries(partial.colors ?? {})) if (kit.colorNames.includes(name)) picks[name] = hex;
-  for (const [key, name] of Object.entries(KIT_COLOR_FOR)) if (overrides[key]) picks[name] = overrides[key];
+  const pick = (name, hex) => {
+    if (normalizeHex(kit.base(name) ?? '') === hex) delete picks[name];
+    else picks[name] = hex;
+  };
+  for (const [name, hex] of Object.entries(partial.colors ?? {})) if (kit.colorNames.includes(name)) pick(name, hex);
+  for (const [key, name] of Object.entries(KIT_COLOR_FOR)) if (overrides[key]) pick(name, overrides[key]);
   return { scales, colors: { ...state.colors, [kit.scheme]: picks } };
 }
 
@@ -273,7 +282,7 @@ export function presetFile(presets) {
   return JSON.stringify({ format: PRESET_FILE_FORMAT, version: 1, presets: presets.map(({ name, settings }) => ({ name, settings })) }, null, 2);
 }
 
-/** Reads an exported file (or a bare array of presets). Throws an Error with a readable message. */
+/** Reads a file Export saved. Throws an Error with a readable message. */
 export function parsePresetFile(text) {
   let data;
   try {
@@ -281,7 +290,7 @@ export function parsePresetFile(text) {
   } catch {
     throw new Error('That file is not JSON.');
   }
-  const list = Array.isArray(data) ? data : data?.format === PRESET_FILE_FORMAT ? data.presets : null;
+  const list = data?.format === PRESET_FILE_FORMAT ? data.presets : null;
   if (!Array.isArray(list)) throw new Error('That file has no design presets.');
   const presets = list.map((raw) => normalizePreset({ name: raw?.name, settings: raw?.settings })).filter(Boolean);
   if (!presets.length) throw new Error('That file has no design presets.');
