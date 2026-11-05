@@ -183,6 +183,59 @@ are not watched for live reload; they do not change once written.
   URLs inside open shadow roots and inside SVG files, and CSS `image-set()`
   strings written without `url()`.
 
+## Site audit
+
+```sh
+npm run audit -- https://example.com/products/shirt
+npm run audit -- https://example.com/ --viewport phone --fail-on aa
+```
+
+This copies the page at desktop and phone width (as `npm run lab:copy` does),
+runs the kit's standards checks on each copy, and writes a report to
+`lab/audits/<host>-<date>-<time>/`:
+
+- **`report.md`**: insights grouped by catalog standard, most urgent first,
+  each with what was found and where, why it matters, how to fix it, and the
+  standard's HIG and WCAG links.
+- **`report.json`**: the same insights, plus every element found with its CSS
+  selector and position on the page.
+- **`shots/`**: a first-screen and a full-page screenshot per width.
+- **`copies/`**: the copies that were checked, with their `manifest.json`.
+
+Insights come in three tiers:
+
+1. **Blocks people**: WCAG level A failures, and axe issues rated critical or
+   serious.
+2. **WCAG AA**: level AA failures.
+3. **Kit polish**: the kit's thresholds that are stricter than WCAG (44px
+   targets, 11px text, 2 font families, a 2px focus ring), and axe best
+   practices.
+
+Within a tier, the problems with the most elements come first, then those with
+an element in the first screen. Contrast with increased contrast turned on is
+listed for information only. The wording is in `catalog/insights.json`.
+
+The checks are the ones the kit's own pages are tested with
+(`tests/e2e/README.md`): axe-core, autocomplete, reflow at the width and at
+320px, target size, text spacing, text size, weight, and families, 200% text
+and page zoom, a keyboard walk with the focus ring, long animations, and
+reduced motion. They run on the copy, never on the live site: requests to any
+other address are blocked.
+
+Options:
+
+- `--viewport desktop|phone|both` (default `both`).
+- `--out <folder>` instead of `lab/audits`.
+- `--fail-on blocker|aa|none` (default `none`): exit with status 1 when there
+  is an insight in that tier or a more urgent one, for use in CI.
+- `--json` prints `report.json` to standard output, and progress to standard
+  error.
+
+The audit exits with status 2 when it cannot run (a bad URL, an HTTP error, or
+no browser). Because the copy is frozen, menus, drawers, dialogs, and the cart
+are not exercised; a live-site test comes after release. Audit only sites you
+own or have permission to test.
+
 ## Design panel for any site (bookmarklet)
 
 `/playground/bookmarklet.html` explains how to install it: drag **SDK Design**

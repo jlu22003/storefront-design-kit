@@ -111,6 +111,11 @@ Saved CSS is swapped in without a reload, so you keep your scroll position.
   gitignored `lab/copies/`, and the playground serves it with the same design
   panel. Viewing a copy never contacts the live site. Copy only sites you own
   or have permission to test.
+- **Site audit.** `npm run audit -- <url>` copies a page, runs the standards
+  checks on the copy, and writes `report.md`, `report.json`, and screenshots
+  to `lab/audits/`: insights grouped by catalog standard in three tiers
+  (blocks people, WCAG AA, kit polish), each with how to fix it.
+  `--fail-on blocker|aa` sets the exit code for CI.
 
 More detail is in [playground/README.md](playground/README.md).
 

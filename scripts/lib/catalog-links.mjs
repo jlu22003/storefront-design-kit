@@ -62,10 +62,15 @@ const WCAG_ANCHORS = {
 /** The URL of a WCAG 2.2 success criterion, or null when the number is not one this table knows. */
 export const wcagUrl = (sc) => (WCAG_ANCHORS[sc] ? `${WCAG}#${WCAG_ANCHORS[sc]}` : null);
 
+/** [{ label: "HIG", url }, { label: "WCAG 2.5.8", url }]: a standard's HIG pages, then its WCAG success criteria. */
+export function standardSources(standard) {
+  return [
+    ...standard.hig.map((link) => ({ label: 'HIG', url: link.url })),
+    ...standard.wcag.map((ref) => ({ label: `WCAG ${ref.sc}`, url: wcagUrl(ref.sc) ?? WCAG })),
+  ];
+}
+
 /** ["HIG https://…/accessibility", "WCAG 2.5.8 https://www.w3.org/TR/WCAG22/#target-size-minimum"] for a standard. */
 export function standardLinks(standard) {
-  return [
-    ...standard.hig.map((link) => `HIG ${link.url}`),
-    ...standard.wcag.map((ref) => `WCAG ${ref.sc} ${wcagUrl(ref.sc) ?? WCAG}`),
-  ];
+  return standardSources(standard).map(({ label, url }) => `${label} ${url}`);
 }

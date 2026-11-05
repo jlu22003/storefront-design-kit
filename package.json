@@ -20,6 +20,7 @@
     "sketch": "node playground/new-sketch.mjs",
     "bookmarklet": "node scripts/build-bookmarklet.mjs",
     "lab:copy": "node scripts/lab-copy.mjs",
+    "audit": "node scripts/audit.mjs",
     "test:e2e": "playwright test",
     "test:e2e:docker": "node scripts/playwright-docker.mjs"
   },

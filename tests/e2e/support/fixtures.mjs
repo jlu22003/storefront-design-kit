@@ -1,20 +1,22 @@
-// Shared Playwright fixtures for the standards checks.
+// Shared Playwright fixtures for the standards checks. The check logic lives
+// in scripts/lib/lab/checks.mjs, which returns what it finds; the specs run
+// those checks on the kit pages and assert that nothing was found.
 //
 // - Requests to other origins are blocked, so runs are hermetic and pages render
 //   the fallback font stack (no Google Fonts download; see tests/e2e/README.md).
 // - probe.js is added to every page as `sdkProbe` (in-page measurements).
 // - `textZoom` (a project option) doubles the root font size for the 200% project.
 // - `open(path)` loads a page and waits until it is ready to measure.
-// - `axe` runs axe-core and reports violations with their catalog IDs.
+// - `expectNone(results)` asserts that each check result found nothing, and
+//   names the catalog standard with its HIG and WCAG links when one did.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import AxeBuilder from '@axe-core/playwright';
 import { test as base, expect } from '@playwright/test';
 import { standardLinks } from '../../../scripts/lib/catalog-links.mjs';
+import { CHECKS, PROBE_PATH } from '../../../scripts/lib/lab/checks.mjs';
 
 const ROOT = join(import.meta.dirname, '..', '..', '..');
-const PROBE = join(import.meta.dirname, 'probe.js');
 const STANDARDS = new Map(
   JSON.parse(readFileSync(join(ROOT, 'catalog', 'standards.json'), 'utf8')).standards.map((standard) => [standard.id, standard]),
 );
@@ -33,35 +35,28 @@ export function problems(ids, heading, list) {
   return [`${heading}`, ...ids.map((id) => `  ${catalogRef(id)}`), ...list.map((item) => `  - ${item}`)].join('\n');
 }
 
-// axe rules and the catalog standards they enforce (research report §5.1).
-export const AXE_RULE_IDS = {
-  'color-contrast': ['COL-01', 'DRK-03'],
-  'target-size': ['ACC-01'],
-  'button-name': ['ACC-03'],
-  'link-name': ['ACC-03'],
-  label: ['ACC-03', 'FRM-01'],
-  'label-content-name-mismatch': ['ACC-03'],
-  'image-alt': ['ACC-04'],
-  'svg-img-alt': ['ACC-04'],
-  'role-img-alt': ['ACC-04'],
-  'page-has-heading-one': ['ACC-05'],
-  'heading-order': ['ACC-05'],
-  'landmark-one-main': ['ACC-05'],
-  region: ['ACC-05'],
-  'html-has-lang': ['ACC-16'],
-  'html-lang-valid': ['ACC-16'],
-  'valid-lang': ['ACC-16'],
-  bypass: ['NAV-13'],
-  'skip-link': ['NAV-13'],
-  'th-has-data-cells': ['LST-05'],
-  'scope-attr-valid': ['LST-05'],
-  'aria-dialog-name': ['MOD-05'],
-  'autocomplete-valid': ['FRM-02'],
-  marquee: ['MOT-07'],
-  blink: ['MOT-07'],
-};
+/** The failure message for one check result: axe's rule and nodes, or the check's label and its items. */
+export function describeResult(result) {
+  if (result.axe) {
+    const { rule, impact, help, helpUrl } = result.axe;
+    return [
+      `${rule} [${impact}] ${help}${result.ids.length ? `: ${result.ids.map(catalogRef).join(', ')}` : ''}`,
+      `    ${helpUrl}`,
+      ...result.items.slice(0, 5).map((item) => `      ${item.selector}: ${item.detail}`),
+    ].join('\n');
+  }
+  return problems(result.ids, `${CHECKS[result.check].label}:`, result.items.map((item) => item.detail));
+}
 
-const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice'];
+/**
+ * Asserts that every result found nothing (soft, so one test reports every
+ * failing check). `heading` prefixes each message, such as the page path.
+ */
+export function expectNone(results, heading = '') {
+  for (const result of results) {
+    expect.soft(result.items, `${heading}${describeResult(result)}`).toEqual([]);
+  }
+}
 
 export const test = base.extend({
   textZoom: [1, { option: true }],
@@ -69,7 +64,7 @@ export const test = base.extend({
   page: async ({ page, baseURL }, use) => {
     const origin = new URL(baseURL).origin;
     await page.route((url) => url.origin !== origin, (route) => route.abort('blockedbyclient'));
-    await page.addInitScript({ path: PROBE });
+    await page.addInitScript({ path: PROBE_PATH });
     await use(page);
   },
 
@@ -79,21 +74,6 @@ export const test = base.extend({
       if (textZoom !== 1) await page.addStyleTag({ content: `html { font-size: ${textZoom * 100}% !important; }` });
       await page.locator('[data-sdk-design-panel]').waitFor({ state: 'attached' });
       await page.evaluate(() => document.fonts.ready.then(() => new Promise(requestAnimationFrame)));
-    });
-  },
-
-  axe: async ({ page }, use) => {
-    await use(async () => {
-      const results = await new AxeBuilder({ page }).withTags(AXE_TAGS).exclude('[data-sdk-design-panel]').analyze();
-      return results.violations.map((violation) => {
-        const ids = AXE_RULE_IDS[violation.id] ?? [];
-        const nodes = violation.nodes.slice(0, 5).map((node) => `      ${node.target.join(' ')}: ${node.failureSummary?.split('\n').slice(1).join(' ').trim()}`);
-        return [
-          `${violation.id} [${violation.impact}] ${violation.help}${ids.length ? `: ${ids.map(catalogRef).join(', ')}` : ''}`,
-          `    ${violation.helpUrl}`,
-          ...nodes,
-        ].join('\n');
-      });
     });
   },
 });
