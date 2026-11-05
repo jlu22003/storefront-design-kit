@@ -1,10 +1,11 @@
-// Builds the live-site bookmarklet from live-panel.js, util.js, the panel's
+// Builds the live-site bookmarklet from live-panel.js, presets.js, util.js, the panel's
 // stylesheet, and the kit's tokens. Runs in Node (`npm run bookmarklet`) and in
 // the browser (playground/bookmarklet.html), so it takes a read(path) function
 // instead of touching the file system. Paths are relative to the repo root.
 
 export const SOURCES = {
   util: 'playground/dev/util.js',
+  presets: 'playground/dev/presets.js',
   live: 'playground/dev/live-panel.js',
   panelCss: 'playground/dev/panel.css',
   tokensCss: 'theme/assets/sdk-tokens.css',
@@ -96,14 +97,19 @@ export function livePanelCss(tokensCss, panelCss) {
 
 /** Builds the bookmarklet. read(path) returns a source file's text. Returns { code, url }. */
 export async function buildBookmarklet(read) {
-  const [util, live, panelCss, tokensCss] = await Promise.all(
-    [SOURCES.util, SOURCES.live, SOURCES.panelCss, SOURCES.tokensCss].map((path) => read(path)),
+  const [util, presets, live, panelCss, tokensCss] = await Promise.all(
+    [SOURCES.util, SOURCES.presets, SOURCES.live, SOURCES.panelCss, SOURCES.tokensCss].map((path) => read(path)),
   );
   const css = livePanelCss(tokensCss, panelCss);
   const code = compactJs(
-    ['(() => {', stripModule(util, SOURCES.util), stripModule(live, SOURCES.live), `toggleLivePanel(${JSON.stringify(css)});`, '})();'].join(
-      '\n',
-    ),
+    [
+      '(() => {',
+      stripModule(util, SOURCES.util),
+      stripModule(presets, SOURCES.presets),
+      stripModule(live, SOURCES.live),
+      `toggleLivePanel(${JSON.stringify(css)});`,
+      '})();',
+    ].join('\n'),
   );
   return { code, url: toBookmarkletUrl(code) };
 }
