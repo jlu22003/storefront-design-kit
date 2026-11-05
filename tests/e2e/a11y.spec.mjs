@@ -1,8 +1,9 @@
 // axe-core on every page in every project (research report §5.1, §5.3).
-// Each axe rule maps to catalog IDs in support/fixtures.mjs, so a failure
-// names the standard it breaks.
+// Each axe rule maps to catalog IDs (AXE_RULE_IDS in scripts/lib/lab/checks.mjs),
+// so a failure names the standard it breaks.
 
-import { expect, problems, test } from './support/fixtures.mjs';
+import { checkAutocomplete, checkAxe } from '../../scripts/lib/lab/checks.mjs';
+import { expectNone, test } from './support/fixtures.mjs';
 import { PAGES } from './support/pages.mjs';
 
 for (const { name, path } of PAGES) {
@@ -15,17 +16,15 @@ for (const { name, path } of PAGES) {
           '@WCAG-1.1.1', '@WCAG-1.3.1', '@WCAG-1.4.3', '@WCAG-2.4.1', '@WCAG-2.5.8', '@WCAG-3.1.1', '@WCAG-3.3.2', '@WCAG-4.1.2',
         ],
       },
-      async ({ open, axe }) => {
+      async ({ open, page }) => {
         await open(path);
-        const violations = await axe();
-        expect(violations, `axe violations on ${path}:\n${violations.join('\n')}`).toEqual([]);
+        expectNone(await checkAxe(page), `axe violations on ${path}:\n`);
       },
     );
 
     test('email, phone, and URL fields carry an autocomplete token', { tag: ['@FRM-02', '@WCAG-1.3.5'] }, async ({ open, page }) => {
       await open(path);
-      const missing = await page.evaluate(() => sdkProbe.fieldsWithoutAutocomplete());
-      expect(missing, problems(['FRM-02'], 'fields without autocomplete:', missing)).toEqual([]);
+      expectNone(await checkAutocomplete(page));
     });
   });
 }

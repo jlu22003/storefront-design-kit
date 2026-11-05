@@ -19,8 +19,8 @@ export const PAGES = [
   { name: 'collection', path: '/playground/starters/collection.html', visual: true },
 ];
 
-/** The floor viewport for reflow (LAY-06): 320 CSS px, as on iPhone SE or a 1280px window at 400%. */
-export const REFLOW_VIEWPORT = { width: 320, height: 568 };
+// The floor viewport for reflow (LAY-06): 320 CSS px, as on iPhone SE or a 1280px window at 400%.
+export { REFLOW_VIEWPORT } from '../../../scripts/lib/lab/checks.mjs';
 
 /**
  * Visual baselines render only in the pinned Playwright image (CI, or

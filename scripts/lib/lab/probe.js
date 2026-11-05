@@ -1,12 +1,17 @@
 // In-page probes for the standards checks. Playwright adds this file to every
-// page as an init script (see fixtures.mjs), so specs can call
-// `page.evaluate(() => sdkProbe.reflow())` and get plain data back.
+// page as an init script (checks.mjs, tests/e2e/support/fixtures.mjs), so the
+// checks can call `page.evaluate(() => sdkProbe.reflow())` and get plain data back.
 //
-// Everything skips the playground's design panel ([data-sdk-design-panel]):
-// it is dev tooling that the server injects, not part of a kit page.
+// A problem the probes find is an item: { selector, detail, rect }. `selector`
+// finds the element again (for "show on page"), `detail` is a sentence for a
+// person, and `rect` is where it sits on the page in CSS px, or null.
+//
+// Everything skips the playground's design panels ([data-sdk-design-panel] on
+// kit pages, [data-sdk-live-panel] on lab copies): they are dev tooling that
+// the server injects, not part of the page.
 
 (() => {
-  const PANEL = '[data-sdk-design-panel]';
+  const PANEL = '[data-sdk-design-panel], [data-sdk-live-panel]';
   const INTERACTIVE = [
     'a[href]',
     'button',
@@ -45,6 +50,41 @@
     if (classes.length) text += `.${classes.join('.')}`;
     const label = (el.getAttribute('aria-label') ?? el.textContent ?? '').trim().replace(/\s+/g, ' ').slice(0, 40);
     return label ? `${text} "${label}"` : text;
+  }
+
+  /** A CSS selector that finds `el` again: its id when that is unique, else a path of nth-of-type steps. */
+  function selectorFor(el) {
+    if (el === document.documentElement) return 'html';
+    const steps = [];
+    for (let node = el; node && node.nodeType === Node.ELEMENT_NODE && node !== document.documentElement; node = node.parentElement) {
+      if (node.id) {
+        const id = `#${CSS.escape(node.id)}`;
+        const root = node.getRootNode();
+        if (root.querySelectorAll(id).length === 1) {
+          steps.unshift(id);
+          return steps.join(' > ');
+        }
+      }
+      let step = CSS.escape(node.localName);
+      const parent = node.parentElement;
+      if (parent) {
+        const same = [...parent.children].filter((child) => child.localName === node.localName);
+        if (same.length > 1) step += `:nth-of-type(${same.indexOf(node) + 1})`;
+      }
+      steps.unshift(step);
+    }
+    return steps.join(' > ');
+  }
+
+  /** Where `el` sits on the page (not the viewport), in whole CSS px. */
+  function rectOf(el) {
+    const rect = el.getBoundingClientRect();
+    return { x: Math.round(rect.left + scrollX), y: Math.round(rect.top + scrollY), width: Math.round(rect.width), height: Math.round(rect.height) };
+  }
+
+  /** One problem: `detail` follows the element's description, as in `button "Close" is 30×30px`. */
+  function item(el, detail = '') {
+    return { selector: selectorFor(el), detail: detail ? `${describe(el)} ${detail}` : describe(el), rect: rectOf(el) };
   }
 
   // ------------------------------------------------------------- color math
@@ -122,7 +162,7 @@
           break;
         }
       }
-      if (!contained) offenders.push(`${describe(el)} spans ${Math.round(rect.left)}..${Math.round(rect.right)}px`);
+      if (!contained) offenders.push(item(el, `spans ${Math.round(rect.left)}..${Math.round(rect.right)}px`));
     }
     return { scrollWidth: root.scrollWidth, clientWidth: width, innerWidth, offenders: offenders.slice(0, 10) };
   }
@@ -140,7 +180,7 @@
       const overX = clipsX && el.scrollWidth > el.clientWidth + 1;
       const overY = clipsY && el.scrollHeight > el.clientHeight + 1;
       if (overX || overY) {
-        out.push(`${describe(el)} clips ${overX ? `${el.scrollWidth}>${el.clientWidth}px wide` : ''}${overX && overY ? ', ' : ''}${overY ? `${el.scrollHeight}>${el.clientHeight}px tall` : ''}`);
+        out.push(item(el, `clips ${overX ? `${el.scrollWidth}>${el.clientWidth}px wide` : ''}${overX && overY ? ', ' : ''}${overY ? `${el.scrollHeight}>${el.clientHeight}px tall` : ''}`));
       }
     }
     return out;
@@ -162,7 +202,7 @@
       if (!regions.length) continue;
       const width = Math.max(...regions.map((rect) => rect.width));
       const height = Math.max(...regions.map((rect) => rect.height));
-      if (width < min - 0.5 || height < min - 0.5) out.push(`${describe(el)} is ${Math.round(width)}×${Math.round(height)}px`);
+      if (width < min - 0.5 || height < min - 0.5) out.push(item(el, `is ${Math.round(width)}×${Math.round(height)}px`));
     }
     return out;
   }
@@ -173,10 +213,15 @@
    * code, kbd, samp, pre, and .sdk-font-mono (SKUs and numbers).
    */
   function renderedText() {
-    const tooSmall = new Set();
-    const tooLight = new Set();
+    // Keyed by detail, so text nodes that share an element and its style are one item.
+    const tooSmall = new Map();
+    const tooLight = new Map();
     const families = new Map();
-    const strayMono = new Set();
+    const strayMono = new Map();
+    const add = (list, el, detail) => {
+      const found = item(el, detail);
+      if (!list.has(found.detail)) list.set(found.detail, found);
+    };
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     for (let node = walker.nextNode(); node; node = walker.nextNode()) {
       const el = node.parentElement;
@@ -185,18 +230,21 @@
       const style = getComputedStyle(el);
       const size = Number.parseFloat(style.fontSize);
       const weight = Number.parseFloat(style.fontWeight);
-      if (size < 11) tooSmall.add(`${describe(el)} at ${size}px`);
-      if (weight < 400) tooLight.add(`${describe(el)} at weight ${weight}`);
+      if (size < 11) add(tooSmall, el, `at ${size}px`);
+      if (weight < 400) add(tooLight, el, `at weight ${weight}`);
       const family = style.fontFamily;
       if (/\bmonospace\b/.test(family)) {
-        if (!el.closest('code, kbd, samp, pre, .sdk-font-mono')) strayMono.add(describe(el));
-      } else if (!families.has(family)) families.set(family, describe(el));
+        if (!el.closest('code, kbd, samp, pre, .sdk-font-mono')) add(strayMono, el);
+      } else if (!families.has(family)) {
+        const first = item(el);
+        families.set(family, { ...first, detail: `${family} (first on ${first.detail})` });
+      }
     }
     return {
-      tooSmall: [...tooSmall],
-      tooLight: [...tooLight],
-      families: [...families].map(([family, first]) => `${family} (first on ${first})`),
-      strayMono: [...strayMono],
+      tooSmall: [...tooSmall.values()],
+      tooLight: [...tooLight.values()],
+      families: [...families.values()],
+      strayMono: [...strayMono.values()],
     };
   }
 
@@ -204,16 +252,18 @@
   function fieldsWithoutAutocomplete() {
     return [...document.querySelectorAll('input[type="email"], input[type="tel"], input[type="url"]')]
       .filter((el) => !inPanel(el) && !el.getAttribute('autocomplete'))
-      .map(describe);
+      .map((el) => item(el));
   }
 
   /**
    * ACC-10, LAY-01: the elements Tab should reach, in DOM order, each tagged with
-   * data-sdk-tab so the walk can match them. Also returns what breaks DOM order.
+   * data-sdk-tab so the walk can match them (`order` holds their descriptions,
+   * `selectors` their selectors). Also returns, as items, what breaks DOM order.
    */
   function tabbables() {
     const seenRadioGroups = new Set();
     const order = [];
+    const selectors = [];
     const positiveTabindex = [];
     const autofocus = [];
     const reordered = [];
@@ -221,8 +271,8 @@
       [...document.querySelectorAll(`input[type="radio"][name="${CSS.escape(name)}"]`)].filter((el) => el.form === form);
     for (const el of document.body.querySelectorAll(INTERACTIVE)) {
       if (inPanel(el)) continue;
-      if (el.tabIndex > 0) positiveTabindex.push(describe(el));
-      if (el.hasAttribute('autofocus')) autofocus.push(describe(el));
+      if (el.tabIndex > 0) positiveTabindex.push(item(el, `has tabindex ${el.tabIndex}`));
+      if (el.hasAttribute('autofocus')) autofocus.push(item(el));
       if (el.tabIndex < 0 || el.disabled || el.closest('[inert]') || !visible(el)) continue;
       if (el.matches('input[type="radio"]') && el.name) {
         const key = `${el.form?.id ?? ''}|${el.name}`;
@@ -235,14 +285,15 @@
       // LAY-01: CSS must not move a control away from its DOM position.
       const style = getComputedStyle(el);
       const parent = el.parentElement && getComputedStyle(el.parentElement);
-      if (style.order !== '0') reordered.push(`${describe(el)} has order: ${style.order}`);
+      if (style.order !== '0') reordered.push(item(el, `has order: ${style.order}`));
       if (parent && /reverse/.test(`${parent.flexDirection} ${parent.flexWrap}`)) {
-        reordered.push(`${describe(el)} sits in a ${parent.flexDirection} ${parent.flexWrap} container`);
+        reordered.push(item(el, `sits in a ${parent.flexDirection} ${parent.flexWrap} container`));
       }
       el.dataset.sdkTab = String(order.length);
       order.push(describe(el));
+      selectors.push(selectorFor(el));
     }
-    return { order, positiveTabindex, autofocus, reordered };
+    return { order, selectors, positiveTabindex, autofocus, reordered };
   }
 
   function deepActive() {
@@ -281,6 +332,8 @@
       key: el.dataset.sdkTab ?? null,
       inPanel: false,
       desc: describe(el),
+      selector: selectorFor(el),
+      rect: rectOf(el),
       focusVisible: el.matches(':focus-visible'),
       outlineStyle: style.outlineStyle,
       outlineWidth: Number.parseFloat(style.outlineWidth),
@@ -313,6 +366,8 @@
       return {
         name: animation.animationName ?? animation.transitionProperty ?? animation.constructor.name,
         target: target ? describe(target) : null,
+        selector: target ? selectorFor(target) : null,
+        rect: target ? rectOf(target) : null,
         inPanel: target ? inPanel(target) : false,
         playState: animation.playState,
         moves: keyframes.some((frame) => Object.keys(frame).some((key) => MOVEMENT.test(key))),

@@ -1,8 +1,11 @@
 // Reduced motion (research report §5.2), run in the iphone-17-pro-reduced-motion
 // project. The pages have no animations of their own yet, so each test adds a
-// moving probe animation and checks that the base CSS stops it.
+// moving probe animation and checks that the base CSS stops it, then that the
+// same probe moves without the preference. The check is in
+// scripts/lib/lab/checks.mjs.
 
-import { expect, problems, test } from './support/fixtures.mjs';
+import { checkReducedMotion, movingAnimations } from '../../scripts/lib/lab/checks.mjs';
+import { expect, expectNone, test } from './support/fixtures.mjs';
 import { PAGES } from './support/pages.mjs';
 
 const PROBE_CSS = `
@@ -12,8 +15,7 @@ const PROBE_CSS = `
   #sdk-fade-probe { animation: sdk-test-fade 1s linear infinite; inline-size: 1rem; block-size: 1rem; }
 `;
 
-const moving = (list) =>
-  list.filter((animation) => !animation.inPanel && animation.moves && animation.playState === 'running').map((animation) => `${animation.name} on ${animation.target}`);
+const moving = (list) => movingAnimations(list).map((animation) => `${animation.name} on ${animation.target}`);
 
 for (const { name, path } of PAGES) {
   test.describe(name, () => {
@@ -33,12 +35,8 @@ for (const { name, path } of PAGES) {
           }
           return new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
         });
-        const running = moving(await page.evaluate(() => sdkProbe.animations()));
-        expect(running, problems(['MOT-02', 'LST-06'], 'moving animations under reduced motion:', running)).toEqual([]);
-
         await page.locator('a[href], button, input, [tabindex="0"]').first().focus();
-        const scrollBehavior = await page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior);
-        expect(scrollBehavior, 'smooth scrolling is off under reduced motion (MOT-02)').toBe('auto');
+        expectNone(await checkReducedMotion(page));
 
         // Control: without the preference the same probe moves, so the check above can fail.
         await page.emulateMedia({ reducedMotion: 'no-preference' });
