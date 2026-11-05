@@ -6,8 +6,9 @@
 // background, and accent colors. Every change lives in one stylesheet the panel
 // adds to the page (document.adoptedStyleSheets) and in data attributes on the
 // containers it measured. "Remove" takes all of it away; reloading the page
-// does too. Nothing is stored and nothing is sent anywhere: the panel makes no
-// network requests and never touches storage or cookies.
+// does too. Nothing is sent anywhere: the panel makes no network requests and
+// never touches storage or cookies itself (an inline panel saves only through
+// the `store` it is given; see below).
 //
 // Two parts, like panel.js:
 // - createLiveDesign({ doc }) holds the settings ({ scales, colors, overrides,
