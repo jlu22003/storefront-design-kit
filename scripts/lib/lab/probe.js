@@ -145,16 +145,20 @@
 
   // ------------------------------------------------------------------ probes
 
-  /** LAY-06: horizontal overflow of the page, with the outermost elements that stick out (not their contents). */
+  /**
+   * LAY-06: horizontal overflow of the page, with the outermost elements that stick out (not their contents).
+   * Only the scrollable inline edge counts (right in LTR, left in RTL): content past the other edge cannot be scrolled to.
+   */
   function reflow() {
     const root = document.documentElement;
     const width = root.clientWidth;
+    const rtl = getComputedStyle(root).direction === 'rtl';
     const offenders = [];
     const outermost = [];
     for (const el of document.body.querySelectorAll('*')) {
       if (inPanel(el) || !visible(el) || outermost.some((offender) => offender.contains(el))) continue;
       const rect = el.getBoundingClientRect();
-      if (rect.right <= width + 1 && rect.left >= -1) continue;
+      if (rtl ? rect.left >= -1 : rect.right <= width + 1) continue;
       // Content inside a scroll or clip container is that container's business.
       let contained = false;
       for (let parent = el.parentElement; parent && parent !== document.body; parent = parent.parentElement) {

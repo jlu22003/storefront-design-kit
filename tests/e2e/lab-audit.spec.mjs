@@ -12,6 +12,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { expect, test } from '@playwright/test';
 import { checkCopy } from '../../scripts/lib/lab/audit.mjs';
+import { checkReflow, PROBE_PATH } from '../../scripts/lib/lab/checks.mjs';
 
 const ROOT = resolve(import.meta.dirname, '../..');
 
@@ -33,7 +34,7 @@ const PROBLEMS_PAGE = `<!doctype html>
   #tiny-button { inline-size: 20px; block-size: 20px; padding: 0; border: 0; }
   #small-button { inline-size: 30px; block-size: 30px; padding: 0; border: 0; }
   @keyframes spin { to { transform: rotate(1turn); } }
-  #spinner { animation: spin 2s linear infinite; inline-size: 16px; block-size: 16px; margin-inline-start: 8px; background: #333; }
+  #spinner { animation: spin 2s linear infinite; inline-size: 16px; block-size: 16px; background: #333; }
 </style>
 </head>
 <body>
@@ -163,7 +164,8 @@ test('audits a page at both widths and sorts what it finds into tiers', async ()
     expect(find(tier, id, check), `${tier} ${id} ${check}`).toBeTruthy();
   }
 
-  // The 600px strip fits a 1280px desktop but not a 412px phone; its contents are not counted again.
+  // The 600px strip fits a 1280px desktop but not a 412px phone; its contents are not counted again,
+  // and the spinner, whose rotating box pokes past the left edge, cannot be scrolled to so is not counted.
   const sideways = find('aa', 'LAY-05').findings[0];
   expect(Object.keys(sideways.viewports)).toEqual(['phone']);
   expect(sideways.items.map((item) => item.selector)).toEqual(['#wide']);
@@ -232,4 +234,22 @@ test('bad input exits 2 with a message and leaves no audit folder', async () => 
   expect(usage.code).toBe(2);
   expect(usage.stderr).toContain('--fail-on must be one of: blocker, aa, none.');
   expect((await readdir(out)).length).toBe(before);
+});
+
+test('only overflow past the scrollable edge counts as scrolling sideways', async ({ page }) => {
+  // CSS Overflow 3: a box scrolls toward its inline end, so content past the start edge is unreachable.
+  await page.addInitScript({ path: PROBE_PATH });
+  await page.setViewportSize({ width: 400, height: 300 });
+  const strips = '<div id="past-left" style="margin-inline-start:-50px;inline-size:100px;block-size:10px"></div>'
+    + '<div id="past-right" style="margin-inline-start:350px;inline-size:100px;block-size:10px"></div>';
+  const offenders = async (dir) => {
+    const html = `<!doctype html><html dir="${dir}"><body style="margin:0"><div style="direction:ltr">${strips}</div></body></html>`;
+    await page.route('http://fixture.test/', (route) => route.fulfill({ contentType: 'text/html', body: html }));
+    await page.goto('http://fixture.test/');
+    await page.unrouteAll();
+    const [{ items }] = await checkReflow(page);
+    return items.map((item) => item.selector);
+  };
+  expect(await offenders('ltr')).toEqual(['#past-right']);
+  expect(await offenders('rtl')).toEqual(['#past-left']);
 });
