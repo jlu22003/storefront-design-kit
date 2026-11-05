@@ -9,10 +9,20 @@
 // does too. Nothing is stored and nothing is sent anywhere: the panel makes no
 // network requests and never touches storage or cookies.
 //
-// The dev client also mounts it, closed, on local copies of sites (/lab/, see
-// client.js). Built into a bookmarklet by bookmarklet.js. The bundler inlines
-// util.js and strips import/export lines, so keep every import relative and
-// single-line, and avoid multi-line template literals.
+// Two parts, like panel.js:
+// - createLiveDesign({ doc }) holds the settings ({ scales, colors, overrides,
+//   factor }) and applies them to one document, which can be a same-origin
+//   iframe's. It has no UI.
+// - mountLivePanel(panelCss, options) adds the panel UI for a design: the
+//   floating Design button (the bookmarklet; the dev client on local copies
+//   under /lab/, closed), or with { inline: true, container } an always-open
+//   panel in `container` that styles another document (variant boards). Only
+//   an inline panel given a `store` saves its settings; the bookmarklet never
+//   gets one.
+//
+// Built into a bookmarklet by bookmarklet.js. The bundler inlines util.js and
+// strips import/export lines, so keep every import relative and single-line,
+// and avoid multi-line template literals.
 
 import { contrastRatio, el, normalizeHex, round, scaleValue } from './util.js';
 
@@ -189,13 +199,74 @@ export function liveCss({ vars = {}, overrides = {}, boxes = [], factor = 1, vie
   return [`/* Design panel values for ${site}. Paste at the end of the site's stylesheet. */`, ...parts].join('\n\n');
 }
 
+// ------------------------------------------------------------------ settings
+
+/** Every slider's range. Saved settings are clamped to these when they load. */
+export const LIVE_RANGES = {
+  space: { min: 0.5, max: 2, step: 0.05 },
+  type: { min: 0.5, max: 1.5, step: 0.05 },
+  radius: { min: 0, max: 2, step: 0.05 },
+  factor: { min: 0.5, max: 2, step: 0.05 },
+  fontSize: { min: 12, max: 24, step: 0.5 },
+  lineHeight: { min: 1, max: 2.2, step: 0.05 },
+  cornerRadius: { min: 0, max: 32, step: 1 },
+};
+
+const OVERRIDE_NUMBERS = { fontSize: 'fontSize', lineHeight: 'lineHeight', radius: 'cornerRadius' };
+const OVERRIDE_COLORS = ['text', 'background', 'accent', 'onAccent'];
+
+/** Settings with nothing changed: the page as loaded. */
+export const freshLiveState = () => ({ scales: { space: 1, type: 1, radius: 1 }, colors: {}, overrides: {}, factor: 1 });
+
+const clampTo = (value, { min, max }) => {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : null;
+};
+
+/**
+ * Turns saved (or otherwise untrusted) settings into valid ones: numbers
+ * clamped to LIVE_RANGES, colors as "#rrggbb", variable names starting with
+ * "--", and anything else dropped.
+ */
+export function normalizeLiveState(raw) {
+  const state = freshLiveState();
+  const input = raw && typeof raw === 'object' ? raw : {};
+  for (const kind of Object.keys(state.scales)) {
+    const value = clampTo(input.scales?.[kind], LIVE_RANGES[kind]);
+    if (value !== null) state.scales[kind] = value;
+  }
+  const factor = clampTo(input.factor, LIVE_RANGES.factor);
+  if (factor !== null) state.factor = factor;
+  for (const [name, value] of Object.entries(input.colors ?? {})) {
+    const hex = typeof value === 'string' ? normalizeHex(value) : null;
+    if (/^--[\w-]+$/.test(name) && hex) state.colors[name] = hex;
+  }
+  const overrides = input.overrides ?? {};
+  for (const [key, range] of Object.entries(OVERRIDE_NUMBERS)) {
+    if (overrides[key] === undefined) continue;
+    const value = clampTo(overrides[key], LIVE_RANGES[range]);
+    if (value !== null) state.overrides[key] = value;
+  }
+  for (const key of OVERRIDE_COLORS) {
+    const hex = typeof overrides[key] === 'string' ? normalizeHex(overrides[key]) : null;
+    if (hex) state.overrides[key] = hex;
+  }
+  return state;
+}
+
 // -------------------------------------------------------------------- page
 
+// The window a document belongs to. The bookmarklet's tests run without one.
+const viewOf = (doc) => doc.defaultView ?? window;
+
 // A stylesheet added to a document or shadow root that can be taken away again.
+// A constructed sheet must come from the target's own window to be adopted.
 function addSheet(target) {
-  if ('adoptedStyleSheets' in target && typeof CSSStyleSheet === 'function') {
+  const owner = target.ownerDocument ?? target;
+  const view = owner.defaultView ?? window;
+  if ('adoptedStyleSheets' in target && typeof view.CSSStyleSheet === 'function') {
     try {
-      const sheet = new CSSStyleSheet();
+      const sheet = new view.CSSStyleSheet();
       target.adoptedStyleSheets = [...target.adoptedStyleSheets, sheet];
       return {
         set: (css) => sheet.replaceSync(css),
@@ -207,7 +278,7 @@ function addSheet(target) {
       // Fall through to a <style> element.
     }
   }
-  const style = document.createElement('style');
+  const style = owner.createElement('style');
   (target.head ?? target).append(style);
   return { set: (css) => (style.textContent = css), remove: () => style.remove() };
 }
@@ -215,32 +286,32 @@ function addSheet(target) {
 const painted = (color) => colorToHex(color) !== null;
 
 function pageBase(doc) {
+  const { getComputedStyle: computed } = viewOf(doc);
   const body = doc.body ?? doc.documentElement;
-  const bodyStyle = getComputedStyle(body);
+  const bodyStyle = computed(body);
   const fontSize = Number.parseFloat(bodyStyle.fontSize) || 16;
   const lineHeight = Number.parseFloat(bodyStyle.lineHeight);
-  const background =
-    [body, doc.documentElement].map((node) => getComputedStyle(node).backgroundColor).find(painted) ?? 'rgb(255, 255, 255)';
-  const button = [...doc.querySelectorAll(`:where(${ACCENT_ELEMENTS})`)].find((node) => painted(getComputedStyle(node).backgroundColor));
+  const background = [body, doc.documentElement].map((node) => computed(node).backgroundColor).find(painted) ?? 'rgb(255, 255, 255)';
+  const button = [...doc.querySelectorAll(`:where(${ACCENT_ELEMENTS})`)].find((node) => painted(computed(node).backgroundColor));
   const link = doc.querySelector('a[href]');
-  const buttonStyle = button ? getComputedStyle(button) : null;
+  const buttonStyle = button ? computed(button) : null;
   return {
     fontSize: round(fontSize),
     lineHeight: Number.isFinite(lineHeight) ? round(lineHeight / fontSize) : 1.2,
     text: colorToHex(bodyStyle.color) ?? '#000000',
     background: colorToHex(background) ?? '#ffffff',
-    accent: colorToHex(buttonStyle?.backgroundColor ?? (link ? getComputedStyle(link).color : '')) ?? '#0a5fd1',
+    accent: colorToHex(buttonStyle?.backgroundColor ?? (link ? computed(link).color : '')) ?? '#0a5fd1',
     onAccent: colorToHex(buttonStyle?.color ?? '') ?? '#ffffff',
     radius: Math.round(Number.parseFloat(buttonStyle?.borderStartStartRadius ?? '') || 0),
   };
 }
 
 // Converts any color the browser understands (hsl, names, …) to hex, without touching the page.
-function browserHex(value) {
+function browserHex(doc, value) {
   const direct = colorToHex(value);
   if (direct) return direct;
-  if (/^currentcolor$/i.test(value) || !CSS.supports('color', value)) return null;
-  const context = document.createElement('canvas').getContext('2d');
+  if (/^currentcolor$/i.test(value) || !viewOf(doc).CSS.supports('color', value)) return null;
+  const context = doc.createElement('canvas').getContext('2d');
   if (!context) return null;
   context.fillStyle = '#010203';
   context.fillStyle = value;
@@ -249,7 +320,7 @@ function browserHex(value) {
 
 function detectVariables(doc) {
   const root = doc.documentElement;
-  const style = getComputedStyle(root);
+  const style = viewOf(doc).getComputedStyle(root);
   const names = new Set();
   for (let i = 0; i < style.length; i += 1) if (style[i].startsWith('--')) names.add(style[i]);
   const scan = (rules) => {
@@ -272,10 +343,10 @@ function detectVariables(doc) {
     const value = style.getPropertyValue(name).trim();
     if (!value || value.length > 200) continue;
     let kind = classifyVariable(name, value);
-    if (!kind && !value.includes('var(') && browserHex(value)) kind = { kind: 'color', format: 'hex' };
+    if (!kind && !value.includes('var(') && browserHex(doc, value)) kind = { kind: 'color', format: 'hex' };
     if (!kind) continue;
     if (kind.kind === 'color') {
-      const hex = browserHex(value);
+      const hex = browserHex(doc, value);
       if (hex) found.color.push({ name, value, hex, format: kind.format });
     } else {
       found[kind.kind].push({ name, value });
@@ -290,10 +361,11 @@ function detectVariables(doc) {
 }
 
 function measureBoxes(doc) {
+  const view = viewOf(doc);
   const boxes = [];
   for (const node of doc.querySelectorAll(CONTAINER_SELECTOR)) {
     if (boxes.length >= MAX_BOXES) break;
-    const style = getComputedStyle(node);
+    const style = view.getComputedStyle(node);
     const values = {};
     for (const prop of BOX_PROPS) {
       const value = style.getPropertyValue(prop);
@@ -305,12 +377,93 @@ function measureBoxes(doc) {
     boxes.push({
       node,
       attr: `[${BOX_ATTR}="${id}"]`,
-      selector: selectorFor({ tag: node.localName, id: node.id, classes: [...node.classList] }, CSS.escape),
+      selector: selectorFor({ tag: node.localName, id: node.id, classes: [...node.classList] }, view.CSS.escape),
       values,
     });
   }
   return boxes;
 }
+
+// ------------------------------------------------------------------- state
+
+/**
+ * The live panel's settings and how they apply to `doc`, with no UI. `site`
+ * names the page in the copied CSS. Returns { doc, found, base, state, apply,
+ * css, contrast, set, reset, destroy }.
+ */
+export function createLiveDesign({ doc = document, site } = {}) {
+  const view = viewOf(doc);
+  const found = detectVariables(doc);
+  const base = pageBase(doc);
+  const state = freshLiveState();
+  const label = site ?? ((doc.location ?? view.location)?.hostname || 'this page');
+  let boxes = null;
+  let measuredWidth = 0;
+  const pageSheet = addSheet(doc);
+
+  function changedVars() {
+    const vars = {};
+    for (const kind of ['space', 'type', 'radius']) {
+      const factor = state.scales[kind];
+      if (factor === 1) continue;
+      for (const { name, value } of found[kind]) vars[name] = scaleVariable(name, value, factor);
+    }
+    for (const { name, format } of found.color) {
+      if (state.colors[name]) vars[name] = formatColor(state.colors[name], format);
+    }
+    return vars;
+  }
+
+  // The text "Copy CSS" copies.
+  const css = () =>
+    liveCss({ vars: changedVars(), overrides: state.overrides, boxes: boxes ?? [], factor: state.factor, viewport: measuredWidth, site: label });
+
+  function apply() {
+    const vars = changedVars();
+    if (state.factor !== 1 && !boxes) {
+      // Measure the containers as the page styles them, without our changes.
+      pageSheet.set('');
+      boxes = measureBoxes(doc);
+      measuredWidth = view.innerWidth;
+    }
+    const scaledBoxes = (boxes ?? []).map((box) => ({ selector: box.attr, values: box.values }));
+    const rules = [variableBlock(vars, { important: true }), ...overrideRules(state.overrides, { important: true }), ...boxRules(scaledBoxes, state.factor, { important: true }).rules];
+    pageSheet.set(rules.filter(Boolean).join('\n'));
+  }
+
+  // Read back from the page, so variable changes count too.
+  function contrast() {
+    const live = pageBase(doc);
+    return [
+      ['Text on background', live.text, live.background],
+      ['Text on accent', live.onAccent, live.accent],
+    ].map(([name, fg, bg]) => ({ name, ratio: contrastRatio(fg, bg) }));
+  }
+
+  // Replaces every setting (saved settings, and later presets and AI versions).
+  function set(next) {
+    const clean = normalizeLiveState(next);
+    // Drop picks for variables this page does not have, and overrides equal to the page as loaded.
+    const known = new Set(found.color.map((c) => c.name));
+    for (const name of Object.keys(clean.colors)) if (!known.has(name)) delete clean.colors[name];
+    for (const [key, value] of Object.entries(clean.overrides)) if (value === base[key]) delete clean.overrides[key];
+    Object.assign(state, clean);
+    apply();
+  }
+
+  function destroy() {
+    try {
+      pageSheet.remove();
+      for (const box of boxes ?? []) box.node.removeAttribute(BOX_ATTR);
+    } catch {
+      // The document is gone (its frame navigated away); nothing is left to clean up.
+    }
+  }
+
+  return { doc, found, base, state, apply, css, contrast, set, reset: () => set({}), destroy };
+}
+
+// ------------------------------------------------------------------- panel
 
 function field(id, label, input, valueNode, hint) {
   return el('div', { class: 'field' }, [
@@ -340,73 +493,57 @@ function swatch(id, label, value, onInput) {
   return { input, node: el('div', { class: 'swatch' }, [input, el('label', { for: id, text: label })]) };
 }
 
-function createLivePanel(panelCss, { open = true } = {}) {
-  const doc = document;
-  const found = detectVariables(doc);
-  const base = pageBase(doc);
-  const state = { scales: { space: 1, type: 1, radius: 1 }, colors: {}, overrides: {}, factor: 1 };
-  let boxes = null;
-  let measuredWidth = 0;
-  const pageSheet = addSheet(doc);
+/**
+ * Mounts the panel UI for a design (createLiveDesign) on `doc`.
+ * - Floating (default): a Design button on `doc` itself, open unless
+ *   { open: false }. Remove takes the panel and its changes off the page.
+ * - Inline ({ inline: true, container }): an always-open panel appended to
+ *   `container`, which may be in another document (a variant board styling
+ *   a same-origin iframe).
+ * `store` ({ load(), save(state) }) keeps the settings; without one nothing
+ * is saved. `onRemove` runs after remove(). Returns { design, host, css(),
+ * getState(), setState(next), toggle(), remove() }.
+ */
+export function mountLivePanel(
+  panelCss,
+  { doc = document, container, inline = false, open = true, store = null, title = 'Design panel', idPrefix = 'sdk-live', site, onRemove } = {},
+) {
+  const design = createLiveDesign({ doc, site });
+  const { found, base, state } = design;
+  if (store) design.set(store.load());
+  const id = (name) => `${idPrefix}-${name}`;
 
-  const host = el('div', { 'data-sdk-live-panel': true });
+  const host = el('div', { 'data-sdk-live-panel': true, 'data-inline': inline });
   const shadow = host.attachShadow({ mode: 'open' });
   addSheet(shadow).set(panelCss);
-
-  function changedVars() {
-    const vars = {};
-    for (const kind of ['space', 'type', 'radius']) {
-      const factor = state.scales[kind];
-      if (factor === 1) continue;
-      for (const { name, value } of found[kind]) vars[name] = scaleVariable(name, value, factor);
-    }
-    for (const { name, format } of found.color) {
-      if (state.colors[name]) vars[name] = formatColor(state.colors[name], format);
-    }
-    return vars;
-  }
 
   const output = el('pre', { class: 'output', tabindex: '0', 'aria-label': 'Changed values as CSS' });
   const status = el('p', { class: 'status', role: 'status' });
   const contrastList = el('ul', { class: 'contrast', role: 'list' });
 
-  // Read back from the page, so variable changes count too.
   function updateContrast() {
-    const live = pageBase(doc);
-    const pairs = [
-      ['Text on background', live.text, live.background],
-      ['Text on accent', live.onAccent, live.accent],
-    ];
     contrastList.replaceChildren(
-      ...pairs.map(([label, fg, bg]) => {
-        const ratio = contrastRatio(fg, bg);
+      ...design.contrast().map(({ name, ratio }) => {
         const pass = ratio >= 4.5;
         return el('li', { 'data-pass': String(pass) }, [
-          el('span', { text: label }),
+          el('span', { text: name }),
           el('span', { class: 'ratio', text: `${ratio.toFixed(2)}:1 ${pass ? 'pass' : 'fail, needs 4.5:1'}` }),
         ]);
       }),
     );
   }
 
-  function apply() {
-    const vars = changedVars();
-    if (state.factor !== 1 && !boxes) {
-      pageSheet.set('');
-      boxes = measureBoxes(doc);
-      measuredWidth = window.innerWidth;
-    }
-    const scaledBoxes = (boxes ?? []).map((box) => ({ selector: box.attr, values: box.values }));
-    const css = [variableBlock(vars, { important: true }), ...overrideRules(state.overrides, { important: true }), ...boxRules(scaledBoxes, state.factor, { important: true }).rules];
-    pageSheet.set(css.filter(Boolean).join('\n'));
-    output.textContent = liveCss({ vars, overrides: state.overrides, boxes: boxes ?? [], factor: state.factor, viewport: measuredWidth, site: location.hostname || 'this page' });
+  function changed() {
+    design.apply();
+    store?.save(state);
+    output.textContent = design.css();
     updateContrast();
   }
 
   // ---- controls
-  const close = el('button', { type: 'button', class: 'close', 'aria-label': 'Close design panel', text: '×' });
-  const toggle = el('button', { type: 'button', class: 'toggle', 'aria-expanded': 'true', 'aria-controls': 'sdk-live-panel', text: 'Design' });
-  const panel = el('section', { id: 'sdk-live-panel', class: 'panel', 'aria-labelledby': 'sdk-live-title' });
+  const close = el('button', { type: 'button', class: 'close', 'aria-label': `Close ${title.toLowerCase()}`, text: '×' });
+  const toggle = el('button', { type: 'button', class: 'toggle', 'aria-expanded': 'true', 'aria-controls': id('panel'), text: 'Design' });
+  const panel = el('section', { id: id('panel'), class: 'panel', 'aria-labelledby': id('title') });
 
   const percent = (n) => `${Math.round(n * 100)}%`;
   const scaleSliders = [
@@ -418,28 +555,28 @@ function createLivePanel(panelCss, { open = true } = {}) {
     .map(([kind, label]) => {
       const names = found[kind].map((v) => v.name);
       const listed = names.slice(0, 3).join(', ') + (names.length > 3 ? ', …' : '');
-      return slider({
-        id: `sdk-live-scale-${kind}`,
+      const control = slider({
+        id: id(`scale-${kind}`),
         label,
-        min: kind === 'radius' ? 0 : 0.5,
-        max: kind === 'type' ? 1.5 : 2,
-        step: 0.05,
-        value: 1,
+        ...LIVE_RANGES[kind],
+        value: state.scales[kind],
         show: percent,
         hint: `Scales ${names.length} variable${names.length === 1 ? '' : 's'}: ${listed}`,
         onInput: (value) => {
           state.scales[kind] = value;
-          apply();
+          changed();
         },
       });
+      return { ...control, value: () => state.scales[kind] };
     });
-  const colorSwatches = found.color.map(({ name, hex }) =>
-    swatch(`sdk-live-var${name}`, name.slice(2), hex, (value) => {
+  const colorSwatches = found.color.map(({ name, hex }) => {
+    const control = swatch(id(`var${name}`), name.slice(2), state.colors[name] ?? hex, (value) => {
       if (value === hex) delete state.colors[name];
       else state.colors[name] = value;
-      apply();
-    }),
-  );
+      changed();
+    });
+    return { ...control, value: () => state.colors[name] ?? hex };
+  });
 
   const variablesSet = el('fieldset', {}, [
     el('legend', { text: 'Site variables' }),
@@ -455,41 +592,57 @@ function createLivePanel(panelCss, { open = true } = {}) {
   const setOverride = (key) => (value) => {
     if (value === base[key]) delete state.overrides[key];
     else state.overrides[key] = value;
-    apply();
+    changed();
   };
+  const override = (key) => () => state.overrides[key] ?? base[key];
   const overrideSliders = [
-    slider({ id: 'sdk-live-font-size', label: 'Body text size', min: 12, max: 24, step: 0.5, value: base.fontSize, show: (n) => `${n}px`, onInput: setOverride('fontSize') }),
-    slider({ id: 'sdk-live-line-height', label: 'Line height', min: 1, max: 2.2, step: 0.05, value: base.lineHeight, show: (n) => n.toFixed(2), onInput: setOverride('lineHeight') }),
-    slider({
-      id: 'sdk-live-containers',
-      label: 'Container spacing',
-      min: 0.5,
-      max: 2,
-      step: 0.05,
-      value: 1,
-      show: percent,
-      hint: 'Scales padding and gaps of sections, headers, footers, and containers',
-      onInput: (value) => {
-        state.factor = value;
-        apply();
-      },
-    }),
-    slider({ id: 'sdk-live-corner', label: 'Corner radius', min: 0, max: 32, step: 1, value: base.radius, show: (n) => `${n}px`, hint: 'Buttons, fields, images, and cards', onInput: setOverride('radius') }),
+    { ...slider({ id: id('font-size'), label: 'Body text size', ...LIVE_RANGES.fontSize, value: override('fontSize')(), show: (n) => `${n}px`, onInput: setOverride('fontSize') }), value: override('fontSize') },
+    { ...slider({ id: id('line-height'), label: 'Line height', ...LIVE_RANGES.lineHeight, value: override('lineHeight')(), show: (n) => n.toFixed(2), onInput: setOverride('lineHeight') }), value: override('lineHeight') },
+    {
+      ...slider({
+        id: id('containers'),
+        label: 'Container spacing',
+        ...LIVE_RANGES.factor,
+        value: state.factor,
+        show: percent,
+        hint: 'Scales padding and gaps of sections, headers, footers, and containers',
+        onInput: (value) => {
+          state.factor = value;
+          changed();
+        },
+      }),
+      value: () => state.factor,
+    },
+    {
+      ...slider({ id: id('corner'), label: 'Corner radius', ...LIVE_RANGES.cornerRadius, value: override('radius')(), show: (n) => `${n}px`, hint: 'Buttons, fields, images, and cards', onInput: setOverride('radius') }),
+      value: override('radius'),
+    },
   ];
   const overrideSwatches = [
     ['text', 'Text'],
     ['background', 'Background'],
     ['accent', 'Accent (buttons)'],
     ['onAccent', 'Text on accent'],
-  ].map(([key, label]) => swatch(`sdk-live-${key}`, label, base[key], setOverride(key)));
+  ].map(([key, label]) => ({ ...swatch(id(key), label, override(key)(), setOverride(key)), value: override(key) }));
+
+  // Moves every control to the current settings.
+  function syncControls() {
+    for (const control of [...scaleSliders, ...overrideSliders, ...colorSwatches, ...overrideSwatches]) {
+      control.input.value = control.value();
+      control.update?.();
+    }
+  }
 
   const copy = el('button', { type: 'button', class: 'primary', text: 'Copy CSS' });
   const reset = el('button', { type: 'button', text: 'Reset' });
   const remove = el('button', { type: 'button', text: 'Remove' });
+  const note = store
+    ? 'Saved in this browser. Reset returns to the page as copied.'
+    : 'Changes stay in this tab: nothing is saved or sent. Remove or reload the page to undo them.';
 
   panel.append(
-    el('div', { class: 'header' }, [el('h2', { id: 'sdk-live-title', text: 'Design panel' }), close]),
-    el('p', { class: 'hint', text: 'Changes stay in this tab: nothing is saved or sent. Remove or reload the page to undo them.' }),
+    el('div', { class: 'header' }, [el('h2', { id: id('title'), text: title }), ...(inline ? [] : [close])]),
+    el('p', { class: 'hint', text: note }),
     variablesSet,
     el('fieldset', {}, [
       el('legend', { text: 'Page overrides' }),
@@ -497,9 +650,9 @@ function createLivePanel(panelCss, { open = true } = {}) {
       el('div', { class: 'swatches' }, overrideSwatches.map((s) => s.node)),
     ]),
     el('fieldset', {}, [el('legend', { text: 'Contrast (WCAG)' }), contrastList]),
-    el('fieldset', {}, [el('legend', { text: 'Changed values' }), output, el('div', { class: 'actions' }, [copy, reset, remove]), status]),
+    el('fieldset', {}, [el('legend', { text: 'Changed values' }), output, el('div', { class: 'actions' }, [copy, reset, ...(inline ? [] : [remove])]), status]),
   );
-  shadow.append(toggle, panel);
+  shadow.append(...(inline ? [] : [toggle]), panel);
 
   function setOpen(show, { focus = true } = {}) {
     panel.hidden = !show;
@@ -507,13 +660,15 @@ function createLivePanel(panelCss, { open = true } = {}) {
     if (focus) (show ? (panel.querySelector('input') ?? close) : toggle).focus();
   }
 
-  toggle.addEventListener('click', () => setOpen(panel.hidden));
-  close.addEventListener('click', () => setOpen(false));
   // Keep the site's keyboard shortcuts from firing while you use the panel.
   for (const type of ['keydown', 'keyup', 'keypress']) host.addEventListener(type, (event) => event.stopPropagation());
-  panel.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') setOpen(false);
-  });
+  if (!inline) {
+    toggle.addEventListener('click', () => setOpen(panel.hidden));
+    close.addEventListener('click', () => setOpen(false));
+    panel.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') setOpen(false);
+    });
+  }
 
   copy.addEventListener('click', async () => {
     try {
@@ -529,46 +684,48 @@ function createLivePanel(panelCss, { open = true } = {}) {
     }
   });
 
+  function setState(next) {
+    design.set(next);
+    syncControls();
+    changed();
+  }
+
   reset.addEventListener('click', () => {
-    state.scales = { space: 1, type: 1, radius: 1 };
-    state.colors = {};
-    state.overrides = {};
-    state.factor = 1;
-    for (const s of scaleSliders) s.input.value = 1;
-    overrideSliders[0].input.value = base.fontSize;
-    overrideSliders[1].input.value = base.lineHeight;
-    overrideSliders[2].input.value = 1;
-    overrideSliders[3].input.value = base.radius;
-    for (const s of [...scaleSliders, ...overrideSliders]) s.update();
-    for (const [i, { hex }] of found.color.entries()) colorSwatches[i].input.value = hex;
-    for (const [i, key] of ['text', 'background', 'accent', 'onAccent'].entries()) overrideSwatches[i].input.value = base[key];
-    apply();
-    status.textContent = 'Reset to the page as loaded.';
+    setState({});
+    status.textContent = store ? 'Reset to the page as copied.' : 'Reset to the page as loaded.';
   });
 
   function destroy() {
-    pageSheet.remove();
-    for (const box of boxes ?? []) box.node.removeAttribute(BOX_ATTR);
+    design.destroy();
     host.remove();
-    delete window[GLOBAL];
+    onRemove?.();
   }
   remove.addEventListener('click', destroy);
 
-  (doc.body ?? doc.documentElement).append(host);
-  apply();
-  setOpen(open, { focus: open });
-  return { toggle: () => setOpen(panel.hidden), remove: destroy };
+  (container ?? doc.body ?? doc.documentElement).append(host);
+  changed();
+  if (!inline) setOpen(open, { focus: open });
+  return {
+    design,
+    host,
+    css: design.css,
+    getState: () => normalizeLiveState(state),
+    setState,
+    toggle: () => setOpen(panel.hidden),
+    remove: destroy,
+  };
 }
 
 /**
- * The bookmarklet's entry point: opens the panel, or toggles it when it is
- * already on the page. Local copies (client.js) pass { open: false } to start
- * with only the Design button showing.
+ * The bookmarklet's entry point: opens the floating panel, or toggles it when
+ * it is already on the page. Local copies (client.js) pass { open: false } to
+ * start with only the Design button showing.
  */
-export function toggleLivePanel(panelCss, options) {
+export function toggleLivePanel(panelCss, options = {}) {
   if (window[GLOBAL]) {
     window[GLOBAL].toggle();
     return;
   }
-  window[GLOBAL] = createLivePanel(panelCss, options);
+  // Remove clears the global too, so the bookmark opens a fresh panel next time.
+  window[GLOBAL] = mountLivePanel(panelCss, { ...options, doc: document, inline: false, store: null, onRemove: () => delete window[GLOBAL] });
 }

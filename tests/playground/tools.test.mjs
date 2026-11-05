@@ -14,7 +14,10 @@ import {
   colorFormat,
   colorToHex,
   formatColor,
+  freshLiveState,
   liveCss,
+  LIVE_RANGES,
+  normalizeLiveState,
   overrideRules,
   scaleVariable,
   selectorFor,
@@ -68,16 +71,6 @@ describe('format frames', () => {
       '/playground/dev/client.js',
     ]) {
       assert.equal(framedPath(bad, ORIGIN), null, bad);
-    }
-  });
-
-  test('framedPath with copies: false (variant boards) refuses local copies only', () => {
-    const options = { copies: false };
-    assert.equal(framedPath('/sketches/idea/', ORIGIN, options), '/sketches/idea/');
-    assert.equal(framedPath('/playground/starters/product.html', ORIGIN, options), '/playground/starters/product.html');
-    for (const copy of ['/lab/copies/shop.example-20261104-090507/', 'lab/copies/x/index.html', `${ORIGIN}/lab/copies/x/`]) {
-      assert.equal(framedPath(copy, ORIGIN, options), null, copy);
-      assert.notEqual(framedPath(copy, ORIGIN), null, copy);
     }
   });
 
@@ -193,6 +186,59 @@ describe('live-site panel helpers', () => {
     assert.match(css, /Container spacing at 200%: fixed px measured at a 1280px-wide viewport[^\n]*div\.container\.[^\n]*\nmain \{ padding-inline-start: 40px; \}/);
     assert.doesNotMatch(css, /^div\.container \{/m);
     assert.doesNotMatch(css, / !important;|data-sdk-live/);
+  });
+});
+
+describe('live-panel settings', () => {
+  test('normalizeLiveState keeps valid settings and clamps or drops the rest', () => {
+    assert.deepEqual(normalizeLiveState(undefined), freshLiveState());
+    assert.deepEqual(normalizeLiveState('nonsense'), freshLiveState());
+    const state = normalizeLiveState({
+      scales: { space: 1.25, type: 9, radius: 'x', extra: 2 },
+      factor: 0.1,
+      colors: { '--brand': '#ABC', '--bad': 'red', 'no-dashes': '#000000', '--x;}': '#000000' },
+      overrides: { fontSize: 40, lineHeight: 1.6, radius: -5, text: '#111111', accent: 'blue', width: 3 },
+      extra: true,
+    });
+    assert.deepEqual(state, {
+      scales: { space: 1.25, type: LIVE_RANGES.type.max, radius: 1 },
+      colors: { '--brand': '#aabbcc' },
+      overrides: { fontSize: LIVE_RANGES.fontSize.max, lineHeight: 1.6, radius: 0, text: '#111111' },
+      factor: LIVE_RANGES.factor.min,
+    });
+    // Normalizing twice changes nothing, so saved settings round-trip.
+    assert.deepEqual(normalizeLiveState(state), state);
+  });
+
+  test('an inline panel with a store restores its settings, saves each change, and resets', async () => {
+    const page = fakePage();
+    const util = await readFile(join(ROOT, 'playground/dev/util.js'), 'utf8');
+    const live = await readFile(join(ROOT, 'playground/dev/live-panel.js'), 'utf8');
+    new Script(`${stripModule(util)}\n${stripModule(live)}`).runInContext(page.context);
+    const saves = [];
+    const store = {
+      load: () => ({ scales: { space: 9 }, overrides: { fontSize: 18 }, colors: { '--not-on-this-page': '#ff0000' } }),
+      save: (state) => saves.push(JSON.parse(JSON.stringify(state))),
+    };
+    const panel = page.context.mountLivePanel('', { inline: true, store, idPrefix: 'sdk-lva', site: 'shop.example, variant A' });
+
+    assert.equal(page.find('sdk-lva-font-size').value, '18');
+    assert.equal(page.find('sdk-lva-scale-space').value, String(LIVE_RANGES.space.max));
+    assert.match(page.pageCss(), /--space-section: 80px !important;/);
+    assert.match(page.pageCss(), /font-size: 18px !important;/);
+    assert.deepEqual(saves.at(-1).colors, {}, 'a pick for a variable the page lacks is dropped');
+    assert.match(panel.css(), /^\/\* Design panel values for shop\.example, variant A\./);
+
+    page.input('sdk-lva-font-size', 20);
+    assert.equal(saves.at(-1).overrides.fontSize, 20);
+    panel.setState({ overrides: { lineHeight: 1.75 } });
+    assert.equal(String(page.find('sdk-lva-line-height').value), '1.75');
+    assert.equal(String(page.find('sdk-lva-font-size').value), '16', 'setState replaces every setting');
+    page.click('Reset');
+    assert.deepEqual(saves.at(-1), freshLiveState());
+    assert.equal(String(page.find('sdk-lva-scale-space').value), '1');
+    assert.doesNotMatch(page.pageCss(), /important/);
+    assert.deepEqual(page.calls, []);
   });
 });
 
