@@ -145,13 +145,14 @@
 
   // ------------------------------------------------------------------ probes
 
-  /** LAY-06: horizontal overflow of the page, with the elements that stick out. */
+  /** LAY-06: horizontal overflow of the page, with the outermost elements that stick out (not their contents). */
   function reflow() {
     const root = document.documentElement;
     const width = root.clientWidth;
     const offenders = [];
+    const outermost = [];
     for (const el of document.body.querySelectorAll('*')) {
-      if (inPanel(el) || !visible(el)) continue;
+      if (inPanel(el) || !visible(el) || outermost.some((offender) => offender.contains(el))) continue;
       const rect = el.getBoundingClientRect();
       if (rect.right <= width + 1 && rect.left >= -1) continue;
       // Content inside a scroll or clip container is that container's business.
@@ -162,7 +163,9 @@
           break;
         }
       }
-      if (!contained) offenders.push(item(el, `spans ${Math.round(rect.left)}..${Math.round(rect.right)}px`));
+      if (contained) continue;
+      outermost.push(el);
+      offenders.push(item(el, `spans ${Math.round(rect.left)}..${Math.round(rect.right)}px`));
     }
     return { scrollWidth: root.scrollWidth, clientWidth: width, innerWidth, offenders };
   }

@@ -29,6 +29,7 @@ const PROBLEMS_PAGE = `<!doctype html>
   #serif { font-family: serif; }
   #cursive { font-family: cursive; }
   #wide { inline-size: 600px; block-size: 10px; background: #ddd; }
+  #wide > div { block-size: 10px; }
   #tiny-button { inline-size: 20px; block-size: 20px; padding: 0; border: 0; }
   #small-button { inline-size: 30px; block-size: 30px; padding: 0; border: 0; }
   @keyframes spin { to { transform: rotate(1turn); } }
@@ -45,7 +46,7 @@ const PROBLEMS_PAGE = `<!doctype html>
 <p id="cursive">A cursive paragraph.</p>
 <img id="no-alt" src="/photo.svg" width="40" height="40">
 <img id="broken" src="/missing.png" alt="">
-<div id="wide"></div>
+<div id="wide"><div></div></div>
 <div id="spinner"></div>
 <label for="email">Email</label> <input id="email" type="email">
 <button id="tiny-button" type="button" aria-label="Close">×</button>
@@ -162,7 +163,7 @@ test('audits a page at both widths and sorts what it finds into tiers', async ()
     expect(find(tier, id, check), `${tier} ${id} ${check}`).toBeTruthy();
   }
 
-  // The 600px strip fits a 1280px desktop but not a 412px phone.
+  // The 600px strip fits a 1280px desktop but not a 412px phone; its contents are not counted again.
   const sideways = find('aa', 'LAY-05').findings[0];
   expect(Object.keys(sideways.viewports)).toEqual(['phone']);
   expect(sideways.items.map((item) => item.selector)).toEqual(['#wide']);
@@ -207,7 +208,11 @@ test('writes report.md, report.json, the copies, and screenshots', async () => {
 test('checks run on the copy and never contact the site', async () => {
   const before = hits.length;
   const { results } = await checkCopy(join(dir, report.viewports[0].copy), { viewport: 'desktop' });
-  expect(results.find((result) => result.check === 'text-size').items.map((item) => item.selector)).toEqual(['#tiny']);
+  expect(results.find((result) => result.check === 'text-size').items.map((item) => item.selector)).toEqual([
+    '#tiny',
+    'body > main > p:nth-of-type(3) > span:nth-of-type(1)',
+    'body > main > p:nth-of-type(3) > span:nth-of-type(2)',
+  ]);
   expect(hits.length).toBe(before);
 });
 
