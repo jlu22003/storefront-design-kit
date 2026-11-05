@@ -25,7 +25,7 @@ const PROBLEMS_PAGE = `<!doctype html>
 <style>
   body { margin: 0; font-family: sans-serif; color: #111; background: #fff; }
   #faint { color: #b0b0b0; }
-  #tiny { font-size: 9px; }
+  #tiny, .badge { font-size: 9px; }
   #serif { font-family: serif; }
   #cursive { font-family: cursive; }
   #wide { inline-size: 600px; block-size: 10px; background: #ddd; }
@@ -40,6 +40,7 @@ const PROBLEMS_PAGE = `<!doctype html>
 <h1>Audit fixture</h1>
 <p id="faint">Faint text that fails contrast.</p>
 <p id="tiny">Tiny print.</p>
+<p><span class="badge">Sale</span> <span class="badge">Sale</span></p>
 <p id="serif">A serif paragraph.</p>
 <p id="cursive">A cursive paragraph.</p>
 <img id="no-alt" src="/photo.svg" width="40" height="40">
@@ -164,11 +165,13 @@ test('audits a page at both widths and sorts what it finds into tiers', async ()
   // The 600px strip fits a 1280px desktop but not a 412px phone.
   const sideways = find('aa', 'LAY-05').findings[0];
   expect(Object.keys(sideways.viewports)).toEqual(['phone']);
-  expect(sideways.items.map((item) => item.selector)).toEqual(expect.arrayContaining(['html', '#wide']));
+  expect(sideways.items.map((item) => item.selector)).toEqual(['#wide']);
+  expect(sideways.count).toBe(1);
   // Items carry a selector that finds the element again, and where it is.
   const tiny = find('polish', 'TYP-01').findings[0];
   expect(tiny.items[0]).toMatchObject({ viewport: 'desktop', selector: '#tiny', detail: 'p#tiny "Tiny print." at 9px', rect: { width: expect.any(Number) } });
-  expect(tiny.sentence).toBe('1 piece of text is under 11px');
+  // Two badges that look the same are still two elements.
+  expect(tiny.sentence).toBe('3 pieces of text are under 11px');
   expect(find('polish', 'ACC-01').findings[0].items.map((item) => item.selector)).toContain('#small-button');
   expect(find('aa', 'ACC-01').findings[0].items.map((item) => item.selector)).toContain('#tiny-button');
 

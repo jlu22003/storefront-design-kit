@@ -164,7 +164,7 @@
       }
       if (!contained) offenders.push(item(el, `spans ${Math.round(rect.left)}..${Math.round(rect.right)}px`));
     }
-    return { scrollWidth: root.scrollWidth, clientWidth: width, innerWidth, offenders: offenders.slice(0, 10) };
+    return { scrollWidth: root.scrollWidth, clientWidth: width, innerWidth, offenders };
   }
 
   /** LAY-07, TYP-08: elements that clip their text (overflow hidden or clip, content larger than the box). */
@@ -213,14 +213,15 @@
    * code, kbd, samp, pre, and .sdk-font-mono (SKUs and numbers).
    */
   function renderedText() {
-    // Keyed by detail, so text nodes that share an element and its style are one item.
+    // Keyed by element and detail, so text nodes that share an element and its style are one item.
     const tooSmall = new Map();
     const tooLight = new Map();
     const families = new Map();
     const strayMono = new Map();
     const add = (list, el, detail) => {
       const found = item(el, detail);
-      if (!list.has(found.detail)) list.set(found.detail, found);
+      const key = `${found.selector}|${found.detail}`;
+      if (!list.has(key)) list.set(key, found);
     };
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     for (let node = walker.nextNode(); node; node = walker.nextNode()) {

@@ -3,7 +3,7 @@
 // tests/e2e/lab-audit.spec.mjs.
 
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { describe, test } from 'node:test';
 import { parseAuditArgs } from '../../scripts/audit.mjs';
@@ -61,7 +61,7 @@ describe('npm run audit arguments', () => {
   test('flags', () => {
     const options = parseAuditArgs(['https://shop.example/', '--viewport', 'phone', '--out', 'somewhere', '--fail-on', 'aa', '--json']);
     assert.deepEqual(options.viewports, ['phone']);
-    assert.equal(options.outDir, resolve('somewhere'));
+    assert.equal(options.outDir, resolve(process.env.INIT_CWD ?? process.cwd(), 'somewhere'));
     assert.equal(options.failOn, 'aa');
     assert.equal(options.json, true);
   });
@@ -75,7 +75,24 @@ describe('npm run audit arguments', () => {
     assert.throws(() => parseAuditArgs(['https://x.example/', '--colour']), /Unknown option '--colour'[\s\S]*usage/);
   });
 
-  test('package.json runs it as npm run audit', () => {
-    assert.equal(JSON.parse(readFileSync(resolve(ROOT, 'package.json'), 'utf8')).scripts.audit, 'node scripts/audit.mjs');
+  test('--out is relative to the folder npm was run from, not the repo root npm runs scripts in', () => {
+    const saved = process.env.INIT_CWD;
+    process.env.INIT_CWD = resolve(ROOT, 'playground');
+    try {
+      assert.equal(parseAuditArgs(['https://shop.example/', '--out', 'mine']).outDir, resolve(ROOT, 'playground', 'mine'));
+    } finally {
+      if (saved === undefined) delete process.env.INIT_CWD;
+      else process.env.INIT_CWD = saved;
+    }
+  });
+
+  test('npm run audit runs the command and reports bad input with exit status 2', () => {
+    const run = spawnSync('npm', ['run', 'audit', '--silent', '--', 'https://x.example/', '--fail-on', 'bogus'], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      shell: process.platform === 'win32',
+    });
+    assert.equal(run.status, 2, run.stderr);
+    assert.match(run.stderr, /--fail-on must be one of: blocker, aa, none\.\nusage: npm run audit/);
   });
 });

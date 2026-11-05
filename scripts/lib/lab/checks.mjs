@@ -166,8 +166,10 @@ export async function checkAutocomplete(page) {
   return [result('autocomplete', await page.evaluate(() => sdkProbe.fieldsWithoutAutocomplete()))];
 }
 
+/** The elements that make the page scroll sideways, or the page itself when none can be singled out. */
 function overflow({ scrollWidth, clientWidth, offenders }) {
-  return scrollWidth > clientWidth ? [pageItem(`page is ${scrollWidth}px wide in a ${clientWidth}px viewport`), ...offenders] : [];
+  if (scrollWidth <= clientWidth) return [];
+  return offenders.length ? offenders : [pageItem(`page is ${scrollWidth}px wide in a ${clientWidth}px viewport`)];
 }
 
 /**

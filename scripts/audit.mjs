@@ -7,7 +7,7 @@
 // Makes a frozen local copy of the page at each viewport (as `npm run lab:copy`
 // does), runs the standards checks on the copy, and writes report.md,
 // report.json, and screenshots to <out>/<host>-<stamp>/ (lab/ is gitignored).
-// --out is relative to the current folder (default: the repo's lab/audits).
+// --out is relative to the folder npm was run from (default: the repo's lab/audits).
 // --json prints report.json to stdout. Exits 1 when --fail-on finds an insight
 // at or above that tier, and 2 when the audit could not run. Audit only sites
 // you own or have permission to test.
@@ -19,6 +19,8 @@ import { FAIL_ON, TIERS } from './lib/lab/insights.mjs';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const USAGE = 'usage: npm run audit -- <url> [--viewport phone|desktop|both] [--out lab/audits] [--fail-on blocker|aa|none] [--json]';
+/** The folder the command was typed in: npm runs scripts from the repo root and passes it as INIT_CWD. */
+const invokedFrom = () => process.env.INIT_CWD ?? process.cwd();
 const VIEWPORT_CHOICES = { desktop: ['desktop'], phone: ['phone'], both: ['desktop', 'phone'] };
 
 /** Parses the command line; throws a message that ends with the usage line. */
@@ -43,7 +45,7 @@ export function parseAuditArgs(argv) {
   const viewports = Object.hasOwn(VIEWPORT_CHOICES, values.viewport) ? VIEWPORT_CHOICES[values.viewport] : null;
   if (!viewports) throw new Error(`--viewport must be one of: ${Object.keys(VIEWPORT_CHOICES).join(', ')}.\n${USAGE}`);
   if (!Object.hasOwn(FAIL_ON, values['fail-on'])) throw new Error(`--fail-on must be one of: ${Object.keys(FAIL_ON).join(', ')}.\n${USAGE}`);
-  return { url: positionals[0], viewports, outDir: values.out ? resolve(values.out) : resolve(ROOT, 'lab', 'audits'), failOn: values['fail-on'], json: values.json };
+  return { url: positionals[0], viewports, outDir: values.out ? resolve(invokedFrom(), values.out) : resolve(ROOT, 'lab', 'audits'), failOn: values['fail-on'], json: values.json };
 }
 
 async function main() {
@@ -62,7 +64,7 @@ async function main() {
     }
     if (report.summary.info) say(`Plus ${report.summary.info} for information; see the report.`);
   }
-  const where = relative(process.cwd(), dir) || '.';
+  const where = relative(invokedFrom(), dir) || '.';
   say(`\nReport: ${where}/report.md (and report.json, shots/, copies/)`);
   say('The checks ran on a frozen copy: menus, dialogs, and the cart were not exercised.');
   if (options.failOn !== 'none') say(`--fail-on ${options.failOn}: ${failed ? 'failed' : 'passed'}`);

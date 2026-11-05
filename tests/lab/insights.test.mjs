@@ -5,7 +5,7 @@
 
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import { AXE_RULE_IDS, CHECKS, axeLevel, emittableIds, focusRingResults, tabOrderResults } from '../../scripts/lib/lab/checks.mjs';
+import { AXE_RULE_IDS, CHECKS, axeLevel, checkReflow, emittableIds, focusRingResults, tabOrderResults } from '../../scripts/lib/lab/checks.mjs';
 import { FAIL_ON, TIERS, buildInsights, fails, findingSentence, loadInsightData, summarize, tierOf } from '../../scripts/lib/lab/insights.mjs';
 
 const { wording, standards } = loadInsightData();
@@ -91,7 +91,7 @@ describe('buildInsights', () => {
     {
       viewport: 'phone',
       height: 839,
-      results: [result('text-size', [item('#a', 3000)]), result('reflow', [item('html'), item('#wide')])],
+      results: [result('text-size', [item('#a', 3000)]), result('reflow', [item('#wide'), item('#wider')])],
     },
   ];
   const insights = buildInsights(runs, { wording, standards });
@@ -148,6 +148,32 @@ describe('buildInsights', () => {
 
   test('findingSentence uses the singular for one', () => {
     assert.equal(findingSentence(result('target-size', []), 1, wording), "1 control is smaller than the kit's 44×44px");
+  });
+});
+
+describe('sideways scroll results', () => {
+  // A stand-in page whose probe reports this reading of the layout.
+  const pageReading = (reading) => ({ evaluate: async () => reading });
+  const insightFor = async (reading) => {
+    const results = await checkReflow(pageReading(reading));
+    return buildInsights([{ viewport: 'phone', height: 800, results }], { wording, standards }).find((insight) => insight.id === 'LAY-05');
+  };
+
+  test('counts the elements that stick out, not the page as well', async () => {
+    const offenders = Array.from({ length: 12 }, (_, i) => item(`#strip-${i}`));
+    const insight = await insightFor({ scrollWidth: 600, clientWidth: 412, offenders });
+    assert.equal(insight.count, 12);
+    assert.deepEqual(insight.findings[0].items.map((entry) => entry.selector), offenders.map((entry) => entry.selector));
+  });
+
+  test('still fails, as one problem, when no element can be singled out', async () => {
+    const insight = await insightFor({ scrollWidth: 600, clientWidth: 412, offenders: [] });
+    assert.equal(insight.count, 1);
+    assert.deepEqual(insight.findings[0].items.map((entry) => `${entry.selector} ${entry.detail}`), ['html page is 600px wide in a 412px viewport']);
+  });
+
+  test('nothing when the page fits', async () => {
+    assert.equal(await insightFor({ scrollWidth: 412, clientWidth: 412, offenders: [] }), undefined);
   });
 });
 
