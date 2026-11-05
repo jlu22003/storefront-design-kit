@@ -8,7 +8,8 @@
 //   (format frames, variant boards) the client opens no connection of its own;
 //   the host page swaps the frame's CSS and reloads it. "frame" and "print"
 //   frames follow the host page's Design panel; "print" frames also show the
-//   page's print styles. "variant" frames are styled by the board.
+//   page's print styles. "variant" frames are styled by the board, which
+//   mounts an inline panel per frame (the live-site panel on local copies).
 
 import { printMediaText } from './formats.js';
 import { followDesign, mountDesignPanel } from './panel.js';

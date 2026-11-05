@@ -99,6 +99,15 @@ CSS**, or use **Copy CSS** in any variant's panel. Settings and the winner
 are kept in this browser's localStorage; each panel's **Reset** clears its
 variant.
 
+The board works on [local copies of sites](#local-copies-of-a-site) too:
+`/playground/variants.html?src=/lab/copies/<name>/&n=3`, or pick a copy in the
+**Page** field. A copy uses its own CSS rather than the kit's tokens, so each
+variant gets the [live-site panel](#design-panel-for-any-site-bookmarklet)
+instead: the copy's site variables, page overrides, contrast, and Copy CSS.
+Its settings are saved per copy and per variant, and the copied CSS names the
+site and the variant. Container spacing is measured in that variant's frame, at
+the board's width.
+
 ## Local copies of a site
 
 ```sh
@@ -109,9 +118,8 @@ npm run lab:copy -- https://example.com/ --viewport phone   # copy at phone widt
 This makes a frozen copy of one page in `lab/copies/<host>-<date>-<time>/`
 and prints its URL. With `npm run dev` running, open it at
 `/lab/copies/<host>-<date>-<time>/`, or list every copy at `/lab/copies/`.
-Copies show up in the **Page** field of the format frames too. Variant boards
-for copies come later, with a version board built on the live panel. Press
-**Design** on a copy for the same panel the bookmarklet opens: its site
+Copies show up in the **Page** field of the format frames and
+[variant boards](#variant-boards) too. Press **Design** on a copy for the same panel the bookmarklet opens: its site
 variables, page overrides, and Copy CSS. On a copy that panel can read every
 stylesheet, since they are all served from this server.
 
@@ -212,4 +220,9 @@ cannot be scanned, so only variables the browser lists in the computed style
 are found there.
 
 The source is `dev/live-panel.js`; `dev/bookmarklet.js` bundles it with
-`dev/util.js`, `dev/panel.css`, and the token values the panel needs.
+`dev/util.js`, `dev/panel.css`, and the token values the panel needs. Like
+the kit's panel, it has two parts: `createLiveDesign()` holds the settings
+(`{ scales, colors, overrides, factor }`) and applies them to one document,
+and `mountLivePanel()` adds the UI, either the floating Design button or an
+inline panel that styles another same-origin document (variant boards). Only
+an inline panel saves its settings; the bookmarklet never does.

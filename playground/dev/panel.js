@@ -97,7 +97,8 @@ const CHANGEABLE = [...SPACE, ...FONT_SIZES, ...RADII, ...COLORS.map((c) => c.na
 
 // ---------------------------------------------------------------- helpers
 
-function storageFor(key) {
+/** Loads and saves one settings object in localStorage under `key`; never throws. */
+export function storageFor(key) {
   return {
     load() {
       try {
